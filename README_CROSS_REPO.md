@@ -1,0 +1,99 @@
+# Cross-repo map: LIVE-uk-aq-webpage (web UI)
+
+## Main repo
+- `LIVE-uk-aq-webpage` is the main repo for this project and the default starting point for cross-repo tasks.
+- Filesystem location: `/Users/mikehinford/Dropbox/Projects/CIC Website/CIC Air Quality Networks/LIVE UK AQ Networks/LIVE-uk-aq-webpage`.
+
+## Purpose
+This repo is a static HTML/CSS/JS front-end for the UK Air Quality Networks project. It renders latest station readings, timeseries charts, and hex-map summaries by calling the Cloudflare cache proxy (`/api/aq/*`) for AQ reads and using local data files for geometry and styling.
+
+It does not ingest data itself; it relies on the ingest and population repos (Edge Functions) and the schema repo (tables/views) for all live data.
+
+## Repo layout
+- `index.html`: Main dashboard page (latest station table + trend chart).
+- `uk_aq_stations_chart.html`: Station-search dashboard page (latest station table + trend chart).
+- `uk_aq_hex_map.html`: Primary hex-map UI.
+- `hex_map_test*.html`: Hex-map test variants.
+- `scripts/`: Build-time helper ([scripts/uk_aq_inject_project_ref.mjs](scripts/uk_aq_inject_project_ref.mjs)).
+- `data/`: Local datasets and hex grids used by the UI.
+- `system_docs/`: UI and schema notes ([system_docs/uk-aq-hex-map-ui.md](system_docs/uk-aq-hex-map-ui.md)).
+- `supabase/`: SQL helpers used for checks ([supabase/data_check.sql](supabase/data_check.sql)).
+- `fonts/`, `favicon.ico`: Static assets.
+- `archive/`: Historical assets (do not edit).
+
+## How this repo connects to the other repos
+- **Schema repo**: `LIVE-uk-aq-schema` defines the tables/views used by the Edge Functions.
+- **AQ ingest repo**: `LIVE-uk-aq-ingest` owns the main air-quality ingest and most Edge Functions called by this UI.
+- **Population ingest repo**: `LIVE-uk-aq-population-ingest` provides the `uk_aq_population` Edge Function used by the hex map.
+- **History repo**: `LIVE-uk-aq-history` houses historical/backfill tooling against the same schemas.
+
+Data flow across repos:
+- `LIVE-uk-aq-schema` defines tables/views/RPC/policies.
+- `LIVE-uk-aq-ingest`, `LIVE-uk-aq-history`, and `LIVE-uk-aq-population-ingest` write data into those schemas.
+- This repo reads data and calls Edge Functions.
+- Edge Functions (if present) live under `/supabase` in the ingest repo; population Edge Functions live under `/supabase` in the population ingest repo.
+
+## Supabase touchpoints
+### Reads
+- **PostgREST**: none found (no direct `/rest/v1` usage in this repo).
+- **RPC**: none found.
+- **Edge Functions**:
+  - [index.html](index.html) and [uk_aq_stations_chart.html](uk_aq_stations_chart.html): `stations-chart`, `timeseries` via cache proxy routes under `/api/aq/*`; DAQI/EAQI chart mode reads AQI history from a pinned/injected base (`UK_AQ_AQI_HISTORY_BASE_URL`) with URL override support (`?aqi_history_base=...`).
+  - [uk_aq_hex_map.html](uk_aq_hex_map.html): `latest`, `pcon-hex`, `la-hex` via cache proxy routes under `/api/aq/*`; `uk_aq_population` remains a direct Supabase edge function route when enabled.
+  - [hex_map_test.html](hex_map_test.html), [hex_map_test1.html](hex_map_test1.html), [hex_map_test2.html](hex_map_test2.html), [hex_map_test3.html](hex_map_test3.html), [hex_map_test_met1.html](hex_map_test_met1.html): `uk_aq_latest`, `uk_aq_pcon_hex`, `uk_aq_population` (varies per file).
+- **Storage**: none found.
+- **Auth**: cached AQ read routes (`/api/aq/*`) use a Cloudflare Worker session cookie (`uk_aq_edge_session`, HttpOnly). Browser fetches use `credentials: include` without `Authorization`/`apikey` headers for AQ reads, and only call `POST /api/aq/session/start` after a `401` response. Session start sends `X-UK-AQ-Session-Init: 1` plus `CF-Turnstile-Token` from Turnstile solve. Direct Supabase calls (for example population/test pages) still use the publishable key flow where configured.
+- **Realtime**: none found.
+
+### Writes
+- No direct writes from this repo (static front-end only).
+
+### Edge Functions (if applicable)
+- **Location**:
+  - AQ functions: [../LIVE-uk-aq-ingest/supabase/functions/](../LIVE-uk-aq-ingest/supabase/functions/)
+  - Population function: [../LIVE-uk-aq-population-ingest/supabase/functions/uk_aq_population](../LIVE-uk-aq-population-ingest/supabase/functions/uk_aq_population)
+- **Invocation pattern**:
+  - AQ reads (main pages): `${window.location.origin}/api/aq/<route>` by default, overrideable via `?cache_base=...`
+  - AQI history chart reads (DAQI/EAQI mode): default from injected `UK_AQ_AQI_HISTORY_BASE_URL`, overrideable via `?aqi_history_base=<aqi-history-worker-base>`
+  - Direct Supabase edge calls (where still used): `https://<project_ref>.supabase.co/functions/v1/<function_name>`
+- **Public vs user-specific responses**: AQ cache routes use worker-managed session cookies (not user account JWTs). The UI does not attach user-specific auth tokens in code.
+
+## Running and configuration (NO SECRETS)
+- **Env vars (names only)**:
+  - `SUPABASE_PROJECT_REF`
+  - `SB_PUBLISHABLE_DEFAULT_KEY`
+  - `UK_AQ_TURNSTILE_SITE_KEY`
+  - `UK_AQ_AQI_HISTORY_BASE_URL`
+- **Env files**: `.env` exists at repo root (no `.env.example` found).
+- **Commands (documented)**:
+  - `node scripts/uk_aq_inject_project_ref.mjs`
+  - `node scripts/uk_aq_inject_project_ref.mjs uk_aq_hex_map.html`
+- **Hosting**: serve the static files from this repo root directory.
+  - README notes a publish directory of `web/` for hosting (confirm).
+
+## Data model pointers
+- Core AQ tables/views (timeseries, observations, stations, guidelines, pcon/la latest views):
+  - [../LIVE-uk-aq-schema/schemas/main_db/uk_aq_core_schema.sql](../LIVE-uk-aq-schema/schemas/main_db/uk_aq_core_schema.sql)
+- Public read-only views (if used by Edge Functions):
+  - [../LIVE-uk-aq-schema/schemas/main_db/uk_aq_public_views.sql](../LIVE-uk-aq-schema/schemas/main_db/uk_aq_public_views.sql)
+- Population views (`uk_population_observations`):
+  - [../LIVE-uk-aq-schema/schemas/main_db/uk_aq_pop_schema.sql](../LIVE-uk-aq-schema/schemas/main_db/uk_aq_pop_schema.sql)
+
+## Egress-relevant notes (FACTUAL, no solutions)
+- [index.html](index.html) and [uk_aq_stations_chart.html](uk_aq_stations_chart.html) poll live data every 5 minutes via Edge Functions.
+- [uk_aq_hex_map.html](uk_aq_hex_map.html) polls live data every 60 seconds and sets `limit=10000` on `uk_aq_latest` requests.
+- [hex_map_test.html](hex_map_test.html), [hex_map_test1.html](hex_map_test1.html), [hex_map_test2.html](hex_map_test2.html), [hex_map_test3.html](hex_map_test3.html), and [hex_map_test_met1.html](hex_map_test_met1.html) poll live data every 10 minutes.
+- The pages above use repeated fetches for Edge Functions on load and on refresh actions.
+
+## Permissions (REQUIRED)
+- The agent may edit any files without asking for permission.
+
+## WORKING STYLE (IMPORTANT)
+
+REQUIRED OUTPUT FORMAT
+
+Summary (2–5 bullets)
+Files changed (paths)
+Implementation details (short, specific)
+Supabase steps (instructions only,)
+Verification checklist (clear pass/fail)
