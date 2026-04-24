@@ -171,6 +171,7 @@
     </style>
   </head>
   <body>
+    <div id="cic-sidebar-mount"></div>
     <div id="map" role="application" aria-label="UK AQ sensor map"></div>
     <div class="control-bar" role="region" aria-label="Map controls">
       <div class="bar-top">
@@ -205,8 +206,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     <script>
       (() => {
-        const PROJECT_REF_PLACEHOLDER = "nmgierafoeuxfkkscrln";
-        const ANON_KEY_PLACEHOLDER = "sb_publishable_a6RslXF8rRzJqNo3RjjSSg_mFwfSNMP";
+        const PROJECT_REF_PLACEHOLDER = "__SUPABASE_PROJECT_REF__";
+        const ANON_KEY_PLACEHOLDER = "__SB_PUBLISHABLE_DEFAULT_KEY__";
         const FALLBACK_CACHE_BASE_URL = "https://cic-test.chronicillnesschannel.co.uk/api/aq";
         const TURNSTILE_SITE_KEY_PLACEHOLDER = "__UK_AQ_TURNSTILE_SITE_KEY__";
         const UPDATED_WITHIN_MS = {
@@ -1226,5 +1227,6 @@
         loadData();
       })();
     </script>
+    <script src="sidebar.js"></script>
   </body>
 </html>
