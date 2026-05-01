@@ -17,18 +17,31 @@
     />
     <style>
       :root {
-        --ink: #142225;
-        --ink-soft: #334449;
-        --mist: #f6f1e9;
-        --teal: #0f8b8d;
-        --teal-deep: #0a5d61;
-        --sun: #f4b942;
-        --clay: #e8dcc7;
-        --no-data: #efe6d8;
-        --fog: rgba(20, 34, 37, 0.08);
-        --card: #ffffff;
-        --tab-inactive: #e6e6e3;
-        --map-wrap: #fdfaf4;
+        /* CIC design system */
+        --surface:     #ffffff;
+        --surface-2:   #FBFAF7;
+        --surface-3:   #F6F5F2;
+        --ink:         #101822;
+        --ink-1:       #1b2a38;
+        --ink-2:       #3a4a5a;
+        --ink-3:       #6b7a88;
+        --ink-4:       #9aa7b3;
+        --line:        #e4e6ea;
+        --line-soft:   #eef0f3;
+        --accent:      #3C78AC;
+        --accent-deep: #285A84;
+        /* legacy aliases kept for JS-populated elements */
+        --ink-soft:    var(--ink-2);
+        --mist:        var(--surface-3);
+        --teal:        var(--accent);
+        --teal-deep:   var(--accent-deep);
+        --clay:        var(--line-soft);
+        --fog:         rgba(16, 24, 34, 0.07);
+        --card:        var(--surface);
+        --tab-inactive: var(--line-soft);
+        --map-wrap:    #FEFAF4;
+        --sun:         #f4b942;
+        --no-data:     #efe6d8;
         --heat-0: #00a85a;
         --heat-1: #ffd54a;
         --heat-2: #ff9b3a;
@@ -40,46 +53,44 @@
         box-sizing: border-box;
       }
 
+      html {
+        font-size: 120%;
+      }
+
       body {
         margin: 0;
         font-family: "Inter", system-ui, -apple-system, sans-serif;
-        color: var(--ink);
-        background:
-          radial-gradient(circle at 12% 20%, #ffe8c7 0%, transparent 55%),
-          radial-gradient(circle at 88% 18%, #d6f1ef 0%, transparent 50%),
-          linear-gradient(135deg, #f7f2e8, #f0f7f6);
+        color: var(--ink-1);
+        background: var(--surface-2);
         min-height: 100vh;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: linear-gradient(120deg, rgba(20, 34, 37, 0.05) 1px, transparent 1px);
-        background-size: 32px 32px;
-        opacity: 0.2;
-        pointer-events: none;
       }
 
       main {
         position: relative;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 48px 24px 64px;
+        padding: 34px 28px 64px;
         display: grid;
-        gap: 24px;
+        gap: 20px;
       }
 
       header {
-        display: grid;
-        gap: 12px;
-        align-items: start;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding-top: 0;
+        margin-bottom: 14px;
       }
 
       .logo {
-        width: 120px;
-        height: auto;
-        margin-bottom: 8px;
+        height: 54px;
+        width: auto;
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+      .page-title {
+        height: 42px;
+        width: auto;
+        flex-shrink: 0;
+        margin-top: 0;
       }
 
       .title {
@@ -116,17 +127,13 @@
       }
 
       .card {
-        background: var(--card);
-        border-radius: 18px;
-        box-shadow: 0 20px 50px rgba(20, 34, 37, 0.12);
-        padding: 24px;
+        background: var(--surface);
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        box-shadow: 0 1px 4px rgba(16, 24, 34, 0.06);
+        padding: 16px;
         display: grid;
-        gap: 16px;
-        animation: floatIn 0.6s ease-out;
-      }
-
-      .tab-panel .card {
-        animation: none;
+        gap: 12px;
       }
 
       .tab-slot {
@@ -169,7 +176,7 @@
       }
 
       .tab-button:focus-visible {
-        outline: 2px solid rgba(15, 139, 141, 0.5);
+        outline: 2px solid rgba(60, 120, 172, 0.5);
         outline-offset: 2px;
       }
 
@@ -261,9 +268,9 @@
 
       .network-card {
         padding: 12px 14px;
-        border-radius: 14px;
-        background: var(--mist);
-        border: 1px solid var(--fog);
+        border-radius: 10px;
+        background: var(--surface-3);
+        border: 1px solid var(--line);
         display: grid;
         gap: 10px;
       }
@@ -481,9 +488,9 @@
 
       .summary-item {
         padding: 12px 14px;
-        border-radius: 14px;
-        background: var(--mist);
-        border: 1px solid var(--fog);
+        border-radius: 8px;
+        background: var(--surface-3);
+        border: 1px solid var(--line-soft);
         display: grid;
         gap: 6px;
       }
@@ -608,13 +615,12 @@
       }
 
       .selected-network-pill {
-        background: var(--mist);
-        border: 1px solid var(--fog);
-        border-radius: 22px;
+        background: var(--surface-3);
+        border: 1px solid var(--line);
+        border-radius: 10px;
         padding: 18px;
         display: grid;
         gap: 6px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
       }
 
       .selected-network-pill--coverage {
@@ -965,18 +971,13 @@
         align-items: center;
       }
 
-      .map-header {
+      .map-title-strip {
         width: 100%;
-        align-items: flex-start;
-      }
-
-      .map-header-left {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
-        min-width: 0;
-        flex: 1 1 280px;
-        align-items: flex-start;
+        align-items: center;
+        min-height: 54px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line-soft);
       }
 
       .card-title {
@@ -999,18 +1000,6 @@
         gap: 8px;
         align-items: center;
       }
-
-      .map-header-controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-      }
-
-      .map-header-controls:empty {
-        display: none;
-      }
-
 
       .status-indicator {
         display: inline-flex;
@@ -1104,18 +1093,44 @@
       }
 
       .network-panel {
-        padding: 12px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(20, 34, 37, 0.12);
+        padding: 8px 0 12px 16px;
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        border-left: 2px solid var(--line);
         display: grid;
         gap: 12px;
+        align-content: start;
       }
 
       .network-heading {
         font-size: 0.85rem;
         color: var(--ink-soft);
         font-weight: 600;
+      }
+
+      .network-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 6px 14px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid var(--line-soft);
+        margin-bottom: 2px;
+      }
+
+      .network-count {
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent);
+        flex-shrink: 0;
+        padding-left: 8px;
       }
 
       .network-actions {
@@ -1153,10 +1168,7 @@
         width: 100%;
         min-width: 0;
         box-sizing: border-box;
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: 1px solid rgba(20, 34, 37, 0.12);
-        background: var(--mist);
+        padding: 4px 10px;
         font-weight: 600;
         color: var(--ink);
         font-size: 0.85rem;
@@ -1186,22 +1198,95 @@
         font-size: 0.85rem;
       }
 
-      .map-wrap {
-        border-radius: 16px;
-        background: var(--map-wrap);
-        padding: 16px;
-        margin-top: 28px;
-        border: 1px solid rgba(20, 34, 37, 0.08);
+      .network-panel .network-option {
         display: grid;
-        grid-template-columns: minmax(200px, 0.35fr) minmax(0, 1fr) minmax(220px, 0.45fr);
-        gap: 16px;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        transition: opacity 0.15s ease, color 0.15s ease;
+      }
+
+      .network-option-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .network-option-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .network-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .network-share-bar {
+        display: block;
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: #d0d4da;
+        overflow: hidden;
+      }
+
+      .network-share-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width 0.2s ease, background-color 0.15s ease;
+      }
+
+      .network-option.is-unselected {
+        color: var(--ink-4);
+      }
+
+      .network-option.is-unselected .network-name,
+      .network-option.is-unselected .network-count {
+        color: var(--ink-4);
+      }
+
+      .network-option.is-unselected .network-share-fill {
+        background: var(--ink-4);
+      }
+
+      .network-option.is-unselected .network-share-bar {
+        background: var(--line-soft);
+      }
+
+      .map-wrap {
+        border-radius: 12px;
+        background: var(--map-wrap);
+        padding: 8px;
+        margin-top: 12px;
+        border: 1px solid var(--line-soft);
+        display: grid;
+        grid-template-columns: minmax(640px, 1fr) 340px;
+        gap: 10px;
         align-items: start;
         position: relative;
       }
 
       .map-wrap.is-loading .map-canvas svg {
-        opacity: 0.35;
-        filter: grayscale(0.35);
+        opacity: 0.96;
+      }
+
+      .map-wrap.is-loading .map-svg-viewport .hex {
+        opacity: 0.74;
+        filter: saturate(0.55) brightness(1.08);
+      }
+
+      .map-wrap.is-loading .map-svg-viewport .hex-label {
+        opacity: 0.9;
       }
 
 
@@ -1212,12 +1297,13 @@
       .map-legend {
         grid-column: 1 / -1;
         justify-content: center;
+        margin-bottom: 6px;
       }
 
       .map-settings {
         position: absolute;
-        left: 16px;
-        bottom: 16px;
+        left: 12px;
+        top: 10px;
         z-index: 2;
         width: 40px;
         height: 40px;
@@ -1245,8 +1331,8 @@
 
       .map-settings-panel {
         position: absolute;
-        left: 16px;
-        bottom: 68px;
+        left: 12px;
+        top: 62px;
         width: auto;
         background: #fff;
         border-radius: 14px;
@@ -1306,27 +1392,35 @@
       }
 
       @media (min-width: 981px) {
-        .map-wrap .map-header {
-          grid-column: 1 / 3;
+        .map-wrap .map-title-strip {
+          grid-column: 1 / -1;
           grid-row: 1;
         }
 
-        .map-wrap .summary-card {
-          grid-column: 3;
-          grid-row: 1 / span 2;
-        }
-
-        .map-wrap .network-panel,
-        .map-wrap .map-aside {
+        .map-wrap #uk-toolbar-slot,
+        .map-wrap #cr-toolbar-slot {
+          grid-column: 1;
           grid-row: 2;
         }
 
         .map-wrap .map-canvas {
-          grid-row: 2;
+          grid-column: 1;
+          grid-row: 3;
+        }
+
+        .map-wrap .network-panel {
+          grid-column: 2;
+          grid-row: 2 / span 3;
+          align-self: stretch;
+          margin-top: -8px;
+          margin-bottom: -8px;
+          padding-top: 16px;
+          padding-bottom: 20px;
         }
 
         .map-wrap .map-legend {
-          grid-row: 3;
+          grid-column: 1;
+          grid-row: 4;
         }
       }
 
@@ -1392,8 +1486,8 @@
       }
 
       .window-option input:checked + .window-text {
-        background: rgba(244, 185, 66, 0.2);
-        box-shadow: inset 0 0 0 1px rgba(244, 185, 66, 0.35);
+        background: rgba(60, 120, 172, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(60, 120, 172, 0.25);
         font-weight: 600;
       }
 
@@ -1501,7 +1595,7 @@
       .hex {
         stroke: rgba(20, 34, 37, 0.12);
         stroke-width: 1;
-        transition: fill 0.2s ease, stroke 0.2s ease;
+        transition: fill 0.24s ease, stroke 0.2s ease, opacity 0.24s ease, filter 0.24s ease;
       }
 
       .hex:hover {
@@ -1804,7 +1898,11 @@
 
       @media (max-width: 720px) {
         main {
-          padding: 36px 18px 48px;
+          padding: 28px 18px 48px;
+        }
+
+        header {
+          margin-bottom: 24px;
         }
 
         .card {
@@ -1845,10 +1943,1124 @@
         .map-wrap {
           grid-template-columns: 1fr;
         }
+      }
+      /* ── Top summary grid ───────────────────────────────────── */
+      .top-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 720px) {
+        .top-summary-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      .top-summary-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(16, 24, 34, 0.04);
+      }
+      .top-summary-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-weight: 700;
+        color: var(--ink-3);
+        margin-bottom: 6px;
+      }
+      .top-summary-value {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1.15;
+      }
+      .top-summary-value-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .top-summary-hex {
+        flex-shrink: 0;
+        width: 18px;
+        height: 21px;
+      }
+      .top-summary-hex polygon {
+        fill: var(--hex-fill, var(--no-data));
+        transition: fill 0.3s ease;
+      }
+      .top-summary-subtext {
+        font-size: 0.8rem;
+        color: var(--ink-3);
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .top-summary-coverage-bar {
+        margin-top: 10px;
+        height: 12px;
+        border-radius: 999px;
+        background: #d0d4da;
+        overflow: hidden;
+        width: 100%;
+      }
+      .top-summary-coverage-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: #3c78ac;
+        transition: width 0.25s ease;
+      }
+      .top-summary-update-line {
+        font-size: 0.82rem;
+        color: var(--ink-3);
+        margin-top: 3px;
+      }
+      .top-summary-update-line span {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
 
-        .summary-card {
-          order: 3;
+      /* ── Typography ─────────────────────────────────────────── */
+      .card-title {
+        font-size: 1.15rem !important;
+        font-weight: 700;
+        color: var(--ink-1);
+        margin: 0;
+      }
+      .card-header {
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line-soft);
+        margin-bottom: 4px;
+      }
+
+      /* Prevent the global svg{width:100%;height:560px} rule from blowing up UI icons */
+      .map-topbar svg,
+      .toolbar svg,
+      .map-search svg {
+        width: auto;
+        height: auto;
+        display: inline;
+        flex-shrink: 0;
+        transition: none;
+      }
+
+      /* ── Toolbar ──────────────────────────────────────────────── */
+      #uk-toolbar-slot:empty,
+      #cr-toolbar-slot:empty {
+        display: none;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 6px 14px 8px;
+        border-bottom: 1px solid var(--line-soft);
+        background: var(--surface-2);
+        overflow: visible;
+      }
+      .toolbar-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--line);
+        flex-shrink: 0;
+      }
+      .field-label {
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--ink-3);
+        white-space: nowrap;
+      }
+
+      /* Segmented control */
+      .segmented {
+        display: inline-flex;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .segmented button {
+        border: 0;
+        background: transparent;
+        padding: 6px 14px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--ink-2);
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.12s, color 0.12s;
+      }
+      .segmented button.active {
+        background: var(--surface);
+        color: var(--accent-deep);
+        box-shadow: 0 1px 3px rgba(16, 24, 34, 0.10);
+        font-weight: 600;
+      }
+
+      /* Pollutant pills (toolbar) */
+      .pill-group {
+        display: inline-flex;
+        gap: 3px;
+      }
+      .pill {
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--ink-2);
+        font-size: 15px;
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+      }
+      .pill[aria-checked="true"],
+      .pill.active {
+        background: color-mix(in oklab, var(--accent) 12%, white);
+        color: var(--accent-deep);
+        border-color: color-mix(in oklab, var(--accent) 35%, white);
+        font-weight: 600;
+      }
+
+      /* Region popover */
+      .popover-wrap { position: relative; }
+      .popover-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 6px 11px;
+        border-radius: 6px;
+        font-size: 15px;
+        color: var(--ink-1);
+        font-family: inherit;
+        cursor: pointer;
+        font-weight: 500;
+        transition: border-color 0.12s;
+      }
+      .popover-trigger.open {
+        border-color: var(--accent);
+        color: var(--accent-deep);
+      }
+      .popover-trigger .chevron { transition: transform 0.15s; }
+      .popover-trigger.open .chevron { transform: rotate(180deg); }
+      .popover-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 8px 28px rgba(16, 24, 34, 0.14);
+        min-width: 210px;
+        padding: 6px;
+        z-index: 200;
+      }
+      .popover-group-head {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--ink-4);
+        padding: 7px 10px 3px;
+      }
+      .popover-item {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+      .popover-item:hover { background: var(--surface-2); }
+      .popover-item.active {
+        color: var(--accent-deep);
+        font-weight: 600;
+        background: color-mix(in oklab, var(--accent) 8%, white);
+      }
+      .popover-item.active::after {
+        content: '✓';
+        margin-left: auto;
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      .popover-divider {
+        height: 1px;
+        background: var(--line-soft);
+        margin: 4px 6px;
+      }
+      .toolbar-region-section {
+        display: none;
+        align-items: center;
+        gap: 10px;
+      }
+      .toolbar-region-section.visible {
+        display: flex;
+      }
+
+      /* Map topbar — floating over canvas */
+      .map-canvas { position: relative; }
+      .map-topbar {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        max-width: calc(100% - 20px);
+        z-index: 20;
+      }
+      .map-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: clamp(340px, 36vw, 420px);
+        min-height: 36px;
+        border: 1px solid rgba(16, 24, 34, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 1px 5px rgba(16, 24, 34, 0.1);
+        backdrop-filter: blur(4px);
+        overflow: visible;
+      }
+      .map-search:focus-within {
+        border-color: color-mix(in oklab, var(--accent) 45%, #6e879c);
+        box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 16%, transparent), 0 2px 10px rgba(16, 24, 34, 0.14);
+      }
+      .map-search-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8fa0ae;
+        flex-shrink: 0;
+        margin-left: 10px;
+        pointer-events: none;
+      }
+      .map-search-input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        outline: none;
+        padding: 8px 10px 8px 8px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--ink-1);
+        background: transparent;
+      }
+      .map-search-input::placeholder {
+        color: color-mix(in oklab, var(--ink-4) 78%, white);
+      }
+      .map-search-input::-webkit-search-cancel-button,
+      .map-search-input::-webkit-search-decoration {
+        -webkit-appearance: none;
+        appearance: none;
+        display: none;
+      }
+      .map-search-input::-ms-clear,
+      .map-search-input::-ms-reveal {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+      .map-search-clear {
+        border: none;
+        background: transparent;
+        color: var(--ink-4);
+        width: 26px;
+        height: 26px;
+        margin-right: 6px;
+        border-radius: 999px;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .map-search-clear:hover {
+        background: rgba(16, 24, 34, 0.08);
+        color: var(--ink-2);
+      }
+      .map-search-results {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        width: max(100%, 460px);
+        max-width: min(620px, calc(100vw - 32px));
+        max-height: min(58vh, 420px);
+        overflow-y: auto;
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        box-shadow: 0 12px 30px rgba(16, 24, 34, 0.16);
+        z-index: 260;
+      }
+      .map-search-result {
+        width: 100%;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        text-align: left;
+        cursor: pointer;
+      }
+      .map-search-result:hover,
+      .map-search-result.is-active {
+        background: color-mix(in oklab, var(--accent) 8%, white);
+      }
+      .map-search-result-type {
+        font-size: 10px;
+        line-height: 1.2;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--ink-4);
+        min-width: 88px;
+        padding-top: 2px;
+        white-space: pre-line;
+      }
+      .map-search-result-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+        flex: 1;
+      }
+      .map-search-result-primary {
+        font-size: 14px;
+        color: var(--ink-1);
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .map-search-result-secondary {
+        font-size: 12px;
+        color: var(--ink-3);
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .map-search-message {
+        font-size: 12px;
+        line-height: 1.35;
+        color: var(--ink-3);
+        padding: 8px 10px;
+      }
+      @media (max-width: 980px) {
+        .map-search {
+          width: min(100%, 380px);
         }
+        .map-search-results {
+          width: max(100%, 420px);
+        }
+      }
+      @media (max-width: 720px) {
+        .map-topbar {
+          left: 12px;
+          right: 12px;
+          gap: 6px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        .map-search {
+          width: min(100%, 340px);
+          max-width: calc(100vw - 24px);
+          order: 1;
+        }
+        .map-search-results {
+          width: 100%;
+          max-width: calc(100vw - 24px);
+          max-height: min(52vh, 340px);
+        }
+        .map-search-result-type {
+          min-width: 74px;
+        }
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--ink-2);
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(16, 24, 34, 0.12);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 1px 4px rgba(16, 24, 34, 0.08);
+      }
+      .btn-refresh {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        color: #fff;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+        box-shadow: 0 1px 4px rgba(16, 24, 34, 0.12);
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      .btn-refresh:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(16, 24, 34, 0.16);
+      }
+      /* Hide old tab bar (kept in DOM for JS) */
+      .tab-bar { display: none; }
+      /* Collapse old actions block (status+refresh moved to map-topbar) */
+      .map-header .actions { display: none; }
+
+      /* ══════════════════════════════════════════════════════
+         LAYOUT TEST ONLY — cohesive dashboard card layout
+         ══════════════════════════════════════════════════════ */
+
+      #tab-panel-uk > .card:first-of-type,
+      #tab-panel-cr > .card:first-of-type {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        gap: 0;
+      }
+
+      .map-dashboard-card {
+        background: var(--map-wrap);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 4px 14px rgba(16, 24, 34, 0.08);
+        padding: 18px;
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        grid-template-rows: auto auto auto auto auto;
+        column-gap: 0;
+        row-gap: 0;
+        align-items: start;
+        position: relative;
+      }
+
+      .map-title-strip {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        min-height: 0;
+        padding: 0 2px 18px;
+        border: 0;
+        margin: 0;
+      }
+
+      .map-dashboard-title {
+        font-size: clamp(1.35rem, 1.65vw, 1.5rem) !important;
+        font-weight: 700;
+        margin: 0;
+        color: var(--ink-1);
+      }
+
+      .map-summary-grid {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0 0 12px;
+        padding: 0;
+      }
+
+      .map-summary-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(16, 24, 34, 0.04);
+      }
+
+      .map-summary-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-weight: 700;
+        color: var(--ink-3);
+        margin-bottom: 6px;
+      }
+
+      .map-summary-value {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1.15;
+      }
+
+      .map-summary-value-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .map-summary-hex {
+        flex-shrink: 0;
+        width: 18px;
+        height: 21px;
+      }
+
+      .map-summary-hex polygon {
+        fill: var(--hex-fill, var(--no-data));
+        transition: fill 0.3s ease;
+      }
+
+      .map-summary-subtext {
+        font-size: 0.8rem;
+        color: var(--ink-3);
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .map-summary-coverage-bar {
+        margin-top: 10px;
+        height: 12px;
+        border-radius: 999px;
+        background: #d0d4da;
+        overflow: hidden;
+        width: 100%;
+      }
+
+      .map-summary-coverage-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: #3c78ac;
+        transition: width 0.25s ease;
+      }
+
+      .map-summary-update-line {
+        font-size: 0.82rem;
+        color: var(--ink-3);
+        margin-top: 3px;
+      }
+
+      .map-summary-update-line span {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .map-controls-row {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        margin: 0 0 0 -18px;
+        padding: 0 0 0 18px;
+        border-top: 1px solid var(--line-soft);
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .map-dashboard-card #uk-toolbar-slot,
+      .map-dashboard-card #cr-toolbar-slot {
+        grid-column: 1;
+        grid-row: 3;
+      }
+
+      .toolbar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 6px 14px 8px;
+        border-bottom: none;
+        background: var(--surface-2);
+        border-radius: 0;
+        overflow: visible;
+      }
+
+      .map-dashboard-card .map-canvas-wrap {
+        grid-column: 1;
+        grid-row: 4;
+        --map-footer-safe: 64px;
+        border: 1px solid var(--line-soft);
+        border-radius: 0 0 0 14px;
+        background: var(--map-wrap);
+        margin-left: -18px;
+        margin-bottom: -18px;
+        min-width: 0;
+        min-height: 700px;
+        overflow: hidden;
+      }
+
+      .map-svg-viewport {
+        position: absolute;
+        inset: 0 0 var(--map-footer-safe) 0;
+        overflow: visible;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .map-svg-viewport.is-dragging {
+        cursor: grabbing;
+      }
+
+      .map-svg-viewport > svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .map-svg-viewport::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        opacity: 0;
+        background: linear-gradient(
+          35deg,
+          rgba(255, 255, 255, 0) 34%,
+          rgba(255, 255, 255, 0.3) 50%,
+          rgba(255, 255, 255, 0) 66%
+        );
+        background-size: 240% 240%;
+        background-position: 0% 100%;
+      }
+
+      .map-wrap.is-loading .map-svg-viewport::after {
+        animation: hexMapLoadingShimmer 2.1s ease-in-out infinite;
+      }
+
+      @keyframes hexMapLoadingShimmer {
+        0% {
+          opacity: 0;
+          background-position: 0% 100%;
+        }
+        18% {
+          opacity: 0.85;
+        }
+        82% {
+          opacity: 0.85;
+        }
+        100% {
+          opacity: 0;
+          background-position: 100% 0%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .map-wrap.is-loading .map-svg-viewport::after {
+          animation: none;
+          opacity: 0;
+        }
+      }
+
+      .map-canvas {
+        position: relative;
+      }
+
+      .map-topbar {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 55;
+      }
+
+      .map-floating-search {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: clamp(340px, 38vw, 420px);
+        z-index: 70;
+      }
+
+      .map-search-results {
+        width: max(100%, 460px);
+        max-width: min(620px, calc(100vw - 32px));
+        z-index: 280;
+      }
+
+      .map-floating-tools {
+        left: 12px;
+        top: 64px;
+        z-index: 58;
+      }
+
+      .map-settings-panel {
+        left: 12px;
+        top: 114px;
+        z-index: 130;
+      }
+
+      .map-zoom-controls {
+        position: absolute;
+        left: 12px;
+        bottom: 8px;
+        display: grid;
+        gap: 0;
+        width: 40px;
+        border: 1px solid rgba(20, 34, 37, 0.18);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.94);
+        z-index: 58;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+
+      .map-zoom-controls:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(60, 120, 172, 0.22);
+        border-color: rgba(60, 120, 172, 0.35);
+      }
+
+      .map-zoom-controls button + button {
+        border-top: 1px solid rgba(20, 34, 37, 0.16);
+      }
+
+      .map-zoom-controls button {
+        border: none;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink-1);
+        border-radius: 0;
+        font-weight: 700;
+        font-size: 0.84rem;
+        min-height: 34px;
+        min-width: 0;
+        width: 100%;
+        padding: 0;
+        cursor: pointer;
+        box-shadow: none;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .map-zoom-controls button[data-zoom-action="in"],
+      .map-zoom-controls button[data-zoom-action="out"] {
+        min-height: 36px;
+        height: 36px;
+      }
+
+      .map-zoom-controls button[data-zoom-action="reset"] {
+        min-width: 0;
+        min-height: 32px;
+        font-size: 0.6rem;
+        letter-spacing: 0.02em;
+        font-weight: 700;
+      }
+
+      .zoom-icon {
+        width: 28px;
+        height: 28px;
+        display: block;
+        transform: translateX(1px);
+      }
+
+      .zoom-icon .zoom-ring,
+      .zoom-icon .zoom-handle,
+      .zoom-icon .zoom-mark {
+        stroke: currentColor;
+        stroke-width: 4;
+        stroke-linecap: round;
+      }
+
+      .zoom-icon .zoom-ring {
+        fill: none;
+      }
+
+      .zoom-icon .zoom-handle,
+      .zoom-icon .zoom-mark {
+        fill: none;
+      }
+
+      .map-floating-tools {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(20, 34, 37, 0.12);
+        box-shadow: none;
+      }
+
+      .map-search-clear {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        width: 26px;
+        height: 26px;
+      }
+
+      .map-floating-tools,
+      .map-zoom-controls button,
+      .btn-refresh,
+      .network-actions button,
+      .toolbar button,
+      .tab-button,
+      .pill,
+      .popover-trigger {
+        box-shadow: none;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          border-color 0.15s ease,
+          background-color 0.15s ease,
+          color 0.15s ease;
+      }
+
+      .map-floating-tools:hover,
+      .btn-refresh:hover,
+      .network-actions button:hover:not(:disabled),
+      .toolbar button:hover,
+      .tab-button:hover,
+      .pill:hover,
+      .popover-trigger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(60, 120, 172, 0.22);
+        border-color: rgba(60, 120, 172, 0.35);
+      }
+
+      .map-search-clear:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+
+      .map-floating-tools:hover {
+        background: rgba(255, 255, 255, 0.98);
+      }
+
+      .map-zoom-controls button:hover {
+        background: rgba(255, 255, 255, 0.98);
+      }
+
+      .map-floating-tools:active,
+      .map-zoom-controls button:active,
+      .btn-refresh:active,
+      .network-actions button:active:not(:disabled),
+      .toolbar button:active,
+      .tab-button:active,
+      .pill:active,
+      .popover-trigger:active {
+        transform: translateY(0);
+        box-shadow: none;
+        background-color: rgba(246, 249, 252, 0.96);
+      }
+
+      .map-zoom-controls:active {
+        transform: translateY(0);
+        box-shadow: none;
+      }
+
+      .map-search-clear:active {
+        transform: none;
+        box-shadow: none;
+        background: transparent;
+      }
+
+      .map-floating-tools:focus-visible,
+      .map-zoom-controls button:focus-visible,
+      .btn-refresh:focus-visible,
+      .network-actions button:focus-visible,
+      .toolbar button:focus-visible,
+      .tab-button:focus-visible,
+      .pill:focus-visible,
+      .popover-trigger:focus-visible {
+        outline: 2px solid rgba(60, 120, 172, 0.45);
+        outline-offset: 2px;
+      }
+
+      .map-search-clear:focus-visible {
+        outline: none;
+      }
+
+      .map-dashboard-card .network-panel {
+        grid-column: 2;
+        grid-row: 3 / span 3;
+        border-left: 2px solid var(--line);
+        border-top: 1px solid var(--line-soft);
+        border-radius: 0;
+        background: var(--map-wrap);
+        padding: 6px 12px 18px 12px;
+        margin-top: 0;
+        margin-right: 0;
+        margin-bottom: -18px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        align-self: stretch;
+      }
+
+      .map-dashboard-card .network-list-header {
+        margin: 0;
+        padding: 6px 10px 8px 14px;
+      }
+
+      .map-dashboard-card .map-legend {
+        grid-column: 1;
+        grid-row: 5;
+        justify-content: center;
+        margin-bottom: 2px;
+      }
+
+      @media (max-width: 1200px) {
+        .map-dashboard-card {
+          grid-template-columns: minmax(0, 1fr) 300px;
+        }
+        .map-summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 980px) {
+        .map-dashboard-card {
+          grid-template-columns: 1fr;
+          padding: 16px;
+          row-gap: 10px;
+        }
+        .map-summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .map-controls-row {
+          grid-column: 1;
+          grid-row: 3;
+          margin: 0;
+          padding: 0;
+        }
+        .map-dashboard-card .map-canvas-wrap {
+          grid-column: 1;
+          grid-row: 4;
+          border: none;
+          border-radius: 0;
+          background: var(--map-wrap);
+          margin-left: 0;
+          margin-bottom: 0;
+        }
+        .map-dashboard-card .network-panel {
+          grid-column: 1;
+          grid-row: 5;
+          border-left: none;
+          border-top: 1px solid var(--line);
+          padding: 10px 0 0;
+          margin-right: 0;
+          margin-bottom: 0;
+          min-height: 0;
+        }
+        .map-zoom-controls {
+          bottom: 12px;
+        }
+        .map-dashboard-card .map-legend {
+          grid-column: 1;
+          grid-row: 6;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .map-summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .map-summary-card {
+          padding: 13px 14px;
+        }
+        .map-floating-search {
+          width: min(100%, 340px);
+          max-width: calc(100vw - 32px);
+        }
+        .map-search-results {
+          width: 100%;
+          max-width: calc(100vw - 32px);
+          max-height: min(52vh, 340px);
+        }
+        .map-topbar {
+          top: 16px;
+          right: 16px;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .map-summary-grid {
+          grid-template-columns: 1fr;
+        }
+        .map-dashboard-card {
+          padding: 14px;
+        }
+        .map-floating-search {
+          width: calc(100% - 32px);
+        }
+      }
+
+      /* ── Floating legend pill ───────────────────────────────── */
+      .legend-pill {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: inline-flex !important;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        white-space: nowrap;
+        background: color-mix(in srgb, var(--no-data) 78%, white 22%);
+        border: 1px solid rgba(20, 34, 37, 0.12);
+        border-radius: 999px;
+        padding: 10px 16px;
+        box-shadow: 0 1px 6px rgba(16, 24, 34, 0.1);
+        font-size: 0.85rem;
+        line-height: 1.2;
+        color: var(--ink-soft);
+        z-index: 15;
+        grid-template-columns: unset;
+        margin: 0;
+      }
+
+      .legend-pill > span:first-child,
+      .legend-pill > #legend-label,
+      .legend-pill > #cr-legend-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 18px;
+        text-align: center;
+        justify-self: auto;
+      }
+
+      .legend-pill .legend-bar-wrap {
+        width: 200px;
+        height: 22px;
+      }
+
+      .legend-pill .legend-scale {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        justify-self: unset;
+        position: relative;
+        top: -2px;
+      }
+
+      .legend-pill .legend-tick-label {
+        top: 17px;
+      }
+
+      /* Keep map controls/legend close to map frame */
+      .map-canvas-wrap {
+        padding-bottom: 0;
       }
     </style>
   </head>
@@ -1856,202 +3068,282 @@
     <div id="cic-sidebar-mount"></div>
     <main>
       <header>
-        <img src="images/UK-AQ-logo-alpha-v2.svg" alt="UK AQ Logo" class="logo" />
+        <img src="images/UK-AQ-Logov2-1Line.svg" alt="UK AQ Logo" class="logo" />
+        <img src="images/UK-AQ-hex-map.svg" alt="Hex Map" class="page-title" />
       </header>
 
       <div class="tab-panel" id="tab-panel-uk" role="tabpanel" aria-labelledby="tab-uk">
+
+        <!-- ── Top summary boxes moved inside map card (layout test) ── -->
+        <!-- Hidden anchors for old summary-* IDs (existing JS still references them) -->
+        <span id="summary-stations" hidden></span>
+        <span id="summary-highest-label" hidden></span>
+        <span id="summary-lowest-label" hidden></span>
+        <span id="summary-highest-value" hidden></span>
+        <span id="summary-highest-datetime" hidden></span>
+        <span id="summary-highest-connector" hidden></span>
+        <span id="summary-highest-name" hidden></span>
+        <span id="summary-lowest-value" hidden></span>
+        <span id="summary-lowest-datetime" hidden></span>
+        <span id="summary-lowest-connector" hidden></span>
+        <span id="summary-lowest-name" hidden></span>
+
         <section class="card">
           <div class="hint" id="endpoint-hint" hidden></div>
           <div class="error" id="error" hidden></div>
           <div class="map-layout">
             <div class="map-panel">
-              <div class="map-wrap">
-                <div class="card-header map-header">
-                  <div class="map-header-left">
-                    <h2 class="card-title" id="map-title">Latest PM2.5 by constituency</h2>
-                    <div class="pollutant-slot" data-pollutant-slot>
-                      <div class="pollutant-selector" id="pollutant-selector" role="radiogroup" aria-label="Pollutant">
-                        <button type="button" class="pill-button" data-pollutant="pm25" role="radio" aria-checked="true" tabindex="0">
-                          PM2.5
+              <div class="map-wrap map-dashboard-card map-main-grid">
+                <div class="map-title-strip">
+                  <h2 class="card-title map-dashboard-title" id="map-title">Latest PM2.5 by constituency</h2>
+                </div>
+                <div id="uk-toolbar-slot" class="map-controls-row">
+                  <!-- ── Toolbar: scope switcher + region popover + pollutant pills ── -->
+                  <div class="toolbar" id="main-toolbar">
+                    <span class="field-label">View</span>
+                    <div class="segmented">
+                      <button type="button" id="toolbar-tab-uk" class="active">United Kingdom</button>
+                      <button type="button" id="toolbar-tab-cr">Countries &amp; Regions</button>
+                    </div>
+
+                    <div class="toolbar-region-section" id="toolbar-region-section">
+                      <div class="toolbar-divider"></div>
+                      <div class="popover-wrap" id="toolbar-popover-wrap">
+                        <button type="button" class="popover-trigger" id="toolbar-region-trigger" aria-haspopup="true" aria-expanded="false">
+                          <span id="toolbar-region-label">London</span>
+                          <svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                          </svg>
                         </button>
-                        <button type="button" class="pill-button" data-pollutant="pm10" role="radio" aria-checked="false" tabindex="-1">
-                          PM10
-                        </button>
-                        <button type="button" class="pill-button" data-pollutant="no2" role="radio" aria-checked="false" tabindex="-1">
-                          NO2
-                        </button>
+                        <div class="popover-menu" id="toolbar-region-menu" hidden>
+                          <div class="popover-group-head">Countries</div>
+                          <div class="popover-item" data-region="Northern Ireland">Northern Ireland</div>
+                          <div class="popover-item" data-region="Scotland">Scotland</div>
+                          <div class="popover-item" data-region="Wales">Wales</div>
+                          <div class="popover-divider"></div>
+                          <div class="popover-group-head">English Regions</div>
+                          <div class="popover-item" data-region="East Midlands">East Midlands</div>
+                          <div class="popover-item" data-region="East of England">East of England</div>
+                          <div class="popover-item" data-region="London">London</div>
+                          <div class="popover-item" data-region="North East">North East</div>
+                          <div class="popover-item" data-region="North West">North West</div>
+                          <div class="popover-item" data-region="South East">South East</div>
+                          <div class="popover-item" data-region="South West">South West</div>
+                          <div class="popover-item" data-region="West Midlands">West Midlands</div>
+                          <div class="popover-item" data-region="Yorkshire and The Humber">Yorkshire and The Humber</div>
+                        </div>
                       </div>
                     </div>
-                    <div class="map-header-controls" data-scope-controls></div>
-                  </div>
-                  <div class="actions">
-                    <span class="status-indicator" data-state="loading">
-                      <span class="pulse-dot" aria-hidden="true"></span>
-                    <span class="hint" id="status">Loading...</span>
-                    </span>
-                    <button id="refresh">Refresh</button>
+
+                    <div class="toolbar-divider"></div>
+                    <span class="field-label">Pollutant</span>
+                    <div class="pill-group">
+                      <div class="pollutant-selector" id="pollutant-selector" role="radiogroup" aria-label="Pollutant">
+                        <button type="button" class="pill" data-pollutant="pm25" role="radio" aria-checked="true" tabindex="0">PM2.5</button>
+                        <button type="button" class="pill" data-pollutant="pm10" role="radio" aria-checked="false" tabindex="-1">PM10</button>
+                        <button type="button" class="pill" data-pollutant="no2" role="radio" aria-checked="false" tabindex="-1">NO₂</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="tab-slot" data-tab-slot>
+                <div class="tab-slot" data-tab-slot style="display:none">
                   <div class="tab-bar" role="tablist" aria-label="Map views">
-                    <button type="button" class="tab-button" id="tab-uk" role="tab" aria-selected="true" aria-controls="tab-panel-uk">
-                      United Kingdom
-                    </button>
-                    <button type="button" class="tab-button" id="tab-cr" role="tab" aria-selected="false" aria-controls="tab-panel-cr">
-                      Countries & Regions
-                    </button>
+                    <button type="button" class="tab-button" id="tab-uk" role="tab" aria-selected="true" aria-controls="tab-panel-uk">United Kingdom</button>
+                    <button type="button" class="tab-button" id="tab-cr" role="tab" aria-selected="false" aria-controls="tab-panel-cr">Countries &amp; Regions</button>
                   </div>
                 </div>
+                <!-- ── Summary strip inside map card (layout test) ── -->
+                <section class="map-summary-strip map-summary-grid" aria-label="Selected air quality summary">
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Total Active Sensors</div>
+                    <div class="map-summary-value" id="top-total-sensors">—</div>
+                    <div class="map-summary-subtext">from selected networks</div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Coverage</div>
+                    <div class="map-summary-value" id="top-coverage-percent">—</div>
+                    <div class="map-summary-subtext" id="top-coverage-detail">—</div>
+                    <div
+                      class="map-summary-coverage-bar"
+                      id="top-coverage-bar"
+                      role="progressbar"
+                      aria-label="Coverage percentage"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow="0"
+                    >
+                      <span class="map-summary-coverage-fill" id="top-coverage-fill"></span>
+                    </div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label" id="top-highest-label">Highest PM2.5</div>
+                    <div class="map-summary-value map-summary-value-with-icon">
+                      <svg class="map-summary-hex" id="top-highest-hex" aria-hidden="true" viewBox="0 0 17.32 20" xmlns="http://www.w3.org/2000/svg"><polygon points="8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5"/></svg>
+                      <span id="top-highest-value">—</span>
+                    </div>
+                    <div class="map-summary-subtext" id="top-highest-sensor">—</div>
+                    <div class="map-summary-subtext" id="top-highest-network">—</div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Updates</div>
+                    <div class="map-summary-update-line">Latest: <span id="top-latest-update">—</span></div>
+                    <div class="map-summary-update-line">Oldest: <span id="top-oldest-update">—</span></div>
+                  </article>
+                </section>
+                <div class="map-canvas map-canvas-wrap">
+                  <div class="map-search map-floating-search" data-map-search data-map-kind="uk">
+                    <span class="map-search-icon" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    </span>
+                    <input
+                      id="uk-map-search-input"
+                      class="map-search-input"
+                      type="search"
+                      autocomplete="off"
+                      autocapitalize="characters"
+                      spellcheck="false"
+                      role="combobox"
+                      aria-autocomplete="list"
+                      aria-expanded="false"
+                      aria-controls="uk-map-search-results"
+                      placeholder="Search postcodes, constituencies, sensors…"
+                    />
+                    <button type="button" class="map-search-clear" aria-label="Clear search" hidden>&times;</button>
+                    <div class="map-search-results" id="uk-map-search-results" role="listbox" hidden></div>
+                  </div>
+                  <div class="map-topbar">
+                  <span class="status-indicator status-pill" data-state="loading">
+                    <span class="pulse-dot" aria-hidden="true"></span>
+                    <span class="hint" id="status">Loading...</span>
+                  </span>
+                  <button class="btn-refresh" id="refresh">Refresh</button>
+                </div>
+                <div class="map-svg-viewport">
+                  <svg id="hex-map" role="img" aria-label="Hex cartogram of PM2.5 by constituency"></svg>
+                </div>
+                <div class="map-settings-panel" id="map-settings-panel" role="dialog" aria-label="Sensor data settings">
+                  <div class="map-settings-header">
+                    <span class="map-settings-title">Sensor Data</span>
+                    <button type="button" class="map-settings-close" id="map-settings-close" aria-label="Close colour scale">
+                      <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
+                    </button>
+                  </div>
+                  <div class="map-settings-section">
+                    <span class="map-settings-label">Updated within:</span>
+                    <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
+                      <label class="window-option">
+                        <input type="radio" name="averagingWindow" value="3h" />
+                        <span class="window-text">3 Hours</span>
+                      </label>
+                      <label class="window-option">
+                        <input type="radio" name="averagingWindow" value="6h" />
+                        <span class="window-text">6 Hours</span>
+                      </label>
+                      <label class="window-option">
+                        <input type="radio" name="averagingWindow" value="1d" />
+                        <span class="window-text">1 Day</span>
+                      </label>
+                      <label class="window-option">
+                        <input type="radio" name="averagingWindow" value="7d" />
+                        <span class="window-text">7 Days</span>
+                      </label>
+                      <label class="window-option">
+                        <input type="radio" name="averagingWindow" value="all" checked />
+                        <span class="window-text">No limit</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="map-settings-section">
+                    <span class="map-settings-label">Averaging Method</span>
+                    <div class="map-settings-options metric-group" role="radiogroup" aria-label="Averaging method" data-active="mean">
+                      <span class="metric-toggle" aria-hidden="true"></span>
+                      <label class="colour-scale-option" data-value="mean">
+                        <input type="radio" name="metricSelect" value="mean" checked />
+                        <span class="colour-scale-text">Average (mean)</span>
+                      </label>
+                      <label class="colour-scale-option" data-value="median">
+                        <input type="radio" name="metricSelect" value="median" />
+                        <span class="colour-scale-text">Typical (median)</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="map-settings-section">
+                    <span class="map-settings-label">Colour Scale</span>
+                    <div class="map-settings-options colour-scale-group" role="radiogroup" aria-label="Colour scale options" data-active="power">
+                      <span class="colour-scale-toggle" aria-hidden="true"></span>
+                      <label class="colour-scale-option" data-value="power">
+                        <input type="radio" name="colourScale" value="power" />
+                        <span class="colour-scale-text">Power-eased</span>
+                      </label>
+                      <label class="colour-scale-option" data-value="linear">
+                        <input type="radio" name="colourScale" value="linear" />
+                        <span class="colour-scale-text">Linear</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="map-settings map-floating-tools" aria-label="Map settings" aria-controls="map-settings-panel" aria-expanded="false">
+                  <img src="images/settings-cog.svg" alt="" aria-hidden="true" />
+                </button>
+                <div class="map-zoom-controls" data-map-zoom-controls data-map-svg-id="hex-map">
+                  <button type="button" data-zoom-action="in" aria-label="Zoom in">
+                    <svg class="zoom-icon" viewBox="0 0 64 64" aria-hidden="true">
+                      <circle class="zoom-ring" cx="30" cy="24" r="15"></circle>
+                      <line class="zoom-handle" x1="20" y1="36" x2="10" y2="49"></line>
+                      <line class="zoom-mark" x1="23" y1="24" x2="37" y2="24"></line>
+                      <line class="zoom-mark" x1="30" y1="17" x2="30" y2="31"></line>
+                    </svg>
+                  </button>
+                  <button type="button" data-zoom-action="reset" aria-label="Reset zoom">Reset</button>
+                  <button type="button" data-zoom-action="out" aria-label="Zoom out">
+                    <svg class="zoom-icon" viewBox="0 0 64 64" aria-hidden="true">
+                      <circle class="zoom-ring" cx="30" cy="24" r="15"></circle>
+                      <line class="zoom-handle" x1="20" y1="36" x2="10" y2="49"></line>
+                      <line class="zoom-mark" x1="23" y1="24" x2="37" y2="24"></line>
+                    </svg>
+                  </button>
+                </div>
+                <!-- ── Floating legend pill (layout test) ── -->
+                <div class="legend map-legend legend-pill">
+                  <span id="legend-pollutant">PM2.5 (µg/m³)</span>
+                  <div
+                    id="legend-scale"
+                    class="legend-scale"
+                    title="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
+                    aria-label="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
+                  >
+                    <span class="legend-value" id="legend-min">-</span>
+                    <div class="legend-bar-wrap" aria-hidden="true">
+                      <span class="legend-bar"></span>
+                      <span class="legend-tick" data-value="10"></span>
+                      <span class="legend-tick" data-value="20"></span>
+                      <span class="legend-tick" data-value="30"></span>
+                      <span class="legend-tick" data-value="40"></span>
+                      <span class="legend-tick-label" data-value="10">10</span>
+                      <span class="legend-tick-label" data-value="20">20</span>
+                      <span class="legend-tick-label" data-value="30">30</span>
+                      <span class="legend-tick-label" data-value="40">40</span>
+                    </div>
+                    <span class="legend-value" id="legend-max">-</span>
+                  </div>
+                  <span id="legend-label"></span>
+                </div>
+              </div>
               <aside class="network-panel">
+                <div class="network-list-header">
+                  <span>Network</span>
+                  <span>Active sensors</span>
+                </div>
+                <div class="network-list" id="network-list">
+                  <span class="network-empty">Loading networks...</span>
+                </div>
                 <div class="network-actions" role="group" aria-label="Network selection actions">
                   <button type="button" id="network-select-all">Select All</button>
                   <button type="button" id="network-deselect-all">Deselect All</button>
                 </div>
-                <span class="hint">Networks</span>
-                <div class="network-list" id="network-list">
-                  <span class="network-empty">Loading networks...</span>
-                </div>
               </aside>
-              <div class="map-canvas">
-                <svg id="hex-map" role="img" aria-label="Hex cartogram of PM2.5 by constituency"></svg>
-              </div>
-              <aside class="summary-card" id="overall-summary">
-                <h3 class="summary-title" id="summary-overall-title">PM2.5 summary</h3>
-                <div class="summary-list">
-                  <div class="summary-item">
-                    <span class="summary-label">Number of sensors</span>
-                    <span class="summary-value" id="summary-stations">-</span>
-                  </div>
-                  <div class="summary-item">
-                    <span class="summary-label" id="summary-highest-label">Highest PM2.5</span>
-                    <span class="summary-value" id="summary-highest-value">-</span>
-                    <span class="summary-datetime" id="summary-highest-datetime">-</span>
-                    <span class="summary-connector" id="summary-highest-connector">-</span>
-                    <span class="summary-name" id="summary-highest-name">-</span>
-                  </div>
-                  <div class="summary-item">
-                    <span class="summary-label" id="summary-lowest-label">Lowest PM2.5 (Non-zero)</span>
-                    <span class="summary-value" id="summary-lowest-value">-</span>
-                    <span class="summary-datetime" id="summary-lowest-datetime">-</span>
-                    <span class="summary-connector" id="summary-lowest-connector">-</span>
-                    <span class="summary-name" id="summary-lowest-name">-</span>
-                  </div>
-                </div>
-              </aside>
-              <div class="legend map-legend">
-                <span id="legend-pollutant">PM2.5 (µg/m³)</span>
-                <div
-                  id="legend-scale"
-                  class="legend-scale"
-                  title="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
-                  aria-label="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
-                >
-                  <span class="legend-value" id="legend-min">-</span>
-                  <div class="legend-bar-wrap" aria-hidden="true">
-                    <span class="legend-bar"></span>
-                    <span class="legend-tick" data-value="10"></span>
-                    <span class="legend-tick" data-value="20"></span>
-                    <span class="legend-tick" data-value="30"></span>
-                    <span class="legend-tick" data-value="40"></span>
-                    <span class="legend-tick-label" data-value="10">10</span>
-                    <span class="legend-tick-label" data-value="20">20</span>
-                    <span class="legend-tick-label" data-value="30">30</span>
-                    <span class="legend-tick-label" data-value="40">40</span>
-                  </div>
-                  <span class="legend-value" id="legend-max">-</span>
-                </div>
-                <span id="legend-label"></span>
-              </div>
-              <div class="map-settings-panel" id="map-settings-panel" role="dialog" aria-label="Sensor data settings">
-                <div class="map-settings-header">
-                  <span class="map-settings-title">Sensor Data</span>
-                  <button type="button" class="map-settings-close" id="map-settings-close" aria-label="Close colour scale">
-                    <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
-                  </button>
-                </div>
-                <div class="map-settings-section">
-                  <span class="map-settings-label">Updated within:</span>
-                  <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
-                    <label class="window-option">
-                      <input type="radio" name="averagingWindow" value="3h" />
-                      <span class="window-text">3 Hours</span>
-                    </label>
-                    <label class="window-option">
-                      <input type="radio" name="averagingWindow" value="6h" />
-                      <span class="window-text">6 Hours</span>
-                    </label>
-                    <label class="window-option">
-                      <input type="radio" name="averagingWindow" value="1d" />
-                      <span class="window-text">1 Day</span>
-                    </label>
-                    <label class="window-option">
-                      <input type="radio" name="averagingWindow" value="7d" />
-                      <span class="window-text">7 Days</span>
-                    </label>
-                    <label class="window-option">
-                      <input type="radio" name="averagingWindow" value="all" checked />
-                      <span class="window-text">No limit</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="map-settings-section">
-                  <span class="map-settings-label">Averaging Method</span>
-                  <div class="map-settings-options metric-group" role="radiogroup" aria-label="Averaging method" data-active="mean">
-                    <span class="metric-toggle" aria-hidden="true"></span>
-                    <label class="colour-scale-option" data-value="mean">
-                      <input type="radio" name="metricSelect" value="mean" checked />
-                      <span class="colour-scale-text">Average (mean)</span>
-                    </label>
-                    <label class="colour-scale-option" data-value="median">
-                      <input type="radio" name="metricSelect" value="median" />
-                      <span class="colour-scale-text">Typical (median)</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="map-settings-section">
-                  <span class="map-settings-label">Colour Scale</span>
-                  <div class="map-settings-options colour-scale-group" role="radiogroup" aria-label="Colour scale options" data-active="power">
-                    <span class="colour-scale-toggle" aria-hidden="true"></span>
-                    <label class="colour-scale-option" data-value="power">
-                      <input type="radio" name="colourScale" value="power" />
-                      <span class="colour-scale-text">Power-eased</span>
-                    </label>
-                    <label class="colour-scale-option" data-value="linear">
-                      <input type="radio" name="colourScale" value="linear" />
-                      <span class="colour-scale-text">Linear</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <button type="button" class="map-settings" aria-label="Map settings" aria-controls="map-settings-panel" aria-expanded="false">
-                <img src="images/settings-cog.svg" alt="" aria-hidden="true" />
-              </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section class="card selected-networks-card" id="selected-networks-summary" aria-live="polite">
-        <div class="selected-networks-card-header">
-          <h2 class="card-title">Summary of selected networks</h2>
-          <p class="selected-networks-card-subtitle">Updates as you toggle networks on the map.</p>
-        </div>
-        <div class="selected-networks-grid" role="list">
-          <article class="selected-network-pill selected-network-pill--coverage" role="listitem">
-            <div class="network-summary-content" id="network-summary-coverage"></div>
-          </article>
-          <article class="selected-network-pill selected-network-pill--sensors" role="listitem">
-            <div class="network-summary-content" id="network-summary-sensors"></div>
-          </article>
-          <article class="selected-network-pill selected-network-pill--share" role="listitem">
-            <section class="sensor-share" aria-label="Sensor share of selected networks">
-              <h3 class="sensor-share-title">Sensor share of selected networks</h3>
-              <ul class="sensor-share-list" id="sensor-share-list"></ul>
-            </section>
-          </article>
-          <article class="selected-network-pill selected-network-pill--freshness" role="listitem">
-            <div class="network-summary-content" id="network-summary-freshness"></div>
-          </article>
         </div>
       </section>
 
@@ -2401,172 +3693,221 @@
       </div>
 
       <div class="tab-panel" id="tab-panel-cr" role="tabpanel" aria-labelledby="tab-cr" hidden>
+        <!-- ── CR top summary boxes moved inside map card (layout test) ── -->
+        <!-- Hidden anchors for legacy cr-summary-* IDs (JS still updates these) -->
+        <span id="cr-summary-overall-title" hidden></span>
+        <span id="cr-summary-stations" hidden></span>
+        <span id="cr-summary-highest-label" hidden></span>
+        <span id="cr-summary-lowest-label" hidden></span>
+        <span id="cr-summary-highest-value" hidden></span>
+        <span id="cr-summary-highest-datetime" hidden></span>
+        <span id="cr-summary-highest-connector" hidden></span>
+        <span id="cr-summary-highest-name" hidden></span>
+        <span id="cr-summary-lowest-value" hidden></span>
+        <span id="cr-summary-lowest-datetime" hidden></span>
+        <span id="cr-summary-lowest-connector" hidden></span>
+        <span id="cr-summary-lowest-name" hidden></span>
         <section class="card">
           <div class="hint" id="cr-endpoint-hint" hidden></div>
           <div class="error" id="cr-error" hidden></div>
           <div class="map-layout">
             <div class="map-panel">
-              <div class="map-wrap">
-                <div class="card-header map-header">
-                  <div class="map-header-left">
-                    <h2 class="card-title" id="cr-map-title">Latest PM2.5 by local authority</h2>
-                    <div class="pollutant-slot" data-pollutant-slot></div>
-                    <div class="map-header-controls" data-scope-controls></div>
-                  </div>
-                  <div class="actions">
-                    <span class="status-indicator" data-state="loading">
-                      <span class="pulse-dot" aria-hidden="true"></span>
-                    <span class="hint" id="cr-status">Loading...</span>
-                    </span>
-                    <button id="cr-refresh">Refresh</button>
-                  </div>
+              <div class="map-wrap map-dashboard-card map-main-grid">
+                <div class="map-title-strip">
+                  <h2 class="card-title map-dashboard-title" id="cr-map-title">Latest PM2.5 by local authority</h2>
                 </div>
-                <div class="tab-slot" data-tab-slot></div>
+                <div id="cr-toolbar-slot" class="map-controls-row"></div>
+                <div class="tab-slot" data-tab-slot style="display:none"></div>
+                <!-- ── CR Summary strip inside map card (layout test) ── -->
+                <section class="map-summary-strip map-summary-grid" aria-label="Selected air quality summary for countries and regions">
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Total Active Sensors</div>
+                    <div class="map-summary-value" id="cr-top-total-sensors">—</div>
+                    <div class="map-summary-subtext">from selected networks</div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Coverage</div>
+                    <div class="map-summary-value" id="cr-top-coverage-percent">—</div>
+                    <div class="map-summary-subtext" id="cr-top-coverage-detail">—</div>
+                    <div
+                      class="map-summary-coverage-bar"
+                      id="cr-top-coverage-bar"
+                      role="progressbar"
+                      aria-label="Coverage percentage"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow="0"
+                    >
+                      <span class="map-summary-coverage-fill" id="cr-top-coverage-fill"></span>
+                    </div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label" id="cr-top-highest-label">Highest PM2.5</div>
+                    <div class="map-summary-value map-summary-value-with-icon">
+                      <svg class="map-summary-hex" id="cr-top-highest-hex" aria-hidden="true" viewBox="0 0 17.32 20" xmlns="http://www.w3.org/2000/svg"><polygon points="8.66,0 17.32,5 17.32,15 8.66,20 0,15 0,5"/></svg>
+                      <span id="cr-top-highest-value">—</span>
+                    </div>
+                    <div class="map-summary-subtext" id="cr-top-highest-sensor">—</div>
+                    <div class="map-summary-subtext" id="cr-top-highest-network">—</div>
+                  </article>
+                  <article class="map-summary-card">
+                    <div class="map-summary-label">Updates</div>
+                    <div class="map-summary-update-line">Latest: <span id="cr-top-latest-update">—</span></div>
+                    <div class="map-summary-update-line">Oldest: <span id="cr-top-oldest-update">—</span></div>
+                  </article>
+                </section>
                 <aside class="network-panel">
-                  <label class="map-select">
-                    <span>Country or Region</span>
-                    <select id="cr-map-select">
-                      <optgroup label="Countries">
-                        <option value="Northern Ireland">Northern Ireland</option>
-                        <option value="Scotland">Scotland</option>
-                        <option value="Wales">Wales</option>
-                      </optgroup>
-                      <optgroup label="English Regions">
-                        <option value="East Midlands">East Midlands</option>
-                        <option value="East of England">East of England</option>
-                        <option value="London" selected>London</option>
-                        <option value="North East">North East</option>
-                        <option value="North West">North West</option>
-                        <option value="South East">South East</option>
-                        <option value="South West">South West</option>
-                        <option value="West Midlands">West Midlands</option>
-                        <option value="Yorkshire and The Humber">Yorkshire and The Humber</option>
-                      </optgroup>
-                    </select>
-                  </label>
-                  <span class="network-heading">Networks</span>
-                  <div class="network-actions" role="group" aria-label="Network selection actions">
-                    <button type="button" id="cr-network-select-all">Select All</button>
-                    <button type="button" id="cr-network-deselect-all">Deselect All</button>
+                  <div class="network-list-header">
+                    <span>Network</span>
+                    <span>Active sensors</span>
                   </div>
                   <div class="network-list" id="cr-network-list">
                     <span class="network-empty">Loading networks...</span>
                   </div>
-                </aside>
-                <div class="map-canvas">
-                  <svg id="cr-hex-map" role="img" aria-label="Hex cartogram of PM2.5 by local authority"></svg>
-                </div>
-                <aside class="summary-card">
-                  <h3 class="summary-title" id="cr-summary-overall-title">PM2.5 summary</h3>
-                  <div class="summary-list">
-                    <div class="summary-item">
-                      <span class="summary-label">Number of sensors</span>
-                      <span class="summary-value" id="cr-summary-stations">-</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label" id="cr-summary-highest-label">Highest PM2.5</span>
-                      <span class="summary-value" id="cr-summary-highest-value">-</span>
-                      <span class="summary-datetime" id="cr-summary-highest-datetime">-</span>
-                      <span class="summary-connector" id="cr-summary-highest-connector">-</span>
-                      <span class="summary-name" id="cr-summary-highest-name">-</span>
-                    </div>
-                    <div class="summary-item">
-                      <span class="summary-label" id="cr-summary-lowest-label">Lowest PM2.5 (Non-zero)</span>
-                      <span class="summary-value" id="cr-summary-lowest-value">-</span>
-                      <span class="summary-datetime" id="cr-summary-lowest-datetime">-</span>
-                      <span class="summary-connector" id="cr-summary-lowest-connector">-</span>
-                      <span class="summary-name" id="cr-summary-lowest-name">-</span>
-                    </div>
+                  <div class="network-actions" role="group" aria-label="Network selection actions">
+                    <button type="button" id="cr-network-select-all">Select All</button>
+                    <button type="button" id="cr-network-deselect-all">Deselect All</button>
                   </div>
                 </aside>
-                <div class="legend map-legend">
-                  <span id="cr-legend-pollutant">PM2.5 (µg/m³)</span>
-                  <div
-                    id="cr-legend-scale"
-                    class="legend-scale"
-                    title="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
-                    aria-label="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
-                  >
-                    <span class="legend-value" id="cr-legend-min">-</span>
-                    <div class="legend-bar-wrap" aria-hidden="true">
-                      <span class="legend-bar"></span>
-                      <span class="legend-tick" data-value="10"></span>
-                      <span class="legend-tick" data-value="20"></span>
-                      <span class="legend-tick" data-value="30"></span>
-                      <span class="legend-tick" data-value="40"></span>
-                      <span class="legend-tick-label" data-value="10">10</span>
-                      <span class="legend-tick-label" data-value="20">20</span>
-                      <span class="legend-tick-label" data-value="30">30</span>
-                      <span class="legend-tick-label" data-value="40">40</span>
-                    </div>
-                    <span class="legend-value" id="cr-legend-max">-</span>
+                <div class="map-canvas map-canvas-wrap">
+                  <div class="map-search map-floating-search" data-map-search data-map-kind="cr">
+                    <span class="map-search-icon" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    </span>
+                    <input
+                      id="cr-map-search-input"
+                      class="map-search-input"
+                      type="search"
+                      autocomplete="off"
+                      autocapitalize="characters"
+                      spellcheck="false"
+                      role="combobox"
+                      aria-autocomplete="list"
+                      aria-expanded="false"
+                      aria-controls="cr-map-search-results"
+                      placeholder="Search postcodes, local authorities, sensors…"
+                    />
+                    <button type="button" class="map-search-clear" aria-label="Clear search" hidden>&times;</button>
+                    <div class="map-search-results" id="cr-map-search-results" role="listbox" hidden></div>
                   </div>
-                  <span id="cr-legend-label"></span>
-                </div>
-                <div class="map-settings-panel" id="cr-map-settings-panel" role="dialog" aria-label="Sensor data settings">
-                  <div class="map-settings-header">
-                    <span class="map-settings-title">Sensor Data</span>
-                    <button type="button" class="map-settings-close" id="cr-map-settings-close" aria-label="Close colour scale">
-                      <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
+                  <div class="map-topbar">
+                    <span class="status-indicator status-pill" data-state="loading">
+                      <span class="pulse-dot" aria-hidden="true"></span>
+                      <span class="hint" id="cr-status">Loading...</span>
+                    </span>
+                    <button class="btn-refresh" id="cr-refresh">Refresh</button>
+                  </div>
+                  <div class="map-svg-viewport">
+                    <svg id="cr-hex-map" role="img" aria-label="Hex cartogram of PM2.5 by local authority"></svg>
+                  </div>
+                  <div class="map-settings-panel" id="cr-map-settings-panel" role="dialog" aria-label="Sensor data settings">
+                    <div class="map-settings-header">
+                      <span class="map-settings-title">Sensor Data</span>
+                      <button type="button" class="map-settings-close" id="cr-map-settings-close" aria-label="Close colour scale">
+                        <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
+                      </button>
+                    </div>
+                    <div class="map-settings-section">
+                      <span class="map-settings-label">Updated within:</span>
+                      <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
+                        <label class="window-option">
+                          <input type="radio" name="cr-averagingWindow" value="3h" />
+                          <span class="window-text">3 Hours</span>
+                        </label>
+                        <label class="window-option">
+                          <input type="radio" name="cr-averagingWindow" value="6h" />
+                          <span class="window-text">6 Hours</span>
+                        </label>
+                        <label class="window-option">
+                          <input type="radio" name="cr-averagingWindow" value="1d" />
+                          <span class="window-text">1 Day</span>
+                        </label>
+                        <label class="window-option">
+                          <input type="radio" name="cr-averagingWindow" value="7d" />
+                          <span class="window-text">7 Days</span>
+                        </label>
+                        <label class="window-option">
+                          <input type="radio" name="cr-averagingWindow" value="all" checked />
+                          <span class="window-text">No limit</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="map-settings-section">
+                      <span class="map-settings-label">Averaging Method</span>
+                      <div class="map-settings-options metric-group" role="radiogroup" aria-label="Averaging method" data-active="mean">
+                        <span class="metric-toggle" aria-hidden="true"></span>
+                        <label class="colour-scale-option" data-value="mean">
+                          <input type="radio" name="cr-metricSelect" value="mean" checked />
+                          <span class="colour-scale-text">Average (mean)</span>
+                        </label>
+                        <label class="colour-scale-option" data-value="median">
+                          <input type="radio" name="cr-metricSelect" value="median" />
+                          <span class="colour-scale-text">Typical (median)</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="map-settings-section">
+                      <span class="map-settings-label">Colour Scale</span>
+                      <div class="map-settings-options colour-scale-group" role="radiogroup" aria-label="Colour scale options" data-active="power">
+                        <span class="colour-scale-toggle" aria-hidden="true"></span>
+                        <label class="colour-scale-option" data-value="power">
+                          <input type="radio" name="cr-colourScale" value="power" />
+                          <span class="colour-scale-text">Power-eased</span>
+                        </label>
+                        <label class="colour-scale-option" data-value="linear">
+                          <input type="radio" name="cr-colourScale" value="linear" />
+                          <span class="colour-scale-text">Linear</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="map-settings map-floating-tools" aria-label="Map settings" aria-controls="cr-map-settings-panel" aria-expanded="false">
+                    <img src="images/settings-cog.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <div class="map-zoom-controls" data-map-zoom-controls data-map-svg-id="cr-hex-map">
+                    <button type="button" data-zoom-action="in" aria-label="Zoom in">
+                      <svg class="zoom-icon" viewBox="0 0 64 64" aria-hidden="true">
+                        <circle class="zoom-ring" cx="30" cy="24" r="15"></circle>
+                        <line class="zoom-handle" x1="20" y1="36" x2="10" y2="49"></line>
+                        <line class="zoom-mark" x1="23" y1="24" x2="37" y2="24"></line>
+                        <line class="zoom-mark" x1="30" y1="17" x2="30" y2="31"></line>
+                      </svg>
+                    </button>
+                    <button type="button" data-zoom-action="reset" aria-label="Reset zoom">Reset</button>
+                  <button type="button" data-zoom-action="out" aria-label="Zoom out">
+                      <svg class="zoom-icon" viewBox="0 0 64 64" aria-hidden="true">
+                        <circle class="zoom-ring" cx="30" cy="24" r="15"></circle>
+                        <line class="zoom-handle" x1="20" y1="36" x2="10" y2="49"></line>
+                        <line class="zoom-mark" x1="23" y1="24" x2="37" y2="24"></line>
+                      </svg>
                     </button>
                   </div>
-                  <div class="map-settings-section">
-                    <span class="map-settings-label">Updated within:</span>
-                    <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
-                      <label class="window-option">
-                        <input type="radio" name="cr-averagingWindow" value="3h" />
-                        <span class="window-text">3 Hours</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="cr-averagingWindow" value="6h" />
-                        <span class="window-text">6 Hours</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="cr-averagingWindow" value="1d" />
-                        <span class="window-text">1 Day</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="cr-averagingWindow" value="7d" />
-                        <span class="window-text">7 Days</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="cr-averagingWindow" value="all" checked />
-                        <span class="window-text">No limit</span>
-                      </label>
+                  <!-- ── Floating legend pill (layout test) ── -->
+                  <div class="legend map-legend legend-pill">
+                    <span id="cr-legend-pollutant">PM2.5 (µg/m³)</span>
+                    <div
+                      id="cr-legend-scale"
+                      class="legend-scale"
+                      title="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
+                      aria-label="Power scale (exp 0.8 with a slight top boost): pulls low values toward mid-range; values above 50 are shown as 50+."
+                    >
+                      <span class="legend-value" id="cr-legend-min">-</span>
+                      <div class="legend-bar-wrap" aria-hidden="true">
+                        <span class="legend-bar"></span>
+                        <span class="legend-tick" data-value="10"></span>
+                        <span class="legend-tick" data-value="20"></span>
+                        <span class="legend-tick" data-value="30"></span>
+                        <span class="legend-tick" data-value="40"></span>
+                        <span class="legend-tick-label" data-value="10">10</span>
+                        <span class="legend-tick-label" data-value="20">20</span>
+                        <span class="legend-tick-label" data-value="30">30</span>
+                        <span class="legend-tick-label" data-value="40">40</span>
+                      </div>
+                      <span class="legend-value" id="cr-legend-max">-</span>
                     </div>
-                  </div>
-                  <div class="map-settings-section">
-                    <span class="map-settings-label">Averaging Method</span>
-                    <div class="map-settings-options metric-group" role="radiogroup" aria-label="Averaging method" data-active="mean">
-                      <span class="metric-toggle" aria-hidden="true"></span>
-                      <label class="colour-scale-option" data-value="mean">
-                        <input type="radio" name="cr-metricSelect" value="mean" checked />
-                        <span class="colour-scale-text">Average (mean)</span>
-                      </label>
-                      <label class="colour-scale-option" data-value="median">
-                        <input type="radio" name="cr-metricSelect" value="median" />
-                        <span class="colour-scale-text">Typical (median)</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="map-settings-section">
-                    <span class="map-settings-label">Colour Scale</span>
-                    <div class="map-settings-options colour-scale-group" role="radiogroup" aria-label="Colour scale options" data-active="power">
-                      <span class="colour-scale-toggle" aria-hidden="true"></span>
-                      <label class="colour-scale-option" data-value="power">
-                        <input type="radio" name="cr-colourScale" value="power" />
-                        <span class="colour-scale-text">Power-eased</span>
-                      </label>
-                      <label class="colour-scale-option" data-value="linear">
-                        <input type="radio" name="cr-colourScale" value="linear" />
-                        <span class="colour-scale-text">Linear</span>
-                      </label>
-                    </div>
+                    <span id="cr-legend-label"></span>
                   </div>
                 </div>
-                <button type="button" class="map-settings" aria-label="Map settings" aria-controls="cr-map-settings-panel" aria-expanded="false">
-                  <img src="images/settings-cog.svg" alt="" aria-hidden="true" />
-                </button>
               </div>
             </div>
           </div>
@@ -2922,6 +4263,91 @@
     <div class="tooltip" id="cr-tooltip"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
+    <script>
+      // ── Top summary boxes — shared updater ───────────────────────────────────
+      window.updateTopSummary = function(data, idPrefix) {
+        const pre = idPrefix || 'top';
+        const elById = (id) => document.getElementById(id);
+        const p = (name) => elById(`${pre}-${name}`);
+
+        // Box 1: Total Active Sensors
+        const sensorsEl = p('total-sensors');
+        if (sensorsEl) {
+          sensorsEl.textContent = Number.isFinite(data.totalSensors)
+            ? data.totalSensors.toLocaleString()
+            : '—';
+        }
+
+        // Box 2: Coverage
+        const coveragePct = p('coverage-percent');
+        const coverageDetail = p('coverage-detail');
+        const coverageBar = p('coverage-bar');
+        const coverageFill = p('coverage-fill');
+        if (coveragePct && coverageDetail) {
+          const covered = data.pconCovered ?? 0;
+          const total = data.pconTotal ?? 0;
+          const ratio = total ? covered / total : 0;
+          const pct = total ? Math.round(ratio * 100) : 0;
+          coveragePct.textContent = total ? `${pct}%` : '—';
+          const label = data.areaLabel || 'constituencies';
+          coverageDetail.textContent = total
+            ? `${covered.toLocaleString()} / ${total.toLocaleString()} ${label}`
+            : '—';
+          if (coverageFill) {
+            const safePct = total ? Math.max(0, Math.min(100, ratio * 100)) : 0;
+            coverageFill.style.width = `${safePct}%`;
+          }
+          if (coverageBar) {
+            coverageBar.setAttribute('aria-valuenow', String(pct));
+            coverageBar.setAttribute(
+              'aria-valuetext',
+              total ? `${pct}% coverage (${covered} of ${total})` : 'No coverage data'
+            );
+          }
+        }
+
+        // Box 3: Highest reading
+        const highestLabel = p('highest-label');
+        const highestHex = p('highest-hex');
+        const highestValue = p('highest-value');
+        const highestSensor = p('highest-sensor');
+        const highestNetwork = p('highest-network');
+        if (highestLabel) {
+          highestLabel.textContent = `Highest ${data.pollutantLabel || 'PM2.5'}`;
+        }
+        if (highestValue) {
+          highestValue.textContent = Number.isFinite(data.highestValue)
+            ? `${data.highestValue.toFixed(1)} ${data.pollutantUnits || ''}`
+            : '—';
+        }
+        if (highestHex) {
+          highestHex.style.setProperty('--hex-fill', data.highestColor || '');
+        }
+        if (highestSensor) {
+          highestSensor.textContent = data.highestSensor || '—';
+        }
+        if (highestNetwork) {
+          highestNetwork.textContent = data.highestNetwork || '—';
+        }
+
+        // Box 4: Updates — show DD/MM/YYYY HH:MM
+        const fmtTime = (iso) => {
+          if (!iso) return '—';
+          const d = new Date(iso);
+          if (isNaN(d.getTime())) return '—';
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+        };
+        const latestEl = p('latest-update');
+        const oldestEl = p('oldest-update');
+        if (latestEl) latestEl.textContent = fmtTime(data.newestReadingISO);
+        if (oldestEl) oldestEl.textContent = fmtTime(data.oldestReadingISO);
+      };
+    </script>
     <script>
       const PROJECT_REF_PLACEHOLDER = "__SUPABASE_PROJECT_REF__";
       const ANON_KEY_PLACEHOLDER = "__SB_PUBLISHABLE_DEFAULT_KEY__";
@@ -3329,6 +4755,7 @@
       let selectedPconCode = null;
       let selectedCell = null;
       let pinnedTooltipCell = null;
+      let ukSearchPreloadPromise = null;
       const CACHE_SESSION_SKEW_MS = 10000;
       const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:uk`;
       let cacheAuthToken = null;
@@ -4667,14 +6094,14 @@
       function buildNetworkDefs(rows) {
         const byCode = new Map();
         rows.forEach((row) => {
+          const seen = new Set();
           collectNetworkEntries(row).forEach((entry) => {
-            if (!entry.code || byCode.has(entry.code)) {
-              return;
+            if (!entry.code || seen.has(entry.code)) return;
+            seen.add(entry.code);
+            if (!byCode.has(entry.code)) {
+              byCode.set(entry.code, { code: entry.code, label: entry.label || entry.code, count: 0 });
             }
-            byCode.set(entry.code, {
-              code: entry.code,
-              label: entry.label || entry.code,
-            });
+            byCode.get(entry.code).count++;
           });
         });
         return Array.from(byCode.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -4691,7 +6118,7 @@
         if (!defs.length) {
           return "empty";
         }
-        return defs.map((def) => `${def.code}:${def.label}`).join("|");
+        return defs.map((def) => `${def.code}:${def.label}:${def.count}`).join("|");
       }
 
       function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll) {
@@ -4775,6 +6202,7 @@
           });
         }
         syncNetworkActionState();
+        syncNetworkRowMutedState();
       }
 
       function renderNetworkFilters(defs, selectedCodes, defaultAll) {
@@ -4790,22 +6218,46 @@
         }
         const fragment = document.createDocumentFragment();
         const hasSelection = selectedCodes !== null && selectedCodes !== undefined;
+        const totalNetworkSensors = defs.reduce((sum, def) => sum + (Number(def.count) || 0), 0);
         defs.forEach((def) => {
+          const sharePercent = totalNetworkSensors
+            ? Math.max(0, Math.min(100, ((Number(def.count) || 0) / totalNetworkSensors) * 100))
+            : 0;
           const label = document.createElement("label");
-          label.className = "checkbox";
+          label.className = "checkbox network-option";
           const input = document.createElement("input");
           input.type = "checkbox";
           input.dataset.network = def.code;
           input.checked = defaultAll || (hasSelection ? selectedCodes.has(def.code) : true);
+          const mainRow = document.createElement("span");
+          mainRow.className = "network-option-main";
+          const leftGroup = document.createElement("span");
+          leftGroup.className = "network-option-left";
           const text = document.createElement("span");
+          text.className = "network-name";
           text.textContent = def.label;
-          label.append(input, text);
+          leftGroup.append(input, text);
+          const count = document.createElement("span");
+          count.className = "network-count";
+          if (def.count > 0) count.textContent = def.count.toLocaleString();
+          mainRow.append(leftGroup, count);
+          const shareBar = document.createElement("span");
+          shareBar.className = "network-share-bar";
+          const tooltipCount = Number(def.count) || 0;
+          const tooltipPct = Math.round(sharePercent);
+          label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
+          const shareFill = document.createElement("span");
+          shareFill.className = "network-share-fill";
+          shareFill.style.width = `${sharePercent.toFixed(1)}%`;
+          shareBar.appendChild(shareFill);
+          label.append(mainRow, shareBar);
           fragment.appendChild(label);
         });
         networkList.appendChild(fragment);
         networkInputs = Array.from(networkList.querySelectorAll("input[data-network]"));
         networkInputs.forEach((input) => input.addEventListener("change", handleNetworkToggle));
         syncNetworkActionState();
+        syncNetworkRowMutedState();
       }
 
       function syncNetworkActionState() {
@@ -4824,6 +6276,15 @@
         networkDeselectAll.disabled = noneChecked;
       }
 
+      function syncNetworkRowMutedState() {
+        networkInputs.forEach((input) => {
+          const row = input.closest(".network-option") || input.closest(".checkbox");
+          if (row) {
+            row.classList.toggle("is-unselected", !input.checked);
+          }
+        });
+      }
+
       function resolveNetworkCodes(row) {
         return collectNetworkEntries(row).map((entry) => entry.code);
       }
@@ -4831,6 +6292,16 @@
       function resolvePconCode(row) {
         return row?.pcon_code
           || row?.station?.pcon_code
+          || null;
+      }
+
+      function resolveLaCode(row) {
+        return row?.la_code
+          || row?.lad_code
+          || row?.local_authority_code
+          || row?.station?.la_code
+          || row?.station?.lad_code
+          || row?.station?.local_authority_code
           || null;
       }
 
@@ -4858,6 +6329,25 @@
 
       function resolveLatestTimestamp(row) {
         return parseDate(row?.last_value_at || row?.observed_at || row?.latest_value_at);
+      }
+
+      function resolveCoordinatePair(row) {
+        const candidates = [
+          [row?.latitude, row?.longitude],
+          [row?.lat, row?.lon],
+          [row?.lat, row?.lng],
+          [row?.station?.latitude, row?.station?.longitude],
+          [row?.station?.lat, row?.station?.lon],
+          [row?.station?.lat, row?.station?.lng],
+        ];
+        for (const candidate of candidates) {
+          const lat = normalizeNumber(candidate?.[0]);
+          const lon = normalizeNumber(candidate?.[1]);
+          if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            return { lat, lon };
+          }
+        }
+        return { lat: null, lon: null };
       }
 
       function filterRowsByWindow(rows) {
@@ -5028,17 +6518,6 @@
           }
         });
         return Array.from(stationMap.values());
-      }
-
-      function countStationsByNetwork(entries) {
-        const counts = new Map();
-        entries.forEach((entry) => {
-          const label = resolvePrimaryNetworkLabel(entry.row) || resolveConnectorLabel(entry.row);
-          counts.set(label, (counts.get(label) || 0) + 1);
-        });
-        return Array.from(counts.entries())
-          .map(([label, count]) => ({ label, count }))
-          .sort((a, b) => a.label.localeCompare(b.label));
       }
 
       function countStationsByNetwork(entries) {
@@ -5277,6 +6756,41 @@
         if (sensorShareBars) {
           sensorShareBars.render(summary.shareData || []);
         }
+        // ── Top summary boxes ──
+        if (typeof window.updateTopSummary === 'function') {
+          const pollutantLabel = getPollutantLabel(activePollutant);
+          const pollutantUnits = getPollutantUnits(activePollutant);
+          const capValue = getLegendCapValue();
+          const baseRows = filterRowsByWindow(scopedLatestRows);
+          const pollutantRows = getRowsForActivePollutant(baseRows);
+          const candidates = pollutantRows
+            .map((row) => { const v = resolveLatestValue(row); return Number.isFinite(v) ? { row, value: v } : null; })
+            .filter(Boolean);
+          let highestValue = null, highestColor = null, highestSensor = '—', highestNetwork = '—';
+          if (candidates.length) {
+            let h = candidates[0];
+            for (const c of candidates) { if (c.value > h.value) h = c; }
+            highestValue = h.value;
+            const palette = HEAT_STOPS.map((n, i) => resolveCssColor(n, HEAT_STOP_FALLBACKS[i]));
+            highestColor = d3.interpolateRgbBasis(palette)(mapValueToT(highestValue, capValue));
+            highestSensor = resolveStationName(h.row);
+            highestNetwork = resolveConnectorLabel(h.row);
+          }
+          window.updateTopSummary({
+            totalSensors: summary.totalSensors,
+            pconCovered: summary.pconCovered,
+            pconTotal: summary.pconTotal,
+            areaLabel: 'constituencies',
+            pollutantLabel,
+            pollutantUnits,
+            highestValue,
+            highestColor,
+            highestSensor,
+            highestNetwork,
+            newestReadingISO: summary.newestReadingISO,
+            oldestReadingISO: summary.oldestReadingISO,
+          });
+        }
       }
 
       function updateRowCountText() {
@@ -5375,6 +6889,26 @@
         updateSelectedHexStyles();
         updateSummary();
         updateDetailsPanel();
+      }
+
+      function selectPconByCode(code) {
+        const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
+        if (!normalized) {
+          return false;
+        }
+        const match = hexCells.find((cell) => {
+          const cellCode = typeof cell?.pcon_code === "string" ? cell.pcon_code.trim().toUpperCase() : "";
+          return cellCode === normalized;
+        }) || null;
+        if (!match) {
+          return false;
+        }
+        setSelectedCell(match);
+        if (tooltip) {
+          tooltip.classList.remove("visible");
+        }
+        pinnedTooltipCell = null;
+        return true;
       }
 
       function compareTextValues(a, b) {
@@ -6241,12 +7775,14 @@
           });
         }
         syncNetworkActionState();
+        syncNetworkRowMutedState();
         applyNetworkFilters();
       }
 
       function handleNetworkToggle() {
         networkSelectionMismatch = false;
         syncNetworkActionState();
+        syncNetworkRowMutedState();
         applyNetworkFilters();
       }
 
@@ -6352,8 +7888,9 @@
         updateSelectedHexStyles();
       }
 
-      async function loadMapData() {
-        if (!isUkMapVisible()) {
+      async function loadMapData(options = {}) {
+        const force = Boolean(options?.force);
+        if (!force && !isUkMapVisible()) {
           return;
         }
         const requestPollutant = activePollutant;
@@ -6364,6 +7901,7 @@
           || requestPollutant !== activePollutant
           || requestWindow !== currentWindow;
         setStatus("Loading...");
+        setMapLoading(true);
         if (errorEl) {
           errorEl.textContent = "";
           errorEl.hidden = true;
@@ -6435,35 +7973,51 @@
           //   }
           //   populationUrl.searchParams.set("limit", "2000");
           // }
-          const [hexResponse, pconResponse, latestResponse, populationResponse] = await Promise.all([
-            fetch(HEX_DATA_URL),
-            fetchCacheApi(pconUrl.toString(), {
-              headers: pconHeaders,
-            }),
-            fetchCacheApi(latestUrl.toString(), {
-              headers: latestHeaders,
-            }).catch(() => null),
-            // populationUrl
-            //   ? fetch(populationUrl.toString(), {
-            //     headers: {
-            //       Authorization: `Bearer ${anonKey}`,
-            //       apikey: anonKey,
-            //     },
-            //   }).catch(() => null)
-            //   : Promise.resolve(null),
-            Promise.resolve(null),
-          ]);
+          const hexRequest = fetch(HEX_DATA_URL);
+          const pconRequest = fetchCacheApi(pconUrl.toString(), {
+            headers: pconHeaders,
+          });
+          const latestRequest = fetchCacheApi(latestUrl.toString(), {
+            headers: latestHeaders,
+          }).catch(() => null);
+          // const populationRequest = populationUrl
+          //   ? fetch(populationUrl.toString(), {
+          //     headers: {
+          //       Authorization: `Bearer ${anonKey}`,
+          //       apikey: anonKey,
+          //     },
+          //   }).catch(() => null)
+          //   : Promise.resolve(null);
+          const populationRequest = Promise.resolve(null);
+          const hexResponse = await hexRequest;
           if (isStale()) {
             return;
           }
           if (!hexResponse.ok) {
             throw new Error(`Hex data request failed: ${hexResponse.status}`);
           }
+          hexData = await hexResponse.json();
+          areaRegionLookup = hexData?.type === "FeatureCollection"
+            ? buildAreaRegionLookupFromGeojson(hexData)
+            : new Map();
+          prepareHexGrid();
+          renderMapIfReady();
+          requestAnimationFrame(() => {
+            if (!isStale()) {
+              renderMapIfReady();
+            }
+          });
+          const [pconResponse, latestResponse, populationResponse] = await Promise.all([
+            pconRequest,
+            latestRequest,
+            populationRequest,
+          ]);
+          if (isStale()) {
+            return;
+          }
           if (!pconResponse.ok && pconResponse.status !== 304) {
             throw new Error(`Constituency request failed: ${pconResponse.status}`);
           }
-          hexData = await hexResponse.json();
-          prepareHexGrid();
           const pconResponseEtag = pconResponse.headers.get("ETag");
           if (pconResponseEtag) {
             pconEtagByKey.set(pconCacheKey, pconResponseEtag);
@@ -6824,6 +8378,90 @@
       updateLegendScaleDescription();
       syncUkPollingOnVisibility();
 
+      function buildConstituencySearchRecords() {
+        const records = [];
+        const seenCodes = new Set();
+        hexCells.forEach((cell) => {
+          const rawCode = typeof cell?.pcon_code === "string" ? cell.pcon_code.trim() : "";
+          if (!rawCode) {
+            return;
+          }
+          const code = rawCode.toUpperCase();
+          if (seenCodes.has(code)) {
+            return;
+          }
+          seenCodes.add(code);
+          const row = pconLookup.get(rawCode) || pconLookup.get(code) || null;
+          const name = cell?.pcon_name || row?.pcon_name || rawCode;
+          records.push({
+            code,
+            name,
+          });
+        });
+        return records;
+      }
+
+      function buildSensorSearchRecords() {
+        const rowsForSearch = scopedLatestRows.length ? scopedLatestRows : baseLatestRows;
+        const recordsByKey = new Map();
+        rowsForSearch.forEach((row, index) => {
+          const stationId = resolveStationKey(row) || `uk:${index}`;
+          const stationName = resolveStationName(row);
+          const networkName = resolvePrimaryNetworkLabel(row) || resolveConnectorLabel(row) || null;
+          const pconRaw = resolvePconCode(row);
+          const laRaw = resolveLaCode(row);
+          const pconCode = typeof pconRaw === "string" ? pconRaw.trim().toUpperCase() : null;
+          const laCode = typeof laRaw === "string" ? laRaw.trim().toUpperCase() : null;
+          const { lat, lon } = resolveCoordinatePair(row);
+          const key = `${stationId}::${networkName || ""}`;
+          const existing = recordsByKey.get(key);
+          if (existing) {
+            if (!existing.pcon_code && pconCode) {
+              existing.pcon_code = pconCode;
+            }
+            if (!existing.la_code && laCode) {
+              existing.la_code = laCode;
+            }
+            if (!Number.isFinite(existing.lat) && Number.isFinite(lat)) {
+              existing.lat = lat;
+            }
+            if (!Number.isFinite(existing.lon) && Number.isFinite(lon)) {
+              existing.lon = lon;
+            }
+            return;
+          }
+          recordsByKey.set(key, {
+            station_id: stationId,
+            station_name: stationName,
+            network_name: networkName,
+            pcon_code: pconCode,
+            la_code: laCode,
+            lat,
+            lon,
+          });
+        });
+        return Array.from(recordsByKey.values());
+      }
+
+      function ensureUkSearchDataLoaded() {
+        if (hexCells.length) {
+          return Promise.resolve(true);
+        }
+        if (ukSearchPreloadPromise) {
+          return ukSearchPreloadPromise;
+        }
+        ukSearchPreloadPromise = loadMapData({ force: true })
+          .then(() => Boolean(hexCells.length))
+          .catch((error) => {
+            console.warn("uk_aq UK search preload failed", error);
+            return false;
+          })
+          .finally(() => {
+            ukSearchPreloadPromise = null;
+          });
+        return ukSearchPreloadPromise;
+      }
+
       window.ukMap = {
         render: () => {
           if (statusEl.textContent === "Live") {
@@ -6837,6 +8475,11 @@
           applyStoredNetworkSelection();
           applyNetworkFilters();
         },
+        selectPconByCode: (code) => selectPconByCode(code),
+        getActivePconCode: () => selectedPconCode,
+        ensureSearchDataLoaded: () => ensureUkSearchDataLoaded(),
+        getConstituencySearchRecords: () => buildConstituencySearchRecords(),
+        getSensorSearchRecords: () => buildSensorSearchRecords(),
       };
     </script>
     <script>
@@ -7205,8 +8848,11 @@
       let populationLookup = new Map();
 	      let networkInputs = [];
 	      let networkSelectionMismatch = false;
-	      let selectedPconCode = null;
+	      let selectedAreaCode = null;
 	      let selectedCell = null;
+	      let pendingSelectedAreaCode = null;
+	      let areaRegionLookup = new Map();
+	      let crSearchPreloadPromise = null;
 	      const CACHE_SESSION_SKEW_MS = 10000;
 	      const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:cr`;
 	      let cacheAuthToken = null;
@@ -7894,7 +9540,7 @@
         const merged = new Map();
         const extras = [];
         const upsert = (row) => {
-          const key = row?.pcon_code;
+          const key = resolveAreaCode(row);
           if (!key) {
             extras.push(row);
             return;
@@ -8200,14 +9846,14 @@
       function buildNetworkDefs(rows) {
         const byCode = new Map();
         rows.forEach((row) => {
+          const seen = new Set();
           collectNetworkEntries(row).forEach((entry) => {
-            if (!entry.code || byCode.has(entry.code)) {
-              return;
+            if (!entry.code || seen.has(entry.code)) return;
+            seen.add(entry.code);
+            if (!byCode.has(entry.code)) {
+              byCode.set(entry.code, { code: entry.code, label: entry.label || entry.code, count: 0 });
             }
-            byCode.set(entry.code, {
-              code: entry.code,
-              label: entry.label || entry.code,
-            });
+            byCode.get(entry.code).count++;
           });
         });
         return Array.from(byCode.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -8224,7 +9870,7 @@
         if (!defs.length) {
           return "empty";
         }
-        return defs.map((def) => `${def.code}:${def.label}`).join("|");
+        return defs.map((def) => `${def.code}:${def.label}:${def.count}`).join("|");
       }
 
       function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll) {
@@ -8309,6 +9955,7 @@
           });
         }
         syncNetworkActionState();
+        syncNetworkRowMutedState();
       }
 
       function renderNetworkFilters(defs, selectedCodes, defaultAll) {
@@ -8324,22 +9971,46 @@
         }
         const fragment = document.createDocumentFragment();
         const hasSelection = selectedCodes !== null && selectedCodes !== undefined;
+        const totalNetworkSensors = defs.reduce((sum, def) => sum + (Number(def.count) || 0), 0);
         defs.forEach((def) => {
+          const sharePercent = totalNetworkSensors
+            ? Math.max(0, Math.min(100, ((Number(def.count) || 0) / totalNetworkSensors) * 100))
+            : 0;
           const label = document.createElement("label");
-          label.className = "checkbox";
+          label.className = "checkbox network-option";
           const input = document.createElement("input");
           input.type = "checkbox";
           input.dataset.network = def.code;
           input.checked = defaultAll || (hasSelection ? selectedCodes.has(def.code) : true);
+          const mainRow = document.createElement("span");
+          mainRow.className = "network-option-main";
+          const leftGroup = document.createElement("span");
+          leftGroup.className = "network-option-left";
           const text = document.createElement("span");
+          text.className = "network-name";
           text.textContent = def.label;
-          label.append(input, text);
+          leftGroup.append(input, text);
+          const count = document.createElement("span");
+          count.className = "network-count";
+          if (def.count > 0) count.textContent = def.count.toLocaleString();
+          mainRow.append(leftGroup, count);
+          const shareBar = document.createElement("span");
+          shareBar.className = "network-share-bar";
+          const tooltipCount = Number(def.count) || 0;
+          const tooltipPct = Math.round(sharePercent);
+          label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
+          const shareFill = document.createElement("span");
+          shareFill.className = "network-share-fill";
+          shareFill.style.width = `${sharePercent.toFixed(1)}%`;
+          shareBar.appendChild(shareFill);
+          label.append(mainRow, shareBar);
           fragment.appendChild(label);
         });
         networkList.appendChild(fragment);
         networkInputs = Array.from(networkList.querySelectorAll("input[data-network]"));
         networkInputs.forEach((input) => input.addEventListener("change", handleNetworkToggle));
         syncNetworkActionState();
+        syncNetworkRowMutedState();
       }
 
       function syncNetworkActionState() {
@@ -8358,24 +10029,66 @@
         networkDeselectAll.disabled = noneChecked;
       }
 
+      function syncNetworkRowMutedState() {
+        networkInputs.forEach((input) => {
+          const row = input.closest(".network-option") || input.closest(".checkbox");
+          if (row) {
+            row.classList.toggle("is-unselected", !input.checked);
+          }
+        });
+      }
+
       function resolveNetworkCodes(row) {
         return collectNetworkEntries(row).map((entry) => entry.code);
       }
 
-      function resolvePconCode(row) {
-        return row?.la_code
+      function resolveAreaCode(row) {
+        return row?.area_code
+          || row?.la_code
           || row?.lad_code
           || row?.la
           || row?.lad
           || row?.local_authority_code
           || row?.local_authority
+          || row?.pcon_code
           || row?.station?.la_code
           || row?.station?.lad_code
           || row?.station?.la
           || row?.station?.lad
           || row?.station?.local_authority_code
           || row?.station?.local_authority
+          || row?.station?.pcon_code
           || null;
+      }
+
+      function resolvePconCode(row) {
+        return row?.pcon_code
+          || row?.station?.pcon_code
+          || null;
+      }
+
+      function resolveAreaName(row) {
+        return row?.area_name
+          || row?.la_name
+          || row?.pcon_name
+          || row?.local_authority_name
+          || row?.station?.la_name
+          || row?.station?.local_authority_name
+          || row?.station?.pcon_name
+          || null;
+      }
+
+      function resolveCellAreaCode(cell) {
+        return cell?.area_code || cell?.pcon_code || null;
+      }
+
+      function resolveCellAreaName(cell) {
+        return cell?.area_name || cell?.pcon_name || null;
+      }
+
+      // Backward-compatible alias used by existing helpers.
+      function resolvePconCode(row) {
+        return resolveAreaCode(row);
       }
 
       function resolveStationKey(row) {
@@ -8402,6 +10115,25 @@
 
       function resolveLatestTimestamp(row) {
         return parseDate(row?.last_value_at || row?.observed_at || row?.latest_value_at);
+      }
+
+      function resolveCoordinatePair(row) {
+        const candidates = [
+          [row?.latitude, row?.longitude],
+          [row?.lat, row?.lon],
+          [row?.lat, row?.lng],
+          [row?.station?.latitude, row?.station?.longitude],
+          [row?.station?.lat, row?.station?.lon],
+          [row?.station?.lat, row?.station?.lng],
+        ];
+        for (const candidate of candidates) {
+          const lat = normalizeNumber(candidate?.[0]);
+          const lon = normalizeNumber(candidate?.[1]);
+          if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            return { lat, lon };
+          }
+        }
+        return { lat: null, lon: null };
       }
 
       function filterRowsByWindow(rows) {
@@ -8680,13 +10412,13 @@
         const pollutantLabel = getPollutantLabel(activePollutant);
         const pollutantUnits = getPollutantUnits(activePollutant);
         updatePollutantLabels();
+        const totalStations = pconRows.reduce((total, row) => {
+          const count = normalizeNumber(row.station_count);
+          return total + (count ?? 0);
+        }, 0);
         if (!pconRows.length) {
           summaryStations.textContent = "-";
         } else {
-          const totalStations = pconRows.reduce((total, row) => {
-            const count = normalizeNumber(row.station_count);
-            return total + (count ?? 0);
-          }, 0);
           summaryStations.textContent = formatNumber(totalStations);
         }
 
@@ -8712,6 +10444,23 @@
           summaryHighestDatetime.textContent = "-";
           summaryHighestConnector.textContent = "-";
           summaryHighestName.textContent = `No ${pollutantLabel} data`;
+          // ── Top summary boxes (no-data state) ──
+          if (typeof window.updateTopSummary === 'function') {
+            window.updateTopSummary({
+              totalSensors: totalStations,
+              pconCovered: 0,
+              pconTotal: pconCodes.size,
+              areaLabel: AREA_LABEL_PLURAL,
+              pollutantLabel,
+              pollutantUnits,
+              highestValue: null,
+              highestColor: null,
+              highestSensor: '—',
+              highestNetwork: '—',
+              newestReadingISO: null,
+              oldestReadingISO: null,
+            }, 'cr-top');
+          }
           return;
         }
 
@@ -8741,6 +10490,36 @@
         summaryHighestDatetime.textContent = formatSummaryTimestamp(resolveLatestTimestamp(highest.row));
         summaryHighestConnector.textContent = resolveConnectorLabel(highest.row);
         summaryHighestName.textContent = resolveStationName(highest.row);
+
+        // ── Top summary boxes ──
+        if (typeof window.updateTopSummary === 'function') {
+          const capValue = getLegendCapValue();
+          const coveredPcons = new Set(rowsWithPcon.map((row) => resolvePconCode(row)).filter(Boolean));
+          let newest = null, oldest = null;
+          candidates.forEach(({ row }) => {
+            const ts = resolveLatestTimestamp(row);
+            if (ts) {
+              if (!newest || ts > newest) newest = ts;
+              if (!oldest || ts < oldest) oldest = ts;
+            }
+          });
+          const palette = HEAT_STOPS.map((n, i) => resolveCssColor(n, HEAT_STOP_FALLBACKS[i]));
+          const highestColor = d3.interpolateRgbBasis(palette)(mapValueToT(highest.value, capValue));
+          window.updateTopSummary({
+            totalSensors: totalStations,
+            pconCovered: coveredPcons.size,
+            pconTotal: pconCodes.size,
+            areaLabel: AREA_LABEL_PLURAL,
+            pollutantLabel,
+            pollutantUnits,
+            highestValue: highest.value,
+            highestColor,
+            highestSensor: resolveStationName(highest.row),
+            highestNetwork: resolveConnectorLabel(highest.row),
+            newestReadingISO: newest ? (newest.toISOString?.() || newest) : null,
+            oldestReadingISO: oldest ? (oldest.toISOString?.() || oldest) : null,
+          }, 'cr-top');
+        }
       }
 
       function updateRowCountText() {
@@ -8818,19 +10597,19 @@
         if (!hexes.size()) {
           return;
         }
-        if (!selectedPconCode) {
+        if (!selectedAreaCode) {
           hexes.classed("is-selected", false).classed("is-dimmed", false);
           return;
         }
         hexes
-          .classed("is-selected", (cell) => cell.pcon_code === selectedPconCode)
-          .classed("is-dimmed", (cell) => cell.pcon_code !== selectedPconCode);
+          .classed("is-selected", (cell) => resolveCellAreaCode(cell) === selectedAreaCode)
+          .classed("is-dimmed", (cell) => resolveCellAreaCode(cell) !== selectedAreaCode);
       }
 
       function setSelectedCell(cell) {
         selectedCell = cell || null;
-        selectedPconCode = cell?.pcon_code || null;
-        if (!selectedPconCode) {
+        selectedAreaCode = resolveCellAreaCode(cell);
+        if (!selectedAreaCode) {
           pinnedTooltipCell = null;
           if (tooltip) {
             tooltip.classList.remove("visible");
@@ -8839,6 +10618,47 @@
         updateSelectedHexStyles();
         updateSummary();
         updateDetailsPanel();
+      }
+
+      function selectAreaByCode(code, { allowRegionSwitch = true, updateUrl = true } = {}) {
+        const normalized = typeof code === "string" ? code.trim().toUpperCase() : "";
+        if (!normalized) {
+          return false;
+        }
+        const match = hexCells.find((cell) => {
+          const cellCode = resolveCellAreaCode(cell);
+          return typeof cellCode === "string" && cellCode.trim().toUpperCase() === normalized;
+        }) || null;
+        if (match) {
+          setSelectedCell(match);
+          if (tooltip) {
+            tooltip.classList.remove("visible");
+          }
+          return true;
+        }
+        if (!allowRegionSwitch) {
+          return false;
+        }
+        const targetRegion = areaRegionLookup.get(normalized) || null;
+        if (targetRegion && targetRegion !== activeRegion) {
+          pendingSelectedAreaCode = normalized;
+          setActiveRegion(targetRegion, { updateUrl });
+          return true;
+        }
+        if (targetRegion && targetRegion === activeRegion && statusEl?.textContent === "Loading...") {
+          pendingSelectedAreaCode = normalized;
+          return true;
+        }
+        return false;
+      }
+
+      function applyPendingAreaSelection() {
+        if (!pendingSelectedAreaCode) {
+          return false;
+        }
+        const code = pendingSelectedAreaCode;
+        pendingSelectedAreaCode = null;
+        return selectAreaByCode(code, { allowRegionSwitch: false, updateUrl: false });
       }
 
       function compareTextValues(a, b) {
@@ -8947,7 +10767,7 @@
           return;
         }
         const pollutantUnits = getPollutantUnits(activePollutant);
-        if (!selectedPconCode) {
+        if (!selectedAreaCode) {
           detailsTitle.textContent = "Selected Networks";
           detailsMeta.textContent = "Network summary for the current window.";
           detailsEmpty.hidden = true;
@@ -8958,11 +10778,11 @@
           return;
         }
         networkSummary.hidden = true;
-        const row = pconLookup.get(selectedPconCode);
-        const areaName = selectedCell?.pcon_name || row?.pcon_name || selectedPconCode;
+        const row = pconLookup.get(selectedAreaCode);
+        const areaName = resolveCellAreaName(selectedCell) || resolveAreaName(row) || selectedAreaCode;
         detailsTitle.textContent = areaName;
         const scopedRows = getRowsForActivePollutant(scopedLatestRows);
-        const stationEntries = collectStationEntries(scopedRows, selectedPconCode);
+        const stationEntries = collectStationEntries(scopedRows, selectedAreaCode);
         if (!stationEntries.length) {
           detailsMeta.textContent = formatSensorCount(0);
           detailsEmpty.textContent = "No sensors found for this local authority.";
@@ -9154,6 +10974,8 @@
             cy: y,
             q,
             r,
+            area_code: key,
+            area_name: value?.n || null,
             pcon_code: key,
             pcon_name: value?.n || null,
             region_code: value?.region || null,
@@ -9461,14 +11283,33 @@
           const name = laName || code;
           cells.push({
             id: code,
-            pcon_code: code || null,
-            pcon_name: name || null,
+            area_code: code || null,
+            area_name: name || null,
             region_name: regionName || null,
             paths: rings,
           });
         });
         const compactedCells = compactGeoIslands(cells, activeRegion);
         return { cells: compactedCells, bounds: computePolygonBounds(compactedCells), side: null, layout: null };
+      }
+
+      function buildAreaRegionLookupFromGeojson(geojson) {
+        const features = Array.isArray(geojson?.features) ? geojson.features : [];
+        const lookup = new Map();
+        features.forEach((feature) => {
+          const props = feature?.properties || {};
+          const laCode = typeof props.la_code === "string" ? props.la_code.trim().toUpperCase() : "";
+          if (!laCode) {
+            return;
+          }
+          const laName = typeof props.la_name === "string" ? props.la_name.trim() : "";
+          const regionName = resolveLaRegionName(laCode, laName, props.region_nation);
+          if (!regionName || lookup.has(laCode)) {
+            return;
+          }
+          lookup.set(laCode, regionName);
+        });
+        return lookup;
       }
 
       function offsetToAxial(layout, col, row) {
@@ -9863,17 +11704,17 @@
         const groups = new Map();
         const scopedRows = getRowsForActivePollutant(rows);
         scopedRows.forEach((row, index) => {
-          const pconCode = resolvePconCode(row);
-          if (!pconCode) {
+          const areaCode = resolveAreaCode(row);
+          if (!areaCode) {
             return;
           }
           const value = resolveLatestValue(row);
           if (!Number.isFinite(value)) {
             return;
           }
-          const stationKey = resolveStationKey(row) || `${pconCode}-${index}`;
+          const stationKey = resolveStationKey(row) || `${areaCode}-${index}`;
           const timestamp = parseDate(row?.last_value_at || row?.observed_at || row?.latest_value_at);
-          const group = groups.get(pconCode) || { stations: new Map(), latestAt: null };
+          const group = groups.get(areaCode) || { stations: new Map(), latestAt: null };
           const existing = group.stations.get(stationKey);
           if (!existing || (timestamp && (!existing.timestamp || timestamp > existing.timestamp))) {
             group.stations.set(stationKey, { value, timestamp });
@@ -9881,11 +11722,11 @@
           if (timestamp && (!group.latestAt || timestamp > group.latestAt)) {
             group.latestAt = timestamp;
           }
-          groups.set(pconCode, group);
+          groups.set(areaCode, group);
         });
 
         const rowsForMap = [];
-        groups.forEach((group, pconCode) => {
+        groups.forEach((group, areaCode) => {
           const values = Array.from(group.stations.values())
             .map((entry) => entry.value)
             .filter((value) => Number.isFinite(value));
@@ -9898,10 +11739,10 @@
             ? (sorted[midpoint - 1] + sorted[midpoint]) / 2
             : sorted[midpoint];
           const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-          const baseRow = basePconLookup.get(pconCode) || {};
+          const baseRow = basePconLookup.get(areaCode) || {};
           rowsForMap.push({
-            pcon_code: pconCode,
-            pcon_name: baseRow.pcon_name || null,
+            area_code: areaCode,
+            area_name: resolveAreaName(baseRow),
             pcon_version: baseRow.pcon_version || baseRow.la_version || activeLaVersion,
             station_count: values.length,
             single_site: values.length === 1,
@@ -9937,7 +11778,7 @@
         latestRows = filterRowsByWindow(filteredLatest);
         const derived = latestRows.length ? buildPconRowsFromLatest(latestRows) : [];
         pconRows = derived;
-        pconLookup = new Map(pconRows.map((row) => [row.pcon_code, row]));
+        pconLookup = new Map(pconRows.map((row) => [resolveAreaCode(row), row]));
         updateRowCountText();
         updateSummary();
         renderMap();
@@ -9977,12 +11818,14 @@
           });
         }
         syncNetworkActionState();
+        syncNetworkRowMutedState();
         applyNetworkFilters();
       }
 
       function handleNetworkToggle() {
         networkSelectionMismatch = false;
         syncNetworkActionState();
+        syncNetworkRowMutedState();
         applyNetworkFilters();
       }
 
@@ -10040,7 +11883,8 @@
             return buildPathFromRings(rings, projection);
           })
           .attr("fill", (cell) => {
-            const row = pconLookup.get(cell.pcon_code);
+            const areaCode = resolveCellAreaCode(cell);
+            const row = areaCode ? pconLookup.get(areaCode) : null;
             const value = getMetricValue(row);
             if (!colorScale || !Number.isFinite(value)) {
               return "var(--no-data)";
@@ -10052,13 +11896,14 @@
             setSelectedCell(cell);
           })
           .on("mouseenter", (event, cell) => {
-            const row = pconLookup.get(cell.pcon_code);
+            const areaCode = resolveCellAreaCode(cell);
+            const row = areaCode ? pconLookup.get(areaCode) : null;
             const metricValue = getMetricValue(row);
-            const areaName = cell.pcon_name || row?.pcon_name || cell.pcon_code || "Unknown local authority";
+            const areaName = resolveCellAreaName(cell) || resolveAreaName(row) || areaCode || "Unknown local authority";
             const regionLabel = cell.region_name || cell.region_code || "Unknown region";
             const pollutantLabel = getPollutantLabel(activePollutant);
             const pollutantUnits = getPollutantUnits(activePollutant);
-            const populationEntry = populationLookup.get(cell.pcon_code);
+            const populationEntry = areaCode ? populationLookup.get(areaCode) : null;
             const populationValue = normalizeNumber(populationEntry?.population_value);
             const populationDate = parseDate(populationEntry?.reference_date);
             const populationYear = populationDate ? populationDate.getFullYear() : null;
@@ -10069,8 +11914,8 @@
               ? `${formatValue(metricValue)} ${pollutantUnits}`
               : `No ${pollutantLabel} data`;
             const rowsForTooltip = getRowsForActivePollutant(latestRows)
-              .filter((item) => resolvePconCode(item) === cell.pcon_code);
-            const stationEntries = collectStationEntries(rowsForTooltip, cell.pcon_code);
+              .filter((item) => resolveAreaCode(item) === areaCode);
+            const stationEntries = collectStationEntries(rowsForTooltip, areaCode);
             const networkCounts = countStationsByNetwork(stationEntries);
             const networkLines = stationEntries.length
               ? networkCounts.map((entry) =>
@@ -10156,8 +12001,9 @@
         loadMapData();
       }
 
-      async function loadMapData() {
-        if (!isCrMapVisible()) {
+      async function loadMapData(options = {}) {
+        const force = Boolean(options?.force);
+        if (!force && !isCrMapVisible()) {
           return;
         }
         const requestPollutant = activePollutant;
@@ -10170,6 +12016,7 @@
           || requestWindow !== currentWindow
           || requestRegion !== activeRegion;
         setStatus("Loading...");
+        setMapLoading(true);
         if (errorEl) {
           errorEl.textContent = "";
           errorEl.hidden = true;
@@ -10261,12 +12108,7 @@
             //   }).catch(() => null)
             //   : Promise.resolve(null);
           }
-          const [hexResponse, laResponse, latestResponse, populationResponse] = await Promise.all([
-            hexPromise,
-            laPromise,
-            latestPromise,
-            populationPromise,
-          ]);
+          const hexResponse = await hexPromise;
           if (isStale()) {
             return;
           }
@@ -10275,7 +12117,21 @@
           }
           hexData = await hexResponse.json();
           prepareHexGrid();
-          pconCodes = new Set(hexCells.map((cell) => cell.pcon_code).filter(Boolean));
+          renderMapIfReady();
+          requestAnimationFrame(() => {
+            if (!isStale()) {
+              renderMapIfReady();
+            }
+          });
+          const [laResponse, latestResponse, populationResponse] = await Promise.all([
+            laPromise,
+            latestPromise,
+            populationPromise,
+          ]);
+          if (isStale()) {
+            return;
+          }
+          pconCodes = new Set(hexCells.map((cell) => resolveCellAreaCode(cell)).filter(Boolean));
           const laNotModified = Boolean(canLoadData && laResponse && laResponse.status === 304);
           const laOk = Boolean(canLoadData && laResponse && (laResponse.ok || laNotModified));
           if (laOk) {
@@ -10287,23 +12143,26 @@
             }
             if (laResponse && laResponse.status === 304) {
               pconRows = basePconRows;
-              pconLookup = new Map(pconRows.map((row) => [row.pcon_code, row]));
+              pconLookup = new Map(pconRows.map((row) => [resolveAreaCode(row), row]));
             } else {
               const payload = await laResponse.json();
               const laSince = laCacheKey ? normalizeIsoTimestamp(laSinceByKey.get(laCacheKey)) : null;
               const rawRows = payload?.data || [];
               const incomingRows = rawRows.map((row) => ({
                 ...row,
-                pcon_code: row?.la_code || null,
-                pcon_name: row?.pcon_name || row?.la_name || null,
+                area_code: row?.area_code || row?.la_code || null,
+                area_name: row?.area_name || row?.la_name || row?.pcon_name || null,
                 region_name: row?.region_name || row?.region_nation || row?.region || null,
-              })).filter((row) => !pconCodes.size || pconCodes.has(row.pcon_code));
+              })).filter((row) => {
+                const code = resolveAreaCode(row);
+                return !pconCodes.size || (code && pconCodes.has(code));
+              });
               basePconRows = laSince
                 ? mergePconRows(basePconRows, incomingRows)
                 : incomingRows;
-              basePconLookup = new Map(basePconRows.map((row) => [row.pcon_code, row]));
+              basePconLookup = new Map(basePconRows.map((row) => [resolveAreaCode(row), row]));
               pconRows = basePconRows;
-              pconLookup = new Map(pconRows.map((row) => [row.pcon_code, row]));
+              pconLookup = new Map(pconRows.map((row) => [resolveAreaCode(row), row]));
               const nextSince = normalizeIsoTimestamp(payload?.next_since) || laSince;
               if (laCacheKey) {
                 if (nextSince) {
@@ -10430,11 +12289,12 @@
               lastUpdated.textContent = "Boundary only (no sensor data yet)";
             }
           }
-          if (isStale()) {
-            return;
-          }
-          applyNetworkFilters();
-          setStatus("Live");
+	          if (isStale()) {
+	            return;
+	          }
+	          applyNetworkFilters();
+	          applyPendingAreaSelection();
+	          setStatus("Live");
         } catch (error) {
           if (isStale()) {
             return;
@@ -10641,16 +12501,127 @@
       applyMetricState();
       updatePollutantLabels();
       currentWindow = normalizeWindowKey(sharedSettings.window || currentWindow);
-      syncWindowInputs();
-      syncSettingsPanelWidth();
-      syncColorScaleInputs();
-      updateLegendScaleDescription();
-      syncCrPollingOnVisibility();
+	      syncWindowInputs();
+	      syncSettingsPanelWidth();
+	      syncColorScaleInputs();
+	      updateLegendScaleDescription();
+	      syncCrPollingOnVisibility();
 
-      window.crMap = {
-        render: () => {
-          if (statusEl.textContent === "Live") {
-            requestAnimationFrame(() => {
+      function buildLocalAuthoritySearchRecords() {
+        const records = [];
+        const seenCodes = new Set();
+        if (hexData?.type === "FeatureCollection") {
+          const features = Array.isArray(hexData?.features) ? hexData.features : [];
+          features.forEach((feature, index) => {
+            const props = feature?.properties || {};
+            const rawCode = typeof props.la_code === "string" ? props.la_code.trim() : "";
+            const rawName = typeof props.la_name === "string" ? props.la_name.trim() : "";
+            const regionName = resolveLaRegionName(rawCode, rawName, props.region_nation);
+            const code = (rawCode || `LA-${index}`).toUpperCase();
+            if (!code || seenCodes.has(code)) {
+              return;
+            }
+            seenCodes.add(code);
+            records.push({
+              code,
+              name: rawName || code,
+              region_name: regionName || null,
+            });
+          });
+          return records;
+        }
+        hexCells.forEach((cell) => {
+          const cellCode = resolveCellAreaCode(cell);
+          const rawCode = typeof cellCode === "string" ? cellCode.trim() : "";
+          if (!rawCode) {
+            return;
+          }
+          const code = rawCode.toUpperCase();
+          if (seenCodes.has(code)) {
+            return;
+          }
+          seenCodes.add(code);
+          records.push({
+            code,
+            name: resolveCellAreaName(cell) || code,
+            region_name: cell?.region_name || null,
+          });
+        });
+        return records;
+      }
+
+      function buildSensorSearchRecords() {
+        const rowsForSearch = scopedLatestRows.length ? scopedLatestRows : baseLatestRows;
+        const recordsByKey = new Map();
+        rowsForSearch.forEach((row, index) => {
+          const stationId = resolveStationKey(row) || `cr:${index}`;
+          const stationName = resolveStationName(row);
+          const networkName = resolvePrimaryNetworkLabel(row) || resolveConnectorLabel(row) || null;
+          const areaRaw = resolveAreaCode(row);
+          const pconRaw = resolvePconCode(row);
+          const laCode = typeof areaRaw === "string" ? areaRaw.trim().toUpperCase() : null;
+          const pconCode = typeof pconRaw === "string" ? pconRaw.trim().toUpperCase() : null;
+          const { lat, lon } = resolveCoordinatePair(row);
+          const key = `${stationId}::${networkName || ""}`;
+          const existing = recordsByKey.get(key);
+          if (existing) {
+            if (!existing.pcon_code && pconCode) {
+              existing.pcon_code = pconCode;
+            }
+            if (!existing.la_code && laCode) {
+              existing.la_code = laCode;
+            }
+            if (!Number.isFinite(existing.lat) && Number.isFinite(lat)) {
+              existing.lat = lat;
+            }
+            if (!Number.isFinite(existing.lon) && Number.isFinite(lon)) {
+              existing.lon = lon;
+            }
+            return;
+          }
+          recordsByKey.set(key, {
+            station_id: stationId,
+            station_name: stationName,
+            network_name: networkName,
+            pcon_code: pconCode,
+            la_code: laCode,
+            lat,
+            lon,
+          });
+        });
+        return Array.from(recordsByKey.values());
+      }
+
+      function hasCrSearchData() {
+        if (hexData?.type === "FeatureCollection") {
+          return Array.isArray(hexData.features) && hexData.features.length > 0;
+        }
+        return hexCells.length > 0;
+      }
+
+      function ensureCrSearchDataLoaded() {
+        if (hasCrSearchData()) {
+          return Promise.resolve(true);
+        }
+        if (crSearchPreloadPromise) {
+          return crSearchPreloadPromise;
+        }
+        crSearchPreloadPromise = loadMapData({ force: true })
+          .then(() => hasCrSearchData())
+          .catch((error) => {
+            console.warn("uk_aq C&R search preload failed", error);
+            return false;
+          })
+          .finally(() => {
+            crSearchPreloadPromise = null;
+          });
+        return crSearchPreloadPromise;
+      }
+
+	      window.crMap = {
+	        render: () => {
+	          if (statusEl.textContent === "Live") {
+	            requestAnimationFrame(() => {
               renderMap();
             });
           }
@@ -10660,11 +12631,16 @@
           applyStoredNetworkSelection();
           applyNetworkFilters();
         },
-        setRegion: (region, options) => {
-          setActiveRegion(region, options);
-        },
-        getRegion: () => activeRegion,
-      };
+	        setRegion: (region, options) => {
+	          setActiveRegion(region, options);
+	        },
+	        getRegion: () => activeRegion,
+	        selectAreaByCode: (code, options) => selectAreaByCode(code, options),
+	        getActiveAreaCode: () => selectedAreaCode,
+	        ensureSearchDataLoaded: () => ensureCrSearchDataLoaded(),
+	        getLocalAuthoritySearchRecords: () => buildLocalAuthoritySearchRecords(),
+	        getSensorSearchRecords: () => buildSensorSearchRecords(),
+	      };
 })();
 
     </script>
@@ -10681,11 +12657,6 @@
   const tabSlots = {
     uk: panelUk.querySelector("[data-tab-slot]"),
     cr: panelCr.querySelector("[data-tab-slot]"),
-  };
-  const pollutantSelector = document.getElementById("pollutant-selector");
-  const pollutantSlots = {
-    uk: panelUk.querySelector("[data-pollutant-slot]"),
-    cr: panelCr.querySelector("[data-pollutant-slot]"),
   };
 
   const REGION_OPTIONS = [
@@ -10740,6 +12711,12 @@
 
   window.updateMapParam = updateMapParam;
 
+  const toolbarEl = document.getElementById("main-toolbar");
+  const toolbarSlots = {
+    uk: document.getElementById("uk-toolbar-slot"),
+    cr: document.getElementById("cr-toolbar-slot"),
+  };
+
   function setActiveTab(tabKey) {
     const isUk = tabKey === "uk";
     tabUk.setAttribute("aria-selected", isUk ? "true" : "false");
@@ -10748,19 +12725,22 @@
     if (tabBar && targetSlot && tabBar.parentElement !== targetSlot) {
       targetSlot.appendChild(tabBar);
     }
-    const pollutantSlot = isUk ? pollutantSlots.uk : pollutantSlots.cr;
-    if (pollutantSelector && pollutantSlot && pollutantSelector.parentElement !== pollutantSlot) {
-      pollutantSlot.appendChild(pollutantSelector);
+    const toolbarSlot = isUk ? toolbarSlots.uk : toolbarSlots.cr;
+    if (toolbarEl && toolbarSlot && toolbarEl.parentElement !== toolbarSlot) {
+      toolbarSlot.appendChild(toolbarEl);
     }
     panelUk.hidden = !isUk;
     panelCr.hidden = isUk;
     if (isUk) {
       window.ukMap?.render();
       window.ukMap?.restoreNetworks();
+      void window.crMap?.ensureSearchDataLoaded?.();
     } else {
       window.crMap?.render();
       window.crMap?.restoreNetworks();
+      void window.ukMap?.ensureSearchDataLoaded?.();
     }
+    window.syncToolbar?.(tabKey);
   }
 
   function applyMap(mapValue, options = {}) {
@@ -10782,6 +12762,23 @@
     }
   }
 
+  window.mapTabController = {
+    getActiveTab: () => (tabUk.getAttribute("aria-selected") === "true" ? "uk" : "cr"),
+    switchToUk: (options = {}) => {
+      applyMap("UK", {
+        updateUrl: options.updateUrl !== false,
+        push: options.push !== false,
+      });
+    },
+    switchToCr: (region, options = {}) => {
+      const target = normalizeMap(region) || normalizeMap(mapState.lastCrMap) || DEFAULT_CR_MAP;
+      applyMap(target, {
+        updateUrl: options.updateUrl !== false,
+        push: options.push !== false,
+      });
+    },
+  };
+
   tabUk.addEventListener("click", () => {
     applyMap("UK", { updateUrl: true, push: true });
   });
@@ -10801,6 +12798,1206 @@
     mapState.lastCrMap = initialMap;
   }
   applyMap(initialMap, { updateUrl: !params.get("map"), push: false });
+})();
+    </script>
+    <script>
+(() => {
+  const toolbarTabUk = document.getElementById("toolbar-tab-uk");
+  const toolbarTabCr = document.getElementById("toolbar-tab-cr");
+  const regionSection = document.getElementById("toolbar-region-section");
+  const regionTrigger = document.getElementById("toolbar-region-trigger");
+  const regionLabel = document.getElementById("toolbar-region-label");
+  const regionMenu = document.getElementById("toolbar-region-menu");
+  const popoverWrap = document.getElementById("toolbar-popover-wrap");
+  const tabUk = document.getElementById("tab-uk");
+  const tabCr = document.getElementById("tab-cr");
+
+  // Segmented control → delegate to existing hidden tab buttons
+  toolbarTabUk?.addEventListener("click", () => tabUk?.click());
+  toolbarTabCr?.addEventListener("click", () => tabCr?.click());
+
+  // Region popover — open/close
+  regionTrigger?.addEventListener("click", () => {
+    const isOpen = !regionMenu.hidden;
+    regionMenu.hidden = isOpen;
+    regionTrigger.classList.toggle("open", !isOpen);
+    regionTrigger.setAttribute("aria-expanded", String(!isOpen));
+    if (!isOpen) syncRegionActive();
+  });
+
+  // Close on outside click
+  document.addEventListener("mousedown", (e) => {
+    if (popoverWrap && !popoverWrap.contains(e.target)) {
+      regionMenu.hidden = true;
+      regionTrigger?.classList.remove("open");
+      regionTrigger?.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  // Region item clicks
+  regionMenu?.querySelectorAll("[data-region]").forEach((item) => {
+    item.addEventListener("click", () => {
+      const region = item.dataset.region;
+      regionMenu.hidden = true;
+      regionTrigger?.classList.remove("open");
+      regionTrigger?.setAttribute("aria-expanded", "false");
+      if (regionLabel) regionLabel.textContent = region;
+      syncRegionActive(region);
+      window.crMap?.setRegion(region, { updateUrl: true });
+    });
+  });
+
+  function syncRegionActive(active) {
+    const current = active ?? window.crMap?.getRegion?.();
+    if (!regionMenu || !current) return;
+    regionMenu.querySelectorAll("[data-region]").forEach((item) => {
+      item.classList.toggle("active", item.dataset.region === current);
+    });
+  }
+
+  // Called by setActiveTab whenever the active tab changes
+  window.syncToolbar = function (tabKey) {
+    const isUk = tabKey === "uk";
+    toolbarTabUk?.classList.toggle("active", isUk);
+    toolbarTabCr?.classList.toggle("active", !isUk);
+    if (regionSection) regionSection.classList.toggle("visible", !isUk);
+    if (!isUk && regionLabel) {
+      const region = window.crMap?.getRegion?.();
+      if (region) {
+        regionLabel.textContent = region;
+        syncRegionActive(region);
+      }
+    }
+  };
+
+  // Sync toolbar to the tab state that was already set before this script ran
+  const initialTabKey = tabUk?.getAttribute("aria-selected") === "true" ? "uk" : "cr";
+  window.syncToolbar(initialTabKey);
+})();
+    </script>
+    <script>
+(() => {
+  const searchRoots = Array.from(document.querySelectorAll("[data-map-search]"));
+  if (!searchRoots.length) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const postcodeSuggestUrl = String(params.get("postcode_suggest_url") || "").trim() || "/api/aq/postcode_suggest";
+  const postcodeLookupUrl = String(params.get("postcode_lookup_url") || "").trim() || "/api/aq/postcode_lookup";
+  const postcodeSuggestUrlCandidates = [postcodeSuggestUrl];
+  const postcodeLookupUrlCandidates = [postcodeLookupUrl];
+  let workingPostcodeSuggestUrl = null;
+  let workingPostcodeLookupUrl = null;
+  const failedPostcodeSuggestUrls = new Set();
+  const failedPostcodeLookupUrls = new Set();
+  let postcodeSuggestDisabled = false;
+  let postcodeLookupDisabled = false;
+  const MAX_RESULTS = 6;
+  const MAX_PER_TYPE = 2;
+  const MAX_LIMIT = 10;
+  const POSTCODE_DEBOUNCE_MS = 250;
+  const LOCAL_SEARCH_MIN_CHARS = 1;
+  const MOBILE_BREAKPOINT_QUERY = "(max-width: 720px)";
+
+  function normalizeText(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ");
+  }
+
+  function normalizePostcode(value) {
+    return String(value || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
+  }
+
+  function normalizeCode(value) {
+    const code = typeof value === "string" ? value.trim().toUpperCase() : "";
+    return code || null;
+  }
+
+  function parseLimit(rawValue, fallback) {
+    const parsed = Number.parseInt(rawValue ?? "", 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return fallback;
+    }
+    return Math.min(MAX_LIMIT, Math.max(1, parsed));
+  }
+
+  function looksLikePostcodePrefix(value) {
+    const compact = normalizePostcode(value);
+    if (!compact || compact.length > 7 || !/^[A-Z0-9]+$/.test(compact)) {
+      return false;
+    }
+    if (!/^[A-Z]/.test(compact)) {
+      return false;
+    }
+    if (compact.length <= 2) {
+      return /^[A-Z]{1,2}$/.test(compact);
+    }
+    if (compact.length === 3) {
+      return /^[A-Z]{1,2}\d[A-Z0-9]?$/.test(compact);
+    }
+    return /^[A-Z]{1,2}\d[A-Z0-9]{1,4}$/.test(compact);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function buildPostcodeLabel(postcode, areaName, postTown) {
+    const trimmedPostcode = String(postcode || "").trim();
+    const area = String(areaName || "").trim();
+    const town = String(postTown || "").trim();
+    const parts = [];
+    if (trimmedPostcode) {
+      parts.push(trimmedPostcode);
+    }
+    if (area && town) {
+      if (normalizeText(area) === normalizeText(town)) {
+        parts.push(area);
+      } else {
+        parts.push(area, town);
+      }
+    } else if (area) {
+      parts.push(area);
+    } else if (town) {
+      parts.push(town);
+    }
+    return parts.join(", ");
+  }
+
+  function getResultTypeLabel(kind) {
+    if (kind === "postcode" || kind === "postcode_hint") {
+      return "POSTCODE";
+    }
+    if (kind === "constituency") {
+      return "CONSTITUENCY";
+    }
+    if (kind === "local_authority") {
+      return "LOCAL\nAUTHORITY";
+    }
+    if (kind === "sensor") {
+      return "SENSOR";
+    }
+    return "RESULT";
+  }
+
+  function isMobileSearch() {
+    return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
+  }
+
+  function getActiveTab() {
+    if (window.mapTabController?.getActiveTab) {
+      return window.mapTabController.getActiveTab();
+    }
+    const tabUk = document.getElementById("tab-uk");
+    return tabUk?.getAttribute("aria-selected") === "true" ? "uk" : "cr";
+  }
+
+  function switchToUkTab() {
+    if (window.mapTabController?.switchToUk) {
+      window.mapTabController.switchToUk({ updateUrl: true, push: false });
+      return;
+    }
+    document.getElementById("tab-uk")?.click();
+  }
+
+  function switchToCrTab(region) {
+    if (window.mapTabController?.switchToCr) {
+      window.mapTabController.switchToCr(region, { updateUrl: true, push: false });
+      return;
+    }
+    document.getElementById("tab-cr")?.click();
+  }
+
+  function selectPconByCode(code) {
+    if (!code || !window.ukMap?.selectPconByCode) {
+      return false;
+    }
+    return Boolean(window.ukMap.selectPconByCode(code));
+  }
+
+  function selectLaByCode(code) {
+    if (!code || !window.crMap?.selectAreaByCode) {
+      return false;
+    }
+    return Boolean(window.crMap.selectAreaByCode(code, { allowRegionSwitch: true, updateUrl: true }));
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  async function ensureUkSearchDataLoaded() {
+    if (!window.ukMap?.ensureSearchDataLoaded) {
+      return false;
+    }
+    try {
+      return Boolean(await window.ukMap.ensureSearchDataLoaded());
+    } catch (error) {
+      console.warn("uk_aq UK search ensure failed", error);
+      return false;
+    }
+  }
+
+  async function ensureCrSearchDataLoaded() {
+    if (!window.crMap?.ensureSearchDataLoaded) {
+      return false;
+    }
+    try {
+      return Boolean(await window.crMap.ensureSearchDataLoaded());
+    } catch (error) {
+      console.warn("uk_aq C&R search ensure failed", error);
+      return false;
+    }
+  }
+
+  async function selectConstituencyCode(code) {
+    const normalized = normalizeCode(code);
+    if (!normalized) {
+      return false;
+    }
+    switchToUkTab();
+    await ensureUkSearchDataLoaded();
+    if (selectPconByCode(normalized)) {
+      return true;
+    }
+    await delay(120);
+    return selectPconByCode(normalized);
+  }
+
+  async function selectLocalAuthorityCode(code, regionName = null) {
+    const normalized = normalizeCode(code);
+    if (!normalized) {
+      return false;
+    }
+    switchToCrTab(regionName || null);
+    await ensureCrSearchDataLoaded();
+    if (selectLaByCode(normalized)) {
+      return true;
+    }
+    await delay(120);
+    return selectLaByCode(normalized);
+  }
+
+  function makeRequestUrl(basePath, paramsObject) {
+    const requestUrl = new URL(basePath, window.location.origin);
+    Object.entries(paramsObject).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === "") {
+        return;
+      }
+      requestUrl.searchParams.set(key, String(value));
+    });
+    return requestUrl.toString();
+  }
+
+  async function safeReadJson(response) {
+    try {
+      return await response.json();
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  async function fetchPostcodeSuggestions(query, signal, limit) {
+    if (postcodeSuggestDisabled) {
+      const error = new Error("Postcode search unavailable");
+      error.status = 503;
+      throw error;
+    }
+    const baseCandidates = workingPostcodeSuggestUrl
+      ? [workingPostcodeSuggestUrl]
+      : postcodeSuggestUrlCandidates;
+    const candidates = baseCandidates.filter((url) => !failedPostcodeSuggestUrls.has(url));
+    if (!candidates.length) {
+      postcodeSuggestDisabled = true;
+      const error = new Error("Postcode search unavailable");
+      error.status = 503;
+      throw error;
+    }
+    let lastError = null;
+    for (const baseUrl of candidates) {
+      const requestUrl = makeRequestUrl(baseUrl, {
+        q: query,
+        limit,
+      });
+      const response = await fetch(requestUrl, { signal });
+      const payload = await safeReadJson(response);
+      if (!response.ok) {
+        if (response.status === 404 && !workingPostcodeSuggestUrl) {
+          failedPostcodeSuggestUrls.add(baseUrl);
+          continue;
+        }
+        if (response.status === 400) {
+          workingPostcodeSuggestUrl = baseUrl;
+          return [];
+        }
+        const message = payload?.message || "Postcode search unavailable";
+        const error = new Error(message);
+        error.status = response.status;
+        lastError = error;
+        if (!workingPostcodeSuggestUrl && (response.status === 401 || response.status === 403 || response.status === 405)) {
+          failedPostcodeSuggestUrls.add(baseUrl);
+          continue;
+        }
+        throw error;
+      }
+      workingPostcodeSuggestUrl = baseUrl;
+      const rows = Array.isArray(payload?.results) ? payload.results : [];
+      return rows.map((row) => {
+        if (row?.type === "postcode_hint") {
+          return null;
+        }
+        const postcode = String(row?.postcode || "").trim();
+        const postcodeNormalised = normalizePostcode(row?.postcode_normalised || postcode);
+        const areaName = String(row?.area_name || "").trim();
+        const postTown = String(row?.post_town || "").trim();
+        return {
+          group: "postcode",
+          kind: "postcode",
+          type_label: getResultTypeLabel("postcode"),
+          postcode,
+          postcode_normalised: postcodeNormalised,
+          area_name: areaName || null,
+          post_town: postTown || null,
+          area_town_id: Number.isFinite(Number(row?.area_town_id)) ? Number(row.area_town_id) : null,
+          primary: postcode || postcodeNormalised,
+          secondary: buildPostcodeLabel("", areaName, postTown),
+        };
+      }).filter((row) => row?.primary);
+    }
+    postcodeSuggestDisabled = true;
+    if (lastError) {
+      throw lastError;
+    }
+    const error = new Error("Postcode search unavailable");
+    error.status = 503;
+    throw error;
+  }
+
+  async function fetchExactPostcode(postcode) {
+    if (postcodeLookupDisabled) {
+      const error = new Error("Postcode lookup unavailable");
+      error.status = 503;
+      throw error;
+    }
+    const baseCandidates = workingPostcodeLookupUrl
+      ? [workingPostcodeLookupUrl]
+      : postcodeLookupUrlCandidates;
+    const candidates = baseCandidates.filter((url) => !failedPostcodeLookupUrls.has(url));
+    if (!candidates.length) {
+      postcodeLookupDisabled = true;
+      const error = new Error("Postcode lookup unavailable");
+      error.status = 503;
+      throw error;
+    }
+    let lastError = null;
+    for (const baseUrl of candidates) {
+      const requestUrl = makeRequestUrl(baseUrl, { postcode });
+      const response = await fetch(requestUrl);
+      const payload = await safeReadJson(response);
+      if (!response.ok || payload?.ok === false) {
+        const status = response.status || 500;
+        if (status === 404 && !workingPostcodeLookupUrl) {
+          failedPostcodeLookupUrls.add(baseUrl);
+          continue;
+        }
+        const error = new Error(payload?.message || "Postcode lookup unavailable");
+        error.status = status;
+        error.code = payload?.error || null;
+        lastError = error;
+        if (!workingPostcodeLookupUrl && (status === 401 || status === 403 || status === 405)) {
+          failedPostcodeLookupUrls.add(baseUrl);
+          continue;
+        }
+        throw error;
+      }
+      workingPostcodeLookupUrl = baseUrl;
+      return payload || {};
+    }
+    postcodeLookupDisabled = true;
+    if (lastError) {
+      throw lastError;
+    }
+    const error = new Error("Postcode lookup unavailable");
+    error.status = 503;
+    throw error;
+  }
+
+  function buildConstituencySearchIndex() {
+    const rows = window.ukMap?.getConstituencySearchRecords?.() || [];
+    return rows.map((row) => {
+      const code = normalizeCode(row?.code);
+      const name = String(row?.name || "").trim();
+      if (!code || !name) {
+        return null;
+      }
+      return {
+        group: "constituency",
+        kind: "constituency",
+        type_label: getResultTypeLabel("constituency"),
+        code,
+        primary: name,
+        secondary: "",
+        _nameNorm: normalizeText(name),
+        _searchNorm: normalizeText(`${name} ${code}`),
+      };
+    }).filter(Boolean);
+  }
+
+  function buildLocalAuthoritySearchIndex() {
+    const rows = window.crMap?.getLocalAuthoritySearchRecords?.() || [];
+    return rows.map((row) => {
+      const code = normalizeCode(row?.code);
+      const name = String(row?.name || "").trim();
+      const regionName = String(row?.region_name || "").trim();
+      if (!code || !name) {
+        return null;
+      }
+      return {
+        group: "local_authority",
+        kind: "local_authority",
+        type_label: getResultTypeLabel("local_authority"),
+        code,
+        region_name: regionName || null,
+        primary: name,
+        secondary: regionName || "",
+        _nameNorm: normalizeText(name),
+        _searchNorm: normalizeText(`${name} ${regionName} ${code}`),
+      };
+    }).filter(Boolean);
+  }
+
+  function buildSensorSearchIndex() {
+    const ukRows = window.ukMap?.getSensorSearchRecords?.() || [];
+    const crRows = window.crMap?.getSensorSearchRecords?.() || [];
+    const mergedByKey = new Map();
+    [...ukRows, ...crRows].forEach((row) => {
+      const stationName = String(row?.station_name || "").trim();
+      if (!stationName) {
+        return;
+      }
+      const stationId = String(row?.station_id || "").trim();
+      const networkName = String(row?.network_name || "").trim();
+      const pconCode = normalizeCode(row?.pcon_code);
+      const laCode = normalizeCode(row?.la_code);
+      const key = stationId || `${normalizeText(stationName)}::${normalizeText(networkName)}`;
+      const existing = mergedByKey.get(key);
+      if (existing) {
+        if (!existing.pcon_code && pconCode) {
+          existing.pcon_code = pconCode;
+        }
+        if (!existing.la_code && laCode) {
+          existing.la_code = laCode;
+        }
+        return;
+      }
+      mergedByKey.set(key, {
+        group: "sensor",
+        kind: "sensor",
+        type_label: getResultTypeLabel("sensor"),
+        station_id: stationId || null,
+        pcon_code: pconCode,
+        la_code: laCode,
+        primary: stationName,
+        secondary: networkName || "",
+        _nameNorm: normalizeText(stationName),
+        _searchNorm: normalizeText(`${stationName} ${networkName} ${stationId}`),
+      });
+    });
+    return Array.from(mergedByKey.values());
+  }
+
+  function rankLocalMatches(records, rawQuery) {
+    const queryNorm = normalizeText(rawQuery);
+    const queryCode = normalizePostcode(rawQuery);
+    if (!queryNorm) {
+      return [];
+    }
+    const scored = [];
+    records.forEach((record) => {
+      const code = normalizeCode(record?.code || record?.station_id);
+      const nameNorm = record?._nameNorm || "";
+      const searchNorm = record?._searchNorm || nameNorm;
+      let score = Number.POSITIVE_INFINITY;
+      if (code && queryCode && code === queryCode) {
+        score = 0;
+      } else if (nameNorm === queryNorm) {
+        score = 1;
+      } else if (nameNorm.startsWith(queryNorm)) {
+        score = 2;
+      } else if (searchNorm.split(" ").some((token) => token.startsWith(queryNorm))) {
+        score = 3;
+      } else if (searchNorm.includes(queryNorm)) {
+        score = 4;
+      } else {
+        return;
+      }
+      scored.push({ score, record });
+    });
+    scored.sort((left, right) => {
+      if (left.score !== right.score) {
+        return left.score - right.score;
+      }
+      return left.record.primary.localeCompare(right.record.primary, undefined, { sensitivity: "base" });
+    });
+    return scored.map((entry) => entry.record);
+  }
+
+  function mergeSearchResults(groups, limit) {
+    const orderedTypes = ["postcode", "constituency", "local_authority", "sensor"];
+    const typePriority = new Map(orderedTypes.map((type, index) => [type, index]));
+    const pools = {};
+    orderedTypes.forEach((type) => {
+      pools[type] = Array.isArray(groups[type]) ? [...groups[type]] : [];
+    });
+    const output = [];
+
+    orderedTypes.forEach((type) => {
+      const pool = pools[type];
+      let taken = 0;
+      while (pool.length && output.length < limit && taken < MAX_PER_TYPE) {
+        output.push(pool.shift());
+        taken += 1;
+      }
+    });
+
+    orderedTypes.forEach((type) => {
+      const pool = pools[type];
+      while (pool.length && output.length < limit) {
+        output.push(pool.shift());
+      }
+    });
+
+    // Keep strict display grouping by type priority while preserving ranking within each type.
+    output.sort((left, right) => {
+      const leftPriority = typePriority.get(left?.group) ?? Number.MAX_SAFE_INTEGER;
+      const rightPriority = typePriority.get(right?.group) ?? Number.MAX_SAFE_INTEGER;
+      return leftPriority - rightPriority;
+    });
+
+    return output;
+  }
+
+  function buildResultMarkup(result, index, isActive) {
+    const activeClass = isActive ? " is-active" : "";
+    const secondary = result.secondary
+      ? `<span class="map-search-result-secondary">${escapeHtml(result.secondary)}</span>`
+      : "";
+    return `
+      <button type="button" class="map-search-result${activeClass}" role="option" aria-selected="${isActive ? "true" : "false"}" data-result-index="${index}">
+        <span class="map-search-result-type">${escapeHtml(result.type_label)}</span>
+        <span class="map-search-result-copy">
+          <span class="map-search-result-primary">${escapeHtml(result.primary)}</span>
+          ${secondary}
+        </span>
+      </button>
+    `;
+  }
+
+  function getPlaceholder(kind) {
+    if (isMobileSearch()) {
+      return "Search UK-AQ…";
+    }
+    if (kind === "cr") {
+      return "Search postcodes, local authorities, sensors…";
+    }
+    return "Search postcodes, constituencies, sensors…";
+  }
+
+  function createMapSearchController(rootElement) {
+    const kind = rootElement.getAttribute("data-map-kind") || "uk";
+    const inputEl = rootElement.querySelector(".map-search-input");
+    const clearEl = rootElement.querySelector(".map-search-clear");
+    const resultsEl = rootElement.querySelector(".map-search-results");
+    if (!inputEl || !clearEl || !resultsEl) {
+      return null;
+    }
+
+    const state = {
+      results: [],
+      activeIndex: -1,
+      debounceTimerId: null,
+      suggestAbortController: null,
+      requestSeq: 0,
+      message: "",
+    };
+
+    function syncPlaceholder() {
+      inputEl.placeholder = getPlaceholder(kind);
+    }
+
+    function setExpanded(expanded) {
+      inputEl.setAttribute("aria-expanded", expanded ? "true" : "false");
+    }
+
+    function closeResults() {
+      resultsEl.hidden = true;
+      resultsEl.innerHTML = "";
+      state.results = [];
+      state.activeIndex = -1;
+      state.message = "";
+      setExpanded(false);
+    }
+
+    function renderCurrentResults() {
+      const hasRows = state.results.length > 0;
+      const hasMessage = Boolean(state.message);
+      if (!hasRows && !hasMessage) {
+        closeResults();
+        return;
+      }
+      const rows = state.results.map((result, index) => buildResultMarkup(result, index, index === state.activeIndex));
+      const messageRow = hasMessage ? `<div class="map-search-message">${escapeHtml(state.message)}</div>` : "";
+      resultsEl.innerHTML = `${rows.join("")}${messageRow}`;
+      resultsEl.hidden = false;
+      setExpanded(true);
+      resultsEl.querySelectorAll("[data-result-index]").forEach((button) => {
+        button.addEventListener("mouseenter", () => {
+          const nextIndex = Number.parseInt(button.getAttribute("data-result-index"), 10);
+          if (!Number.isFinite(nextIndex)) {
+            return;
+          }
+          state.activeIndex = nextIndex;
+          renderCurrentResults();
+        });
+      });
+    }
+
+    function getLocalResultGroups(queryText) {
+      if (normalizeText(queryText).length < LOCAL_SEARCH_MIN_CHARS) {
+        return {
+          constituency: [],
+          local_authority: [],
+          sensor: [],
+        };
+      }
+      return {
+        constituency: rankLocalMatches(buildConstituencySearchIndex(), queryText),
+        local_authority: rankLocalMatches(buildLocalAuthoritySearchIndex(), queryText),
+        sensor: rankLocalMatches(buildSensorSearchIndex(), queryText),
+      };
+    }
+
+    function mergeAndRender(localGroups, postcodeRows, message) {
+      const merged = mergeSearchResults({
+        postcode: postcodeRows || [],
+        constituency: localGroups.constituency || [],
+        local_authority: localGroups.local_authority || [],
+        sensor: localGroups.sensor || [],
+      }, MAX_RESULTS);
+      state.results = merged;
+      state.activeIndex = merged.length ? 0 : -1;
+      state.message = message || "";
+      renderCurrentResults();
+    }
+
+    async function runPostcodeLookupResult(selectedResult) {
+      try {
+        const exact = await fetchExactPostcode(selectedResult.postcode || selectedResult.postcode_normalised || selectedResult.primary);
+        const postcode = String(exact?.postcode || selectedResult.postcode || "").trim();
+        const label = exact?.label || buildPostcodeLabel(postcode, exact?.area_name, exact?.post_town) || postcode;
+        inputEl.value = label;
+        clearEl.hidden = !inputEl.value;
+        const activeTab = getActiveTab();
+        const pconCode = normalizeCode(exact?.pcon_code);
+        const laCode = normalizeCode(exact?.la_code);
+        if (activeTab === "uk") {
+          if (pconCode && await selectConstituencyCode(pconCode)) {
+            closeResults();
+            return;
+          }
+          if (laCode && await selectLocalAuthorityCode(laCode)) {
+            closeResults();
+            return;
+          }
+        } else {
+          if (laCode && await selectLocalAuthorityCode(laCode)) {
+            closeResults();
+            return;
+          }
+          if (pconCode && await selectConstituencyCode(pconCode)) {
+            closeResults();
+            return;
+          }
+        }
+        closeResults();
+      } catch (error) {
+        const status = Number.isFinite(Number(error?.status)) ? Number(error.status) : 0;
+        const message = status === 404
+          ? "Postcode not found."
+          : (status === 400 ? "Enter a valid UK postcode." : "Postcode lookup unavailable");
+        state.message = message;
+        renderCurrentResults();
+      }
+    }
+
+    async function selectConstituencyResult(result) {
+      await selectConstituencyCode(result.code);
+      inputEl.value = result.primary;
+      clearEl.hidden = !inputEl.value;
+      closeResults();
+    }
+
+    async function selectLocalAuthorityResult(result) {
+      await selectLocalAuthorityCode(result.code, result.region_name || null);
+      inputEl.value = result.primary;
+      clearEl.hidden = !inputEl.value;
+      closeResults();
+    }
+
+    async function selectSensorResult(result) {
+      const activeTab = getActiveTab();
+      if (activeTab === "uk") {
+        if (result.pcon_code) {
+          await selectConstituencyCode(result.pcon_code);
+        } else if (result.la_code) {
+          await selectLocalAuthorityCode(result.la_code);
+        }
+      } else {
+        if (result.la_code) {
+          await selectLocalAuthorityCode(result.la_code);
+        } else if (result.pcon_code) {
+          await selectConstituencyCode(result.pcon_code);
+        }
+      }
+      inputEl.value = result.primary;
+      clearEl.hidden = !inputEl.value;
+      closeResults();
+    }
+
+    async function selectResult(result) {
+      if (!result) {
+        return;
+      }
+      if (result.kind === "postcode_hint") {
+        inputEl.value = result.prefix || "";
+        clearEl.hidden = !inputEl.value;
+        runSearch(true);
+        return;
+      }
+      if (result.kind === "postcode") {
+        await runPostcodeLookupResult(result);
+        return;
+      }
+      if (result.kind === "constituency") {
+        await selectConstituencyResult(result);
+        return;
+      }
+      if (result.kind === "local_authority") {
+        await selectLocalAuthorityResult(result);
+        return;
+      }
+      if (result.kind === "sensor") {
+        await selectSensorResult(result);
+      }
+    }
+
+    function clearPendingSuggest() {
+      if (state.debounceTimerId) {
+        window.clearTimeout(state.debounceTimerId);
+        state.debounceTimerId = null;
+      }
+      if (state.suggestAbortController) {
+        state.suggestAbortController.abort();
+        state.suggestAbortController = null;
+      }
+    }
+
+    function runSearch(immediate = false) {
+      clearPendingSuggest();
+      const query = inputEl.value || "";
+      clearEl.hidden = !query;
+      const trimmed = query.trim();
+      if (!trimmed) {
+        closeResults();
+        return;
+      }
+      const localGroups = getLocalResultGroups(trimmed);
+      const shouldFetchPostcode = looksLikePostcodePrefix(trimmed);
+      if (!shouldFetchPostcode) {
+        mergeAndRender(localGroups, [], "");
+        return;
+      }
+      const requestSeq = ++state.requestSeq;
+      const requestLimit = parseLimit(params.get("search_limit"), MAX_RESULTS);
+      const triggerFetch = async () => {
+        const controller = new AbortController();
+        state.suggestAbortController = controller;
+        let postcodeRows = [];
+        let message = "";
+        try {
+          postcodeRows = await fetchPostcodeSuggestions(trimmed, controller.signal, requestLimit);
+        } catch (error) {
+          if (controller.signal.aborted) {
+            return;
+          }
+          message = "Postcode search unavailable";
+          console.warn("postcode_suggest request failed", error);
+        }
+        if (requestSeq !== state.requestSeq) {
+          return;
+        }
+        const refreshedLocalGroups = getLocalResultGroups(trimmed);
+        mergeAndRender(refreshedLocalGroups, postcodeRows, message);
+      };
+      if (immediate) {
+        void triggerFetch();
+      } else {
+        state.debounceTimerId = window.setTimeout(() => {
+          void triggerFetch();
+        }, POSTCODE_DEBOUNCE_MS);
+      }
+      mergeAndRender(localGroups, [], "");
+    }
+
+    inputEl.addEventListener("input", () => {
+      runSearch(false);
+    });
+
+    inputEl.addEventListener("focus", () => {
+      if (inputEl.value.trim()) {
+        runSearch(true);
+      }
+    });
+
+    inputEl.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown") {
+        if (!state.results.length) {
+          return;
+        }
+        event.preventDefault();
+        state.activeIndex = state.activeIndex < state.results.length - 1 ? state.activeIndex + 1 : 0;
+        renderCurrentResults();
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        if (!state.results.length) {
+          return;
+        }
+        event.preventDefault();
+        state.activeIndex = state.activeIndex > 0 ? state.activeIndex - 1 : state.results.length - 1;
+        renderCurrentResults();
+        return;
+      }
+      if (event.key === "Enter") {
+        if (state.activeIndex < 0 || state.activeIndex >= state.results.length) {
+          return;
+        }
+        event.preventDefault();
+        void selectResult(state.results[state.activeIndex]);
+        return;
+      }
+      if (event.key === "Escape") {
+        if (!resultsEl.hidden) {
+          event.preventDefault();
+          closeResults();
+        }
+      }
+    });
+
+    resultsEl.addEventListener("click", (event) => {
+      const target = event.target instanceof Element ? event.target.closest("[data-result-index]") : null;
+      if (!target) {
+        return;
+      }
+      const nextIndex = Number.parseInt(target.getAttribute("data-result-index"), 10);
+      if (!Number.isFinite(nextIndex) || nextIndex < 0 || nextIndex >= state.results.length) {
+        return;
+      }
+      state.activeIndex = nextIndex;
+      void selectResult(state.results[nextIndex]);
+    });
+
+    clearEl.addEventListener("click", () => {
+      clearPendingSuggest();
+      inputEl.value = "";
+      clearEl.hidden = true;
+      closeResults();
+      inputEl.focus();
+    });
+
+    syncPlaceholder();
+
+    return {
+      rootElement,
+      inputEl,
+      syncPlaceholder,
+      closeResults,
+    };
+  }
+
+  const controllers = searchRoots
+    .map((root) => createMapSearchController(root))
+    .filter(Boolean);
+
+  if (!controllers.length) {
+    return;
+  }
+
+  function syncAllPlaceholders() {
+    controllers.forEach((controller) => controller.syncPlaceholder());
+  }
+
+  window.addEventListener("resize", syncAllPlaceholders);
+  document.addEventListener("mousedown", (event) => {
+    const target = event.target;
+    controllers.forEach((controller) => {
+      if (!controller.rootElement.contains(target)) {
+        controller.closeResults();
+      }
+    });
+  });
+  syncAllPlaceholders();
+  if (getActiveTab() === "uk") {
+    void ensureCrSearchDataLoaded();
+  } else {
+    void ensureUkSearchDataLoaded();
+  }
+})();
+
+    </script>
+    <script>
+(() => {
+  const controls = Array.from(document.querySelectorAll("[data-map-zoom-controls]"));
+  if (!controls.length) {
+    return;
+  }
+
+  const MIN_SCALE = 0.8;
+  const MAX_SCALE = 3;
+  const STEP = 1.15;
+  const mapState = new Map();
+
+  function getSvgElement(control) {
+    const id = control.getAttribute("data-map-svg-id");
+    if (!id) {
+      return null;
+    }
+    return document.getElementById(id);
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function getState(svgId) {
+    const state = mapState.get(svgId);
+    if (state) {
+      return state;
+    }
+    const initial = { scale: 1, tx: 0, ty: 0 };
+    mapState.set(svgId, initial);
+    return initial;
+  }
+
+  function clampPan(viewport, state) {
+    const width = viewport.clientWidth || 0;
+    const height = viewport.clientHeight || 0;
+    const maxTx = Math.max(0, ((state.scale - 1) * width) / 2);
+    const maxTy = Math.max(0, ((state.scale - 1) * height) / 2);
+    return {
+      scale: state.scale,
+      tx: clamp(state.tx, -maxTx, maxTx),
+      ty: clamp(state.ty, -maxTy, maxTy),
+    };
+  }
+
+  function applyTransform(svg, viewport, nextState, animate = false) {
+    const clampedScale = clamp(nextState.scale, MIN_SCALE, MAX_SCALE);
+    const clampedState = clampPan(viewport, {
+      scale: clampedScale,
+      tx: nextState.tx,
+      ty: nextState.ty,
+    });
+    mapState.set(svg.id, clampedState);
+    svg.style.transformOrigin = "50% 50%";
+    svg.style.transform = `translate(${clampedState.tx}px, ${clampedState.ty}px) scale(${clampedState.scale})`;
+    svg.style.transition = animate ? "transform 0.18s ease" : "none";
+  }
+
+  function setScale(svg, viewport, nextScale, animate = true) {
+    const current = getState(svg.id);
+    applyTransform(svg, viewport, {
+      scale: nextScale,
+      tx: current.tx,
+      ty: current.ty,
+    }, animate);
+  }
+
+  function zoomAroundPoint(svg, viewport, factor, anchorX, anchorY, animate = false) {
+    const current = getState(svg.id);
+    const nextScale = clamp(current.scale * factor, MIN_SCALE, MAX_SCALE);
+    if (Math.abs(nextScale - current.scale) < 0.0001) {
+      return;
+    }
+    const width = viewport.clientWidth || 0;
+    const height = viewport.clientHeight || 0;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const ratio = nextScale / current.scale;
+    const nextTx = (current.tx * ratio) + ((anchorX - centerX) * (1 - ratio));
+    const nextTy = (current.ty * ratio) + ((anchorY - centerY) * (1 - ratio));
+    applyTransform(svg, viewport, {
+      scale: nextScale,
+      tx: nextTx,
+      ty: nextTy,
+    }, animate);
+  }
+
+  function resetView(svg, viewport) {
+    applyTransform(svg, viewport, { scale: 1, tx: 0, ty: 0 }, true);
+  }
+
+  controls.forEach((control) => {
+    const svg = getSvgElement(control);
+    if (!svg || !svg.id) {
+      return;
+    }
+    const canvasWrap = control.closest(".map-canvas-wrap");
+    const viewport = canvasWrap ? canvasWrap.querySelector(".map-svg-viewport") : null;
+    if (!viewport) {
+      return;
+    }
+    resetView(svg, viewport);
+
+    let drag = null;
+    let suppressClickUntil = 0;
+
+    control.addEventListener("click", (event) => {
+      const button = event.target instanceof Element
+        ? event.target.closest("[data-zoom-action]")
+        : null;
+      if (!button) {
+        return;
+      }
+      const action = button.getAttribute("data-zoom-action");
+      const current = getState(svg.id).scale;
+      if (action === "in") {
+        setScale(svg, viewport, current * STEP, true);
+        return;
+      }
+      if (action === "out") {
+        setScale(svg, viewport, current / STEP, true);
+        return;
+      }
+      if (action === "reset") {
+        resetView(svg, viewport);
+      }
+    });
+
+    viewport.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const current = getState(svg.id);
+      if (current.scale <= 1.001) {
+        return;
+      }
+      drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startTx: current.tx,
+        startTy: current.ty,
+        moved: false,
+      };
+      viewport.classList.add("is-dragging");
+    });
+
+    viewport.addEventListener("wheel", (event) => {
+      if (!(event.ctrlKey || event.metaKey)) {
+        return;
+      }
+      const rect = viewport.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        return;
+      }
+      const anchorX = event.clientX - rect.left;
+      const anchorY = event.clientY - rect.top;
+      const speed = 0.006;
+      const factor = Math.exp(-event.deltaY * speed);
+      zoomAroundPoint(svg, viewport, factor, anchorX, anchorY, false);
+      event.preventDefault();
+    }, { passive: false });
+
+    let gestureStartScale = 1;
+    viewport.addEventListener("gesturestart", (event) => {
+      gestureStartScale = getState(svg.id).scale;
+      event.preventDefault();
+    }, { passive: false });
+
+    viewport.addEventListener("gesturechange", (event) => {
+      const rect = viewport.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        return;
+      }
+      const anchorX = event.clientX - rect.left;
+      const anchorY = event.clientY - rect.top;
+      const targetScale = clamp(gestureStartScale * event.scale, MIN_SCALE, MAX_SCALE);
+      const current = getState(svg.id);
+      const factor = targetScale / current.scale;
+      zoomAroundPoint(svg, viewport, factor, anchorX, anchorY, false);
+      event.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+      }
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      if (!drag.moved && Math.hypot(dx, dy) > 3) {
+        drag.moved = true;
+      }
+      if (!drag.moved) {
+        return;
+      }
+      applyTransform(svg, viewport, {
+        scale: getState(svg.id).scale,
+        tx: drag.startTx + dx,
+        ty: drag.startTy + dy,
+      }, false);
+      event.preventDefault();
+    }, { passive: false });
+
+    function endDrag(event) {
+      if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+      }
+      if (drag.moved) {
+        suppressClickUntil = performance.now() + 220;
+      }
+      drag = null;
+      viewport.classList.remove("is-dragging");
+    }
+
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
+
+    viewport.addEventListener("click", (event) => {
+      if (performance.now() < suppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+
+    window.addEventListener("resize", () => {
+      applyTransform(svg, viewport, getState(svg.id), false);
+    });
+  });
 })();
     </script>
     <script src="sidebar.js"></script>

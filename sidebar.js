@@ -1,45 +1,69 @@
 (() => {
+  try {
+    const embedded = window.parent && window.parent !== window;
+    if (embedded) {
+      return;
+    }
+  } catch (error) {
+    return;
+  }
+
   // ─── Nav config ──────────────────────────────────────────────────────────────
   const NAV = [
     {
       id: 'uk-aq',
       label: 'UK-AQ',
       children: [
-        { label: 'Hex Map',     icon: '◆', href: '/uk-aq/hex_map.html' },
-        { label: 'Sensors',     icon: '●', href: '/uk-aq/sensors_chart.html' },
-        { label: 'Sensors Map', icon: '◉', href: '/uk-aq/sensors_map.html' },
+        { label: 'Hex Map',     iconImg: 'uk-aq-hex-map-icon.svg', href: '/uk-aq/hex_map.html' },
+        { label: 'Sensors',     iconImg: 'uk-aq-sensors-icon.svg',  href: '/uk-aq/sensors_chart.html' },
+        { label: 'Sensors Map', iconImg: 'uk-aq-map-icon.svg',       href: '/uk-aq/sensors_map.html' },
       ],
     },
     {
       id: 'data-explorer',
       label: 'Data Explorer',
       children: [
-        { label: 'Bubble Chart',       icon: '○', href: '/data-explorer/bubblechart/' },
-        { label: 'Line Chart',         icon: '↗', href: '/data-explorer/linechart/' },
-        { label: 'Ecodesign Replaces', icon: '≡', href: '#' },
-        { label: 'Category Info',      icon: 'i', href: '/data-explorer/resources/' },
-        { label: 'User Guide',         icon: '?', href: '/data-explorer/user-guide/' },
+        { label: 'Bubble Chart',       iconImg: 'Bubble-Chart-Icon.svg', href: '/data-explorer/?page=bubblechart' },
+        { label: 'Line Chart',         iconImg: 'Line-Chart-Icon.svg', href: '/data-explorer/?page=linechart' },
+        { label: 'Ecodesign Replaces', iconImg: 'Stove Ecodesign 430x683.svg', href: '/data-explorer/?page=eco-replaces-all', className: 'cic-nav-item--eco-replaces' },
+        { label: 'Category Info',      iconImg: 'Category Info - Icon.svg', href: '/data-explorer/category-info/' },
+        { label: 'User Guide',         iconImg: 'user-guide.svg', href: '/data-explorer/user-guide/' },
       ],
     },
     {
-      id: 'resources',
-      label: 'Resources',
-      children: [],
-    },
-    {
-      id: 'contact',
-      label: 'Contact',
-      children: [],
+      id: 'quick-links',
+      showLabel: false,
+      dividerBefore: true,
+      children: [
+        {
+          label: 'YouTube',
+          iconImg: 'youtube-logo.svg',
+          labelImg: 'youtube-logo-Word.svg',
+          href: 'https://youtube.com/@chronicillnesschannel',
+          external: true,
+        },
+        { label: 'Resources', iconImg: 'chain-link-icon-grey.svg', href: '/resources/' },
+        { label: 'Contact', iconImg: 'Contacts-Email-icon-cic-web.svg', href: '/contact.html' },
+      ],
     },
   ];
+  const HOME_ITEM = {
+    label: 'Home',
+    iconImg: 'CIC-Home-Alpha.svg',
+    href: '/',
+    className: 'cic-home-nav-item',
+  };
 
   // ─── State ────────────────────────────────────────────────────────────────────
   const EXPANDED  = 'expanded';
   const COLLAPSED = 'collapsed';
   const MINI      = 'mini';
   const DRAWER    = 'drawer';
+  const HAMBURGER_ICON_OFF = '/sidebar-images/CIC-hamburger-button.svg';
+  const HAMBURGER_ICON_ON = '/sidebar-images/CIC%20Hamburger%20Button-SidebarOn.svg';
 
   let autoCollapseTimer = null;
+  let pinnedOpenDesktop = false;
 
   function getBreakpoint() {
     const w = window.innerWidth;
@@ -66,10 +90,19 @@
   function scheduleAutoCollapse() {
     clearTimeout(autoCollapseTimer);
     autoCollapseTimer = setTimeout(() => {
-      if (getBreakpoint() === 'desktop' && getState() === EXPANDED) {
-        setState(COLLAPSED);
+      if (getBreakpoint() === 'desktop' && !pinnedOpenDesktop && getState() === EXPANDED) {
+        setState(MINI);
       }
     }, 3000);
+  }
+
+  function updateHamburgerIcon(btn) {
+    const img = btn?.querySelector('img');
+    if (!img) return;
+    const mobileOpen = getBreakpoint() === 'mobile' && document.body.classList.contains('cic-drawer-open');
+    const shouldShowOn = pinnedOpenDesktop || mobileOpen;
+    const target = `${location.origin}${shouldShowOn ? HAMBURGER_ICON_ON : HAMBURGER_ICON_OFF}`;
+    if (img.src !== target) img.src = target;
   }
 
   // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -112,7 +145,7 @@
       border-right: 1px solid var(--cic-line);
       display: flex;
       flex-direction: column;
-      z-index: 200;
+      z-index: 10010;
       overflow-y: auto;
       overflow-x: hidden;
       transition: transform var(--cic-ease), width var(--cic-ease);
@@ -140,7 +173,7 @@
       position: fixed;
       inset: 0;
       background: rgba(16,24,34,0.35);
-      z-index: 199;
+      z-index: 10009;
       opacity: 0;
       transition: opacity var(--cic-ease);
     }
@@ -150,8 +183,8 @@
     /* ── Hamburger button ── */
     #cic-hamburger {
       position: fixed;
-      top: 16px; left: 16px;
-      z-index: 300;
+      top: 16px; left: 10px;
+      z-index: 10012;
       background: none;
       border: none;
       cursor: pointer;
@@ -166,13 +199,12 @@
       box-shadow: 0 8px 14px rgba(20,34,37,0.12);
     }
     #cic-hamburger img { width: 44px; height: 44px; object-fit: contain; display: block; }
-    body[data-sidebar-state="mini"] #cic-hamburger { display: none; }
 
     /* ── Top-right CIC home logo ── */
     #cic-home-logo {
-      position: fixed;
-      top: 16px; right: 16px;
-      z-index: 1100;
+      position: absolute;
+      top: 16px; right: 28px;
+      z-index: 10011;
       display: block;
       border-radius: 16px;
       overflow: hidden;
@@ -191,6 +223,32 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+    }
+
+    .cic-home-nav-item {
+      padding-left: 0;
+      margin-left: -13px;
+      margin-bottom: 0;
+    }
+    .cic-home-nav-item .cic-nav-icon-img {
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      max-width: 44px !important;
+      max-height: 44px !important;
+    }
+    .cic-home-nav-item + .cic-nav-section .cic-section-label {
+      padding-top: 6px;
+    }
+    body[data-sidebar-state="mini"] .cic-home-nav-item {
+      margin-left: 0;
+    }
+
+    .cic-section-divider {
+      height: 0;
+      border-top: 1px solid var(--cic-line);
+      margin: 10px 12px 8px;
     }
 
     .cic-section-label {
@@ -229,16 +287,54 @@
       text-decoration: none;
     }
     .cic-nav-item.active {
-      background: color-mix(in oklab, var(--cic-accent) 10%, white);
+      background: #FBFAF7;
       color: var(--cic-accent-deep);
-      border-color: color-mix(in oklab, var(--cic-accent) 25%, white);
+      border-color: #d6d0c8;
     }
     .cic-nav-icon {
       width: 20px; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
       font-style: normal; font-size: 13px;
     }
+    .cic-nav-icon-img {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      min-height: 40px !important;
+      max-width: 40px !important;
+      max-height: 40px !important;
+      flex-shrink: 0;
+      max-width: none !important;
+      object-fit: contain;
+      display: block;
+    }
+    .cic-nav-icon-placeholder {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      border: 2px dashed var(--cic-ink-4);
+      border-radius: 10px;
+      display: inline-block;
+      opacity: 0.75;
+    }
+    .cic-nav-label-img {
+      display: block;
+      height: 16px !important;
+      width: auto !important;
+      max-width: 136px !important;
+      max-height: 16px !important;
+      object-fit: contain;
+    }
     .cic-nav-label { overflow: hidden; text-overflow: ellipsis; }
+    .cic-nav-item--eco-replaces .cic-nav-label {
+      display: block;
+      width: 92px;
+      white-space: normal;
+      line-height: 1.15;
+      text-align: left;
+      overflow: visible;
+      text-overflow: clip;
+    }
 
     body[data-sidebar-state="mini"] .cic-nav-label { display: none; }
     body[data-sidebar-state="mini"] .cic-nav-item  { padding: 11px; justify-content: center; }
@@ -270,20 +366,40 @@
 
   function buildNavItem(item) {
     const path = location.pathname;
+    const pathWithSearch = location.pathname + location.search;
     const href = resolveHref(item.href);
-    const isActive = href !== '#' && path.includes(href);
+    const isActive = href !== '#' && (
+      href === '/' || href === '/index.html'
+        ? isHomePage()
+        : (href.includes('?') ? pathWithSearch.includes(href) : path.includes(href))
+    );
+    const className = item.className ? ` ${item.className}` : '';
+    const iconHtml = item.iconImg
+      ? `<img class="cic-nav-icon-img" src="${location.origin}/sidebar-images/${item.iconImg}" alt="">`
+      : item.iconPlaceholder
+        ? `<span class="cic-nav-icon-placeholder" aria-hidden="true"></span>`
+        : `<i class="cic-nav-icon">${item.icon}</i>`;
+    const labelHtml = item.labelImg
+      ? `<img class="cic-nav-label-img" src="${location.origin}/sidebar-images/${item.labelImg}" alt="${item.label}">`
+      : item.label;
+    const targetAttrs = item.external ? ' target="_blank" rel="noopener noreferrer"' : '';
     return `
-      <a class="cic-nav-item${isActive ? ' active' : ''}" href="${href}">
-        <i class="cic-nav-icon">${item.icon}</i>
-        <span class="cic-nav-label">${item.label}</span>
+      <a class="cic-nav-item${className}${isActive ? ' active' : ''}" href="${href}"${targetAttrs}>
+        ${iconHtml}
+        <span class="cic-nav-label">${labelHtml}</span>
       </a>`;
   }
 
   function buildSection(section) {
     const childrenHtml = section.children.map(buildNavItem).join('');
+    const sectionLabel = section.showLabel === false
+      ? ''
+      : `<div class="cic-section-label">${section.label}</div>`;
+    const divider = section.dividerBefore ? '<div class="cic-section-divider" aria-hidden="true"></div>' : '';
     return `
       <div class="cic-nav-section">
-        <div class="cic-section-label">${section.label}</div>
+        ${divider}
+        ${sectionLabel}
         ${childrenHtml}
       </div>`;
   }
@@ -291,6 +407,7 @@
   function buildSidebar() {
     return `
       <nav class="cic-nav" aria-label="Site navigation">
+        ${buildNavItem(HOME_ITEM)}
         ${NAV.map(buildSection).join('')}
       </nav>
       <div id="cic-sidebar-footer">
@@ -329,7 +446,7 @@
     const btn = document.createElement('button');
     btn.id = 'cic-hamburger';
     btn.setAttribute('aria-label', 'Toggle navigation');
-    btn.innerHTML = `<img src="${location.origin}/sidebar-images/CIC-hamburger-button.svg" alt="Menu">`;
+    btn.innerHTML = `<img src="${location.origin}${HAMBURGER_ICON_OFF}" alt="Menu">`;
 
     // Top-right home logo (hidden on homepage)
     const homeLogo = isHomePage() ? null : (() => {
@@ -357,14 +474,13 @@
 
     // Initial state
     const bp = getBreakpoint();
+    pinnedOpenDesktop = false;
     if (bp === 'mobile') {
       setState(DRAWER);
-    } else if (bp === 'tablet') {
-      setState(MINI);
     } else {
-      setState(EXPANDED);
-      if (!isHomePage()) scheduleAutoCollapse();
+      setState(MINI);
     }
+    updateHamburgerIcon(btn);
 
     bindEvents(btn, overlay);
   }
@@ -378,19 +494,27 @@
         document.body.classList.toggle('cic-drawer-open');
       } else {
         clearTimeout(autoCollapseTimer);
-        setState(getState() === EXPANDED ? COLLAPSED : EXPANDED);
+        if (pinnedOpenDesktop) {
+          pinnedOpenDesktop = false;
+          setState(MINI);
+        } else {
+          pinnedOpenDesktop = true;
+          setState(EXPANDED);
+        }
       }
+      updateHamburgerIcon(btn);
     });
 
     // Close drawer on overlay click
     overlay.addEventListener('click', () => {
       document.body.classList.remove('cic-drawer-open');
+      updateHamburgerIcon(btn);
     });
 
     // Left-edge hover re-expand (desktop)
     document.addEventListener('mousemove', e => {
       if (getBreakpoint() !== 'desktop') return;
-      if (e.clientX < 20 && getState() === COLLAPSED) {
+      if (!pinnedOpenDesktop && e.clientX < 20 && (getState() === COLLAPSED || getState() === MINI)) {
         clearTimeout(autoCollapseTimer);
         setState(EXPANDED);
       }
@@ -403,7 +527,7 @@
 
     // Resume auto-collapse on mouse leave (non-home pages)
     document.getElementById('cic-sidebar').addEventListener('mouseleave', () => {
-      if (!isHomePage() && getBreakpoint() === 'desktop' && getState() === EXPANDED) {
+      if (!pinnedOpenDesktop && getBreakpoint() === 'desktop' && getState() === EXPANDED) {
         scheduleAutoCollapse();
       }
     });
@@ -414,14 +538,19 @@
       clearTimeout(autoCollapseTimer);
       if (bp === 'tablet') {
         setState(MINI);
+        pinnedOpenDesktop = false;
         document.body.classList.remove('cic-drawer-open');
       } else if (bp === 'mobile') {
         setState(DRAWER);
+        pinnedOpenDesktop = false;
         document.body.classList.remove('cic-drawer-open');
-      } else if (getState() === MINI || getState() === DRAWER) {
+      } else if (getState() === MINI || getState() === DRAWER || getState() === COLLAPSED) {
         document.body.classList.remove('cic-drawer-open');
-        setState(isHomePage() ? EXPANDED : COLLAPSED);
+        setState(pinnedOpenDesktop ? EXPANDED : MINI);
+      } else {
+        setState(pinnedOpenDesktop ? EXPANDED : MINI);
       }
+      updateHamburgerIcon(btn);
     });
   }
 
