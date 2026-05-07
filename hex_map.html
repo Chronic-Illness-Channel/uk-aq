@@ -1609,18 +1609,6 @@
         position: relative;
       }
 
-      .map-wrap.is-loading .map-canvas svg {
-        opacity: 0.96;
-      }
-
-      .map-wrap.is-loading .map-svg-viewport .hex {
-        opacity: 0.74;
-        filter: saturate(0.55) brightness(1.08);
-      }
-
-      .map-wrap.is-loading .map-svg-viewport .hex-label {
-        opacity: 0.9;
-      }
 
 
       .map-canvas {
@@ -3085,48 +3073,18 @@
         height: 100%;
       }
 
-      .map-svg-viewport::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 5;
-        opacity: 0;
-        background: linear-gradient(
-          35deg,
-          rgba(255, 255, 255, 0) 34%,
-          rgba(255, 255, 255, 0.3) 50%,
-          rgba(255, 255, 255, 0) 66%
-        );
-        background-size: 240% 240%;
-        background-position: 0% 100%;
+      .map-wrap.is-initial.is-loading .map-svg-viewport {
+        animation: hexMapFadeIn 1s ease forwards;
       }
 
-      .map-wrap.is-loading .map-svg-viewport::after {
-        animation: hexMapLoadingShimmer 2.1s ease-in-out infinite;
-      }
-
-      @keyframes hexMapLoadingShimmer {
-        0% {
-          opacity: 0;
-          background-position: 0% 100%;
-        }
-        18% {
-          opacity: 0.85;
-        }
-        82% {
-          opacity: 0.85;
-        }
-        100% {
-          opacity: 0;
-          background-position: 100% 0%;
-        }
+      @keyframes hexMapFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .map-wrap.is-loading .map-svg-viewport::after {
+        .map-wrap.is-initial.is-loading .map-svg-viewport {
           animation: none;
-          opacity: 0;
         }
       }
 
@@ -3563,7 +3521,7 @@
           <div class="error" id="error" hidden></div>
           <div class="map-layout">
             <div class="map-panel">
-              <div class="map-wrap map-dashboard-card map-main-grid">
+              <div class="map-wrap map-dashboard-card map-main-grid is-loading is-initial">
                 <div class="map-title-strip">
                   <h2 class="card-title map-dashboard-title" id="map-title">Latest PM2.5 by constituency</h2>
                 </div>
@@ -4208,7 +4166,7 @@
           <div class="error" id="cr-error" hidden></div>
           <div class="map-layout">
             <div class="map-panel">
-              <div class="map-wrap map-dashboard-card map-main-grid">
+              <div class="map-wrap map-dashboard-card map-main-grid is-loading is-initial">
                 <div class="map-title-strip">
                   <h2 class="card-title map-dashboard-title" id="cr-map-title">Latest PM2.5 by local authority</h2>
                 </div>
@@ -6145,11 +6103,30 @@
         }
       }
 
+      let ukInitialLoad = true;
+
       function setMapLoading(isLoading) {
         if (!mapWrap) {
           return;
         }
-        mapWrap.classList.toggle("is-loading", isLoading);
+        if (!isLoading) {
+          if (ukInitialLoad) {
+            ukInitialLoad = false;
+            mapWrap.classList.remove("is-initial");
+          }
+          const dataHexes = mapWrap.querySelectorAll(".hex.has-data");
+          mapWrap.classList.remove("is-loading");
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              dataHexes.forEach((el) => {
+                const targetFill = el.getAttribute("data-fill");
+                if (targetFill) el.style.fill = targetFill;
+              });
+            });
+          });
+        } else {
+          mapWrap.classList.add("is-loading");
+        }
         if (isLoading && tooltip) {
           tooltip.classList.remove("visible");
         }
@@ -8518,11 +8495,18 @@
         updateLegendScaleDescription();
         updateLegendTicks(domainMax);
 
+        const isCurrentlyLoading = mapWrap.classList.contains("is-loading");
+        const noDataColor = getComputedStyle(document.documentElement).getPropertyValue("--no-data").trim() || "#efe6d8";
+
         const hexGroup = svg.append("g");
         hexGroup.selectAll("polygon")
           .data(hexCells)
           .join("polygon")
-          .attr("class", "hex")
+          .attr("class", (cell) => {
+            const row = pconLookup.get(cell.pcon_code);
+            const value = getMetricValue(row);
+            return (colorScale && Number.isFinite(value)) ? "hex has-data" : "hex";
+          })
           .attr("points", (cell) => hexPoints(cell.cx, cell.cy, hexSide)
             .map((point) => projection(point))
             .map((point) => `${point[0]},${point[1]}`)
@@ -8530,9 +8514,13 @@
           .attr("fill", (cell) => {
             const row = pconLookup.get(cell.pcon_code);
             const value = getMetricValue(row);
-            if (!colorScale || !Number.isFinite(value)) {
-              return "var(--no-data)";
-            }
+            if (!colorScale || !Number.isFinite(value)) return "var(--no-data)";
+            return isCurrentlyLoading ? noDataColor : colorScale(value);
+          })
+          .attr("data-fill", (cell) => {
+            const row = pconLookup.get(cell.pcon_code);
+            const value = getMetricValue(row);
+            if (!colorScale || !Number.isFinite(value)) return null;
             return colorScale(value);
           })
           .on("click", (event, cell) => {
@@ -10221,11 +10209,30 @@
         }
       }
 
+      let crInitialLoad = true;
+
       function setMapLoading(isLoading) {
         if (!mapWrap) {
           return;
         }
-        mapWrap.classList.toggle("is-loading", isLoading);
+        if (!isLoading) {
+          if (crInitialLoad) {
+            crInitialLoad = false;
+            mapWrap.classList.remove("is-initial");
+          }
+          const dataHexes = mapWrap.querySelectorAll(".hex.has-data");
+          mapWrap.classList.remove("is-loading");
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              dataHexes.forEach((el) => {
+                const targetFill = el.getAttribute("data-fill");
+                if (targetFill) el.style.fill = targetFill;
+              });
+            });
+          });
+        } else {
+          mapWrap.classList.add("is-loading");
+        }
         if (isLoading && tooltip) {
           tooltip.classList.remove("visible");
         }
@@ -12859,11 +12866,19 @@
         updateLegendScaleDescription();
         updateLegendTicks(domainMax);
 
+        const isCurrentlyLoading = mapWrap.classList.contains("is-loading");
+        const noDataColor = getComputedStyle(document.documentElement).getPropertyValue("--no-data").trim() || "#efe6d8";
+
         const hexGroup = svg.append("g");
         hexGroup.selectAll("path")
           .data(hexCells)
           .join("path")
-          .attr("class", "hex")
+          .attr("class", (cell) => {
+            const areaCode = resolveCellAreaCode(cell);
+            const row = areaCode ? pconLookup.get(areaCode) : null;
+            const value = getMetricValue(row);
+            return (colorScale && Number.isFinite(value)) ? "hex has-data" : "hex";
+          })
           .attr("d", (cell) => {
             const rings = cell.paths || (hexSide ? [hexPoints(cell.cx, cell.cy, hexSide)] : []);
             return buildPathFromRings(rings, projection);
@@ -12872,9 +12887,14 @@
             const areaCode = resolveCellAreaCode(cell);
             const row = areaCode ? pconLookup.get(areaCode) : null;
             const value = getMetricValue(row);
-            if (!colorScale || !Number.isFinite(value)) {
-              return "var(--no-data)";
-            }
+            if (!colorScale || !Number.isFinite(value)) return "var(--no-data)";
+            return isCurrentlyLoading ? noDataColor : colorScale(value);
+          })
+          .attr("data-fill", (cell) => {
+            const areaCode = resolveCellAreaCode(cell);
+            const row = areaCode ? pconLookup.get(areaCode) : null;
+            const value = getMetricValue(row);
+            if (!colorScale || !Number.isFinite(value)) return null;
             return colorScale(value);
           })
           .on("click", (event, cell) => {

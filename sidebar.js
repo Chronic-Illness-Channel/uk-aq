@@ -53,6 +53,8 @@
     href: '/',
     className: 'cic-home-nav-item',
   };
+  const SIDEBAR_ICON_OFF = '/sidebar-images/CIC-Sidebar-Button-off.svg';
+  const SIDEBAR_ICON_ON = '/sidebar-images/CIC-Sidebar-Button-on.svg';
 
   // ─── Preload sidebar button images ───────────────────────────────────────────
   [SIDEBAR_ICON_OFF, SIDEBAR_ICON_ON].forEach(path => {
@@ -68,8 +70,6 @@
   const COLLAPSED = 'collapsed';
   const MINI      = 'mini';
   const DRAWER    = 'drawer';
-  const SIDEBAR_ICON_OFF = '/sidebar-images/CIC-Sidebar-Button-off.svg';
-  const SIDEBAR_ICON_ON = '/sidebar-images/CIC-Sidebar-Button-on.svg';
 
   let autoCollapseTimer = null;
   let pinnedOpenDesktop = false;
@@ -481,7 +481,9 @@
       document.body.prepend(aside);
     }
 
-    // Initial state
+    // Initial state — suppress the body transition so the padding-left jump
+    // doesn't cause a mid-flight layout shift before the hex map first renders.
+    document.body.style.transition = 'none';
     const bp = getBreakpoint();
     pinnedOpenDesktop = false;
     if (bp === 'mobile') {
@@ -489,6 +491,8 @@
     } else {
       setState(MINI);
     }
+    document.body.offsetHeight; // force reflow, then restore CSS transition
+    document.body.style.transition = '';
     updateHamburgerIcon(btn);
 
     bindEvents(btn, overlay);
