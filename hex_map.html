@@ -872,6 +872,10 @@
 
       .sensor-table-wrap {
         overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-y: contain;
+        scrollbar-width: none;
+        scrollbar-gutter: auto;
       }
 
       .sensor-table {
@@ -1177,23 +1181,14 @@
 
       .map-inline-sensor-panel-body {
         flex: 1;
-        overflow-y: auto;
+        overflow-y: hidden;
         padding: 0;
-        scrollbar-gutter: stable;
         overscroll-behavior-y: contain;
         position: relative;
       }
 
       .map-inline-sensor-panel-body.is-scroll-forced {
         overflow-y: hidden;
-        scrollbar-width: none;
-        scrollbar-gutter: auto;
-      }
-
-      .map-inline-sensor-panel-body.is-scroll-forced::-webkit-scrollbar {
-        display: none;
-        width: 0;
-        height: 0;
       }
 
       .sensor-table-wrap.is-scroll-forced {
@@ -1204,6 +1199,7 @@
         scrollbar-width: none;
       }
 
+      .sensor-table-wrap::-webkit-scrollbar,
       .sensor-table-wrap.is-scroll-forced::-webkit-scrollbar {
         display: none;
         width: 0;
@@ -1212,14 +1208,15 @@
 
       .sensor-scrollbar-rail {
         position: absolute;
-        top: 8px;
+        top: var(--sensor-scrollbar-rail-top, 8px);
         right: 4px;
         bottom: 8px;
         width: 12px;
         border-radius: 999px;
         background: rgba(60, 120, 172, 0.14);
-        pointer-events: none;
-        z-index: 5;
+        cursor: pointer;
+        z-index: 7;
+        touch-action: none;
       }
 
       .sensor-scrollbar-rail[hidden] {
@@ -1234,17 +1231,84 @@
         height: var(--sensor-scroll-thumb-height, 80px);
         border-radius: 999px;
         background: rgba(60, 120, 172, 0.82);
+        cursor: grab;
       }
 
-      .sensor-scroll-hint {
-        flex: 0 0 auto;
-        padding: 5px 14px 6px;
-        border-bottom: 1px solid var(--line-soft);
-        background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-        color: var(--accent-deep);
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-align: center;
+      .sensor-scrollbar-rail.is-dragging,
+      .sensor-scrollbar-rail.is-dragging .sensor-scrollbar-thumb {
+        cursor: grabbing;
+      }
+
+      .sensor-scrollbar-thumb:hover {
+        background: rgba(60, 120, 172, 0.95);
+      }
+
+      .sensor-scroll-indicator-shell {
+        position: relative;
+      }
+
+      .sensor-scroll-indicator {
+        position: absolute;
+        left: 0;
+        right: 24px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        color: #3C78AC;
+        pointer-events: none;
+        z-index: 6;
+      }
+
+      .sensor-scroll-indicator[hidden] {
+        display: none;
+      }
+
+      .sensor-scroll-indicator--top {
+        top: 36px;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0));
+      }
+
+      .sensor-scroll-indicator--bottom {
+        bottom: 0;
+        background: linear-gradient(to top, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0));
+      }
+
+      .hex-chart-sensor-wrap ~ .sensor-scroll-indicator--bottom {
+        border-bottom-left-radius: 10px;
+      }
+
+      .sensor-scroll-indicator__chevron {
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.9));
+      }
+
+      .sensor-scroll-indicator--top .sensor-scroll-indicator__chevron {
+        transform: rotate(225deg);
+      }
+
+      .sensor-scroll-indicator--bottom .sensor-scroll-indicator__chevron {
+        transform: rotate(45deg);
+      }
+
+      .sensor-list-sort-hidden .sort-header {
+        cursor: default;
+        pointer-events: none;
+      }
+
+      .sensor-list-sort-hidden .sort-icon {
+        display: none;
+      }
+
+      .sensor-list-sort-hidden .sort-header:not(.is-active),
+      .sensor-list-sort-hidden .sort-header.is-active {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+        color: inherit;
       }
 
       .map-inline-sensor-panel-body .sensor-table-wrap {
@@ -3677,10 +3741,27 @@
 
       .hex-chart-sensor-wrap {
         max-height: calc(44px + (46px * 4));
-        overflow-y: auto;
+        overflow-y: hidden;
+        overscroll-behavior-y: contain;
         background: #fff;
         border: 1px solid rgba(20, 34, 37, 0.1);
         border-radius: 10px;
+        scrollbar-width: none;
+        scrollbar-gutter: auto;
+      }
+
+      .hex-chart-sensor-wrap.is-scrollable {
+        overflow-y: scroll;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: auto;
+        scrollbar-width: none;
+      }
+
+      .hex-chart-sensor-wrap::-webkit-scrollbar,
+      .hex-chart-sensor-wrap.is-scrollable::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
       }
 
       .hex-chart-sensor-table {
@@ -3722,21 +3803,29 @@
 
       .hex-chart-sensor-table th:nth-child(2),
       .hex-chart-sensor-table td:nth-child(2) {
-        width: 42%;
+        width: 24px;
+        text-align: center;
+        padding-left: 2px;
+        padding-right: 2px;
       }
 
       .hex-chart-sensor-table th:nth-child(3),
       .hex-chart-sensor-table td:nth-child(3) {
-        width: 18%;
+        width: 36%;
       }
 
       .hex-chart-sensor-table th:nth-child(4),
       .hex-chart-sensor-table td:nth-child(4) {
-        width: 15%;
+        width: 18%;
       }
 
       .hex-chart-sensor-table th:nth-child(5),
       .hex-chart-sensor-table td:nth-child(5) {
+        width: 15%;
+      }
+
+      .hex-chart-sensor-table th:nth-child(6),
+      .hex-chart-sensor-table td:nth-child(6) {
         width: 20%;
       }
 
@@ -3757,6 +3846,15 @@
 
       .hex-chart-sensor-muted {
         color: var(--ink-soft);
+      }
+
+      .hex-chart-symbol-glyph {
+        color: #3C78AC;
+        font-size: 1rem;
+        line-height: 1;
+        text-align: center;
+        width: 20px;
+        display: inline-block;
       }
 
       .hex-chart-selector {
@@ -3828,7 +3926,7 @@
 
       .chart-line {
         fill: none;
-        stroke: var(--series-color, #3C78AC);
+        stroke: #3C78AC;
         stroke-width: 2.5px;
       }
 
@@ -4074,6 +4172,7 @@
                       <thead>
                         <tr>
                           <th scope="col" aria-label="Selection"></th>
+                          <th scope="col" aria-label="Symbol"></th>
                           <th scope="col" data-sort-key="sensor" aria-sort="none">
                             <button type="button" class="sort-header" data-chart-sort-key="sensor" data-sort-type="alpha" title="Sort A→Z">
                               <span class="sort-label">Sensor</span>
@@ -4242,7 +4341,6 @@
                 <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
               </button>
             </div>
-            <div class="sensor-scroll-hint" id="sensor-scroll-hint" hidden>Scroll for more sensors</div>
             <div class="map-inline-sensor-panel-body" id="sensor-panel-body">
               <div class="details-empty" id="details-empty">Select a constituency to see sensors.</div>
               <div class="sensor-table-wrap" id="sensor-table-wrap" hidden>
@@ -4278,9 +4376,6 @@
                   </thead>
                   <tbody id="sensor-table-body"></tbody>
                 </table>
-              </div>
-              <div class="sensor-scrollbar-rail" id="sensor-scrollbar-rail" hidden aria-hidden="true">
-                <span class="sensor-scrollbar-thumb"></span>
               </div>
             </div>
           </div>
@@ -4743,6 +4838,7 @@
                         <thead>
                           <tr>
                             <th scope="col" aria-label="Selection"></th>
+                            <th scope="col" aria-label="Symbol"></th>
                             <th scope="col" data-sort-key="sensor" aria-sort="none">
                               <button type="button" class="sort-header" data-chart-sort-key="sensor" data-sort-type="alpha" title="Sort A→Z">
                                 <span class="sort-label">Sensor</span>
@@ -4911,7 +5007,6 @@
                 <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
               </button>
             </div>
-            <div class="sensor-scroll-hint" id="cr-sensor-scroll-hint" hidden>Scroll for more sensors</div>
             <div class="map-inline-sensor-panel-body" id="cr-sensor-panel-body">
               <div class="details-empty" id="cr-details-empty">Select a local authority to see sensors.</div>
               <div class="sensor-table-wrap" id="cr-sensor-table-wrap" hidden>
@@ -4947,9 +5042,6 @@
                   </thead>
                   <tbody id="cr-sensor-table-body"></tbody>
                 </table>
-              </div>
-              <div class="sensor-scrollbar-rail" id="cr-sensor-scrollbar-rail" hidden aria-hidden="true">
-                <span class="sensor-scrollbar-thumb"></span>
               </div>
             </div>
           </div>
@@ -5274,6 +5366,7 @@
     <div class="tooltip" id="cr-tooltip"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
+    <script src="chart-core.js"></script>
     <script>
       // ── Top summary boxes — shared updater ───────────────────────────────────
       window.updateTopSummary = function(data, idPrefix) {
@@ -5360,6 +5453,238 @@
       };
     </script>
     <script>
+      window.attachPersistentScrollbar = function attachPersistentScrollbar(scrollEl, options = {}) {
+        if (!scrollEl) return null;
+        const threshold = Number.isFinite(options.threshold) ? options.threshold : 2;
+        const trackOffsetTop = Number.isFinite(options.trackOffsetTop) ? Math.max(0, options.trackOffsetTop) : 0;
+        const host = options.host || scrollEl.parentElement;
+        if (!host) return null;
+        if (window.getComputedStyle(host).position === "static") {
+          host.style.position = "relative";
+        }
+
+        let rail = host.querySelector(":scope > .sensor-scrollbar-rail");
+        if (!rail) {
+          rail = document.createElement("div");
+          rail.className = "sensor-scrollbar-rail";
+          rail.hidden = true;
+          rail.setAttribute("aria-hidden", "true");
+          const thumb = document.createElement("span");
+          thumb.className = "sensor-scrollbar-thumb";
+          rail.appendChild(thumb);
+          host.appendChild(rail);
+        }
+        if (trackOffsetTop > 0) {
+          rail.style.setProperty("--sensor-scrollbar-rail-top", `${trackOffsetTop}px`);
+        } else {
+          rail.style.removeProperty("--sensor-scrollbar-rail-top");
+        }
+        const thumbEl = rail.querySelector(".sensor-scrollbar-thumb");
+        let rafId = 0;
+        const isForceHidden = () => options.isHidden ? !!options.isHidden() : false;
+
+        const measureGeometry = () => {
+          const trackHeight = rail.clientHeight || 0;
+          const scrollable = scrollEl.scrollHeight - scrollEl.clientHeight;
+          const scrollTrackHeight = Math.max(0, scrollEl.scrollHeight - trackOffsetTop);
+          const visibleTrackHeight = Math.max(0, scrollEl.clientHeight - trackOffsetTop);
+          const visibleRatio = scrollTrackHeight > 0
+            ? Math.max(0.18, Math.min(1, visibleTrackHeight / scrollTrackHeight))
+            : 1;
+          const thumbHeight = Math.max(42, trackHeight * visibleRatio);
+          const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+          return { trackHeight, scrollable, thumbHeight, maxThumbTop };
+        };
+
+        let dragPointerId = null;
+        let dragStartPointerY = 0;
+        let dragStartScrollTop = 0;
+
+        const onThumbPointerDown = (event) => {
+          if (event.button !== undefined && event.button !== 0) return;
+          if (isForceHidden() || rail.hidden) return;
+          const { scrollable, maxThumbTop } = measureGeometry();
+          if (scrollable <= 0 || maxThumbTop <= 0) return;
+          dragPointerId = event.pointerId;
+          dragStartPointerY = event.clientY;
+          dragStartScrollTop = scrollEl.scrollTop;
+          rail.classList.add("is-dragging");
+          try { thumbEl.setPointerCapture(event.pointerId); } catch (_) {}
+          event.preventDefault();
+          event.stopPropagation();
+        };
+
+        const onThumbPointerMove = (event) => {
+          if (dragPointerId === null || event.pointerId !== dragPointerId) return;
+          const { scrollable, maxThumbTop } = measureGeometry();
+          if (scrollable <= 0 || maxThumbTop <= 0) return;
+          const deltaY = event.clientY - dragStartPointerY;
+          const ratio = deltaY / maxThumbTop;
+          const next = dragStartScrollTop + ratio * scrollable;
+          scrollEl.scrollTop = Math.max(0, Math.min(scrollable, next));
+          event.preventDefault();
+        };
+
+        const endDrag = (event) => {
+          if (dragPointerId === null) return;
+          if (event && event.pointerId !== dragPointerId) return;
+          try { thumbEl.releasePointerCapture(dragPointerId); } catch (_) {}
+          dragPointerId = null;
+          rail.classList.remove("is-dragging");
+        };
+
+        thumbEl?.addEventListener("pointerdown", onThumbPointerDown);
+        thumbEl?.addEventListener("pointermove", onThumbPointerMove);
+        thumbEl?.addEventListener("pointerup", endDrag);
+        thumbEl?.addEventListener("pointercancel", endDrag);
+
+        const onRailPointerDown = (event) => {
+          if (event.target === thumbEl) return;
+          if (event.button !== undefined && event.button !== 0) return;
+          if (isForceHidden() || rail.hidden) return;
+          const { trackHeight, scrollable, thumbHeight, maxThumbTop } = measureGeometry();
+          if (scrollable <= 0 || trackHeight <= 0) return;
+          const railRect = rail.getBoundingClientRect();
+          const clickY = event.clientY - railRect.top;
+          const targetThumbTop = Math.max(0, Math.min(maxThumbTop, clickY - thumbHeight / 2));
+          const ratio = maxThumbTop > 0 ? targetThumbTop / maxThumbTop : 0;
+          scrollEl.scrollTop = ratio * scrollable;
+          event.preventDefault();
+        };
+
+        rail.addEventListener("pointerdown", onRailPointerDown);
+
+        const update = () => {
+          rafId = 0;
+          if (isForceHidden()) {
+            rail.hidden = true;
+            return;
+          }
+          const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight + threshold;
+          rail.hidden = !canScroll;
+          if (!canScroll || !thumbEl) return;
+          const { trackHeight, scrollable, thumbHeight, maxThumbTop } = measureGeometry();
+          if (trackHeight <= 0 || scrollable <= 0) return;
+          const top = maxThumbTop * (scrollEl.scrollTop / scrollable);
+          rail.style.setProperty("--sensor-scroll-thumb-height", `${thumbHeight.toFixed(1)}px`);
+          rail.style.setProperty("--sensor-scroll-thumb-top", `${top.toFixed(1)}px`);
+        };
+
+        const schedule = () => {
+          if (rafId) return;
+          rafId = window.requestAnimationFrame(update);
+        };
+
+        scrollEl.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule);
+
+        const resizeObserver = "ResizeObserver" in window
+          ? new ResizeObserver(schedule)
+          : null;
+        resizeObserver?.observe(scrollEl);
+        if (scrollEl.firstElementChild) resizeObserver?.observe(scrollEl.firstElementChild);
+
+        const mutationObserver = "MutationObserver" in window
+          ? new MutationObserver(schedule)
+          : null;
+        mutationObserver?.observe(scrollEl, { childList: true, subtree: true, attributes: true });
+
+        schedule();
+
+        return {
+          update: schedule,
+          destroy() {
+            if (rafId) window.cancelAnimationFrame(rafId);
+            scrollEl.removeEventListener("scroll", schedule);
+            window.removeEventListener("resize", schedule);
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
+            thumbEl?.removeEventListener("pointerdown", onThumbPointerDown);
+            thumbEl?.removeEventListener("pointermove", onThumbPointerMove);
+            thumbEl?.removeEventListener("pointerup", endDrag);
+            thumbEl?.removeEventListener("pointercancel", endDrag);
+            rail.removeEventListener("pointerdown", onRailPointerDown);
+            rail.remove();
+          },
+        };
+      };
+
+      window.attachScrollIndicators = function attachScrollIndicators(scrollEl, options = {}) {
+        if (!scrollEl) return null;
+
+        const threshold = Number.isFinite(options.threshold) ? options.threshold : 2;
+        const hostClass = options.hostClass || "sensor-scroll-indicator-shell";
+        let host = options.host || scrollEl.parentElement;
+        if (!host || !host.classList?.contains(hostClass)) {
+          host = document.createElement("div");
+          host.className = hostClass;
+          scrollEl.parentNode?.insertBefore(host, scrollEl);
+          host.appendChild(scrollEl);
+        } else {
+          host.classList.add(hostClass);
+        }
+
+        const makeIndicator = (position) => {
+          const indicator = document.createElement("div");
+          indicator.className = `sensor-scroll-indicator sensor-scroll-indicator--${position}`;
+          indicator.setAttribute("aria-hidden", "true");
+          indicator.hidden = true;
+          const chevron = document.createElement("span");
+          chevron.className = "sensor-scroll-indicator__chevron";
+          indicator.appendChild(chevron);
+          host.appendChild(indicator);
+          return indicator;
+        };
+
+        const topIndicator = makeIndicator("top");
+        const bottomIndicator = makeIndicator("bottom");
+        let rafId = 0;
+
+        const update = () => {
+          rafId = 0;
+          const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight + threshold;
+          const atTop = scrollEl.scrollTop <= threshold;
+          const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - threshold;
+          topIndicator.hidden = !canScroll || atTop;
+          bottomIndicator.hidden = !canScroll || atBottom;
+        };
+
+        const scheduleUpdate = () => {
+          if (rafId) return;
+          rafId = window.requestAnimationFrame(update);
+        };
+
+        scrollEl.addEventListener("scroll", scheduleUpdate, { passive: true });
+        window.addEventListener("resize", scheduleUpdate);
+
+        const resizeObserver = "ResizeObserver" in window
+          ? new ResizeObserver(scheduleUpdate)
+          : null;
+        resizeObserver?.observe(scrollEl);
+        if (scrollEl.firstElementChild) resizeObserver?.observe(scrollEl.firstElementChild);
+
+        const mutationObserver = "MutationObserver" in window
+          ? new MutationObserver(scheduleUpdate)
+          : null;
+        mutationObserver?.observe(scrollEl, { childList: true, subtree: true, attributes: true });
+
+        scheduleUpdate();
+
+        return {
+          update: scheduleUpdate,
+          destroy() {
+            if (rafId) window.cancelAnimationFrame(rafId);
+            scrollEl.removeEventListener("scroll", scheduleUpdate);
+            window.removeEventListener("resize", scheduleUpdate);
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
+            topIndicator.remove();
+            bottomIndicator.remove();
+          },
+        };
+      };
+    </script>
+    <script>
       const PROJECT_REF_PLACEHOLDER = "__SUPABASE_PROJECT_REF__";
       const ANON_KEY_PLACEHOLDER = "__SB_PUBLISHABLE_DEFAULT_KEY__";
       const params = new URLSearchParams(window.location.search);
@@ -5443,9 +5768,20 @@
       const REST_URL = cacheBaseUrl
         ? `${cacheBaseUrl}/pcon-hex`
         : "";
-      const LATEST_URL = cacheBaseUrl
+      const LATEST_SNAPSHOT_URL = cacheBaseUrl
+        ? `${cacheBaseUrl}/latest-snapshot`
+        : "";
+      const LATEST_LEGACY_URL = cacheBaseUrl
         ? `${cacheBaseUrl}/latest`
         : "";
+      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d"]);
+      function resolveLatestUrl(windowLabel) {
+        const normalizedWindow = String(windowLabel || "").trim().toLowerCase();
+        if (LATEST_SNAPSHOT_URL && SNAPSHOT_WINDOWS.has(normalizedWindow)) {
+          return LATEST_SNAPSHOT_URL;
+        }
+        return LATEST_LEGACY_URL || LATEST_SNAPSHOT_URL;
+      }
       const POPULATION_URL = projectRef
         ? `https://${projectRef}.supabase.co/functions/v1/uk_aq_population`
         : "";
@@ -5725,14 +6061,16 @@
       const inlinePanelCount = document.getElementById("sensor-panel-count");
       const inlinePanelHexIcon = document.getElementById("sensor-panel-hex-icon");
       const inlinePanelBody = document.getElementById("sensor-panel-body");
-      const inlinePanelScrollHint = document.getElementById("sensor-scroll-hint");
-      const inlinePanelScrollbarRail = document.getElementById("sensor-scrollbar-rail");
       const SENSOR_PANEL_EMPTY_HEIGHT = 104;
       const SENSOR_PANEL_HEADER_HEIGHT = 50;
-      const SENSOR_PANEL_SCROLL_HINT_HEIGHT = 28;
       const SENSOR_TABLE_HEADER_HEIGHT = 44;
       const SENSOR_PANEL_ROW_HEIGHT = 46;
       const SENSOR_PANEL_MAX_VISIBLE_ROWS = 8;
+      const detailScrollIndicators = window.attachScrollIndicators?.(detailsTableWrap);
+      const detailPersistentScrollbar = window.attachPersistentScrollbar?.(detailsTableWrap, {
+        isHidden: () => !detailsTableWrap?.classList.contains("is-scroll-forced"),
+        trackOffsetTop: SENSOR_TABLE_HEADER_HEIGHT,
+      });
       if (inlinePanelClose) {
         inlinePanelClose.addEventListener("click", () => setSelectedCell(null));
       }
@@ -5759,7 +6097,7 @@
         }
       });
       if (detailsTableWrap) {
-        detailsTableWrap.addEventListener("scroll", syncSensorScrollbarIndicator);
+        detailsTableWrap.addEventListener("scroll", () => detailScrollIndicators?.update?.());
         detailsTableWrap.addEventListener("wheel", handleSensorTableWheel, { passive: false });
         detailsTableWrap.addEventListener("click", (event) => {
           const button = event.target instanceof Element
@@ -8126,18 +8464,24 @@
           pm25: { asc: "PM2.5, sorted low to high. Click to sort high to low.", desc: "PM2.5, sorted high to low. Click to sort low to high." },
           updated: { asc: "Updated, sorted oldest first. Click to sort newest first.", desc: "Updated, sorted newest first. Click to sort oldest first." },
         };
+        const sortingHidden = detailsTableWrap?.classList.contains("sensor-list-sort-hidden") === true;
         sortHeaderButtons.forEach((button) => {
           const key = button.dataset.sortKey;
           const isActive = key === sortKey;
           const direction = getSortDirection(key, sortKey, sortDir);
           const th = button.closest("th");
-          button.classList.toggle("is-active", isActive);
-          if (th) th.setAttribute("aria-sort", isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none");
+          button.classList.toggle("is-active", isActive && !sortingHidden);
+          button.disabled = sortingHidden;
+          button.tabIndex = sortingHidden ? -1 : 0;
+          if (th) th.setAttribute("aria-sort", !sortingHidden && isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none");
           const icon = button.querySelector(".sort-icon,.sort-arrow");
           if (icon) {
-            icon.textContent = renderSortIcon(key, sortKey, sortDir);
+            icon.textContent = sortingHidden ? "" : renderSortIcon(key, sortKey, sortDir);
           }
-          if (isActive) {
+          if (sortingHidden) {
+            button.setAttribute("aria-label", "");
+            button.title = "";
+          } else if (isActive) {
             button.setAttribute("aria-label", ACTIVE_ARIA[key]?.[sortDir] || "");
             button.title = "";
           } else {
@@ -8156,7 +8500,6 @@
         const visibleRows = Math.min(count, SENSOR_PANEL_MAX_VISIBLE_ROWS);
         const panelHeight = count
           ? SENSOR_PANEL_HEADER_HEIGHT
-            + (hasOverflow ? SENSOR_PANEL_SCROLL_HINT_HEIGHT : 0)
             + SENSOR_TABLE_HEADER_HEIGHT
             + (visibleRows * SENSOR_PANEL_ROW_HEIGHT)
           : SENSOR_PANEL_EMPTY_HEIGHT;
@@ -8167,36 +8510,13 @@
         if (detailsTableWrap) {
           detailsTableWrap.classList.toggle("is-scroll-forced", hasOverflow);
         }
-        if (inlinePanelScrollHint) {
-          inlinePanelScrollHint.hidden = !hasOverflow;
-        }
-        if (inlinePanelScrollbarRail) {
-          inlinePanelScrollbarRail.hidden = !hasOverflow;
-        }
-        syncSensorScrollbarIndicator();
+        detailScrollIndicators?.update?.();
+        detailPersistentScrollbar?.update?.();
       }
 
       function syncSensorScrollbarIndicator() {
-        if (!inlinePanelScrollbarRail || inlinePanelScrollbarRail.hidden || !detailsTableWrap) {
-          return;
-        }
-        window.requestAnimationFrame(() => {
-          if (!inlinePanelScrollbarRail || inlinePanelScrollbarRail.hidden || !detailsTableWrap) {
-            return;
-          }
-          const thumb = inlinePanelScrollbarRail.querySelector(".sensor-scrollbar-thumb");
-          const trackHeight = inlinePanelScrollbarRail.clientHeight || 0;
-          const scrollable = detailsTableWrap.scrollHeight - detailsTableWrap.clientHeight;
-          if (!thumb || trackHeight <= 0 || scrollable <= 0) {
-            return;
-          }
-          const visibleRatio = Math.max(0.18, Math.min(1, detailsTableWrap.clientHeight / detailsTableWrap.scrollHeight));
-          const thumbHeight = Math.max(42, trackHeight * visibleRatio);
-          const maxTop = Math.max(0, trackHeight - thumbHeight);
-          const top = maxTop * (detailsTableWrap.scrollTop / scrollable);
-          inlinePanelScrollbarRail.style.setProperty("--sensor-scroll-thumb-height", `${thumbHeight.toFixed(1)}px`);
-          inlinePanelScrollbarRail.style.setProperty("--sensor-scroll-thumb-top", `${top.toFixed(1)}px`);
-        });
+        detailScrollIndicators?.update?.();
+        detailPersistentScrollbar?.update?.();
       }
 
       function handleSensorTableWheel(event) {
@@ -8231,6 +8551,8 @@
           if (inlinePanelCount) inlinePanelCount.textContent = "";
           detailsEmpty.hidden = true;
           detailsTableWrap.hidden = true;
+          detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          syncSortHeaders();
           updateInlinePanelHeight(0);
           networkSummary.hidden = false;
           updateNetworkSummary();
@@ -8270,6 +8592,8 @@
           detailsEmpty.textContent = "No sensors found for this constituency.";
           detailsEmpty.hidden = false;
           detailsTableWrap.hidden = true;
+          detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          syncSortHeaders();
           detailsTableBody.innerHTML = "";
           updateInlinePanelHeight(0);
           updateSelectedHexViewportShift();
@@ -8293,6 +8617,8 @@
         }
         detailsEmpty.hidden = true;
         detailsTableWrap.hidden = false;
+        detailsTableWrap.classList.toggle("sensor-list-sort-hidden", entries.length <= 1);
+        syncSortHeaders();
         networkSummary.hidden = true;
         detailsTableBody.innerHTML = entries.map((entry) => {
           const stationName = resolveStationName(entry.row);
@@ -8919,7 +9245,7 @@
         updateSummary();
         renderMap();
         updateDetailsPanel();
-        window.hexChartMode?.syncFromMap?.("uk");
+        window.hexChartMode?.syncFromMap?.("uk", { preserveChartMode: true, updateChart: false });
         refreshPinnedTooltip();
         persistNetworkSelection();
       }
@@ -9204,16 +9530,21 @@
           if (pconEtag) {
             pconHeaders["If-None-Match"] = pconEtag;
           }
-          const latestUrl = new URL(LATEST_URL);
+          const latestUrl = new URL(resolveLatestUrl(currentWindow));
           const latestCacheKey = getLatestCacheKey(requestPollutant, requestWindow);
-          const latestSince = latestSinceByKey.get(latestCacheKey) || null;
-          const latestSinceId = normalizeCursorId(latestSinceIdByKey.get(latestCacheKey));
+          const latestCursorEnabled = !latestUrl.pathname.endsWith("/latest-snapshot");
+          const latestSince = latestCursorEnabled
+            ? (latestSinceByKey.get(latestCacheKey) || null)
+            : null;
+          const latestSinceId = latestCursorEnabled
+            ? normalizeCursorId(latestSinceIdByKey.get(latestCacheKey))
+            : null;
           const latestEtag = latestEtagByKey.get(latestCacheKey) || null;
           latestUrl.searchParams.set("pollutant", activePollutant);
           latestUrl.searchParams.set("window", currentWindow);
           latestUrl.searchParams.set("scope", "all");
           latestUrl.searchParams.set("limit", "10000");
-          if (latestSince) {
+          if (latestCursorEnabled && latestSince) {
             latestUrl.searchParams.set("since", latestSince);
             if (latestSinceId !== null) {
               latestUrl.searchParams.set("since_id", String(latestSinceId));
@@ -9336,16 +9667,20 @@
               const latestRaw = latestPayload?.data || [];
               const cleanedLatest = latestRaw.filter((row) => Number.isFinite(resolveLatestValue(row)));
               const responsePollutant = normalizePollutantKey(latestPayload?.pollutant) || requestPollutant;
-              const nextSince = normalizeIsoTimestamp(latestPayload?.next_since) || latestSince;
-              const nextSinceId = normalizeCursorId(latestPayload?.next_since_id)
-                ?? latestSinceId
-                ?? 0;
-              const existingLatest = latestSince
+              const nextSince = latestCursorEnabled
+                ? (normalizeIsoTimestamp(latestPayload?.next_since) || latestSince)
+                : null;
+              const nextSinceId = latestCursorEnabled
+                ? (normalizeCursorId(latestPayload?.next_since_id)
+                  ?? latestSinceId
+                  ?? 0)
+                : 0;
+              const existingLatest = (latestCursorEnabled && latestSince)
                 ? (pollutantCache.get(latestCacheKey)?.latestRows || baseLatestRows)
                 : [];
-              const mergedLatest = latestSince
+              const mergedLatest = (latestCursorEnabled && latestSince)
                 ? mergeLatestRows(existingLatest, cleanedLatest)
-              : cleanedLatest;
+                : cleanedLatest;
             if (!isStale()) {
               baseLatestRows = mergedLatest;
               latestPollutant = responsePollutant;
@@ -9356,9 +9691,12 @@
                 nextSince,
                 nextSinceId,
               });
-              if (nextSince) {
+              if (latestCursorEnabled && nextSince) {
                 latestSinceByKey.set(latestCacheKey, nextSince);
                 latestSinceIdByKey.set(latestCacheKey, nextSinceId);
+              } else {
+                latestSinceByKey.delete(latestCacheKey);
+                latestSinceIdByKey.delete(latestCacheKey);
               }
             }
           } else if (!isStale()) {
@@ -9908,9 +10246,20 @@
 		      const REST_URL = cacheBaseUrl
 		        ? `${cacheBaseUrl}/la-hex`
 		        : "";
-	      const LATEST_URL = cacheBaseUrl
-	        ? `${cacheBaseUrl}/latest`
-	        : "";
+      const LATEST_SNAPSHOT_URL = cacheBaseUrl
+        ? `${cacheBaseUrl}/latest-snapshot`
+        : "";
+      const LATEST_LEGACY_URL = cacheBaseUrl
+        ? `${cacheBaseUrl}/latest`
+        : "";
+      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d"]);
+      function resolveLatestUrl(windowLabel) {
+        const normalizedWindow = String(windowLabel || "").trim().toLowerCase();
+        if (LATEST_SNAPSHOT_URL && SNAPSHOT_WINDOWS.has(normalizedWindow)) {
+          return LATEST_SNAPSHOT_URL;
+        }
+        return LATEST_LEGACY_URL || LATEST_SNAPSHOT_URL;
+      }
       const POPULATION_URL = projectRef
         ? `https://${projectRef}.supabase.co/functions/v1/uk_aq_population`
         : "";
@@ -10227,14 +10576,16 @@
       const inlinePanelCount = byId("sensor-panel-count");
       const inlinePanelHexIcon = byId("sensor-panel-hex-icon");
       const inlinePanelBody = byId("sensor-panel-body");
-      const inlinePanelScrollHint = byId("sensor-scroll-hint");
-      const inlinePanelScrollbarRail = byId("sensor-scrollbar-rail");
       const SENSOR_PANEL_EMPTY_HEIGHT = 104;
       const SENSOR_PANEL_HEADER_HEIGHT = 50;
-      const SENSOR_PANEL_SCROLL_HINT_HEIGHT = 28;
       const SENSOR_TABLE_HEADER_HEIGHT = 44;
       const SENSOR_PANEL_ROW_HEIGHT = 46;
       const SENSOR_PANEL_MAX_VISIBLE_ROWS = 8;
+      const detailScrollIndicators = window.attachScrollIndicators?.(detailsTableWrap);
+      const detailPersistentScrollbar = window.attachPersistentScrollbar?.(detailsTableWrap, {
+        isHidden: () => !detailsTableWrap?.classList.contains("is-scroll-forced"),
+        trackOffsetTop: SENSOR_TABLE_HEADER_HEIGHT,
+      });
       if (inlinePanelClose) {
         inlinePanelClose.addEventListener("click", () => setSelectedCell(null));
       }
@@ -10261,7 +10612,7 @@
         }
       });
       if (detailsTableWrap) {
-        detailsTableWrap.addEventListener("scroll", syncSensorScrollbarIndicator);
+        detailsTableWrap.addEventListener("scroll", () => detailScrollIndicators?.update?.());
         detailsTableWrap.addEventListener("wheel", handleSensorTableWheel, { passive: false });
         detailsTableWrap.addEventListener("click", (event) => {
           const button = event.target instanceof Element
@@ -12315,18 +12666,24 @@
           pm25: { asc: "PM2.5, sorted low to high. Click to sort high to low.", desc: "PM2.5, sorted high to low. Click to sort low to high." },
           updated: { asc: "Updated, sorted oldest first. Click to sort newest first.", desc: "Updated, sorted newest first. Click to sort oldest first." },
         };
+        const sortingHidden = detailsTableWrap?.classList.contains("sensor-list-sort-hidden") === true;
         sortHeaderButtons.forEach((button) => {
           const key = button.dataset.sortKey;
           const isActive = key === sortKey;
           const direction = getSortDirection(key, sortKey, sortDir);
           const th = button.closest("th");
-          button.classList.toggle("is-active", isActive);
-          if (th) th.setAttribute("aria-sort", isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none");
+          button.classList.toggle("is-active", isActive && !sortingHidden);
+          button.disabled = sortingHidden;
+          button.tabIndex = sortingHidden ? -1 : 0;
+          if (th) th.setAttribute("aria-sort", !sortingHidden && isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none");
           const icon = button.querySelector(".sort-icon,.sort-arrow");
           if (icon) {
-            icon.textContent = renderSortIcon(key, sortKey, sortDir);
+            icon.textContent = sortingHidden ? "" : renderSortIcon(key, sortKey, sortDir);
           }
-          if (isActive) {
+          if (sortingHidden) {
+            button.setAttribute("aria-label", "");
+            button.title = "";
+          } else if (isActive) {
             button.setAttribute("aria-label", ACTIVE_ARIA[key]?.[sortDir] || "");
             button.title = "";
           } else {
@@ -12345,7 +12702,6 @@
         const visibleRows = Math.min(count, SENSOR_PANEL_MAX_VISIBLE_ROWS);
         const panelHeight = count
           ? SENSOR_PANEL_HEADER_HEIGHT
-            + (hasOverflow ? SENSOR_PANEL_SCROLL_HINT_HEIGHT : 0)
             + SENSOR_TABLE_HEADER_HEIGHT
             + (visibleRows * SENSOR_PANEL_ROW_HEIGHT)
           : SENSOR_PANEL_EMPTY_HEIGHT;
@@ -12356,36 +12712,13 @@
         if (detailsTableWrap) {
           detailsTableWrap.classList.toggle("is-scroll-forced", hasOverflow);
         }
-        if (inlinePanelScrollHint) {
-          inlinePanelScrollHint.hidden = !hasOverflow;
-        }
-        if (inlinePanelScrollbarRail) {
-          inlinePanelScrollbarRail.hidden = !hasOverflow;
-        }
-        syncSensorScrollbarIndicator();
+        detailScrollIndicators?.update?.();
+        detailPersistentScrollbar?.update?.();
       }
 
       function syncSensorScrollbarIndicator() {
-        if (!inlinePanelScrollbarRail || inlinePanelScrollbarRail.hidden || !detailsTableWrap) {
-          return;
-        }
-        window.requestAnimationFrame(() => {
-          if (!inlinePanelScrollbarRail || inlinePanelScrollbarRail.hidden || !detailsTableWrap) {
-            return;
-          }
-          const thumb = inlinePanelScrollbarRail.querySelector(".sensor-scrollbar-thumb");
-          const trackHeight = inlinePanelScrollbarRail.clientHeight || 0;
-          const scrollable = detailsTableWrap.scrollHeight - detailsTableWrap.clientHeight;
-          if (!thumb || trackHeight <= 0 || scrollable <= 0) {
-            return;
-          }
-          const visibleRatio = Math.max(0.18, Math.min(1, detailsTableWrap.clientHeight / detailsTableWrap.scrollHeight));
-          const thumbHeight = Math.max(42, trackHeight * visibleRatio);
-          const maxTop = Math.max(0, trackHeight - thumbHeight);
-          const top = maxTop * (detailsTableWrap.scrollTop / scrollable);
-          inlinePanelScrollbarRail.style.setProperty("--sensor-scroll-thumb-height", `${thumbHeight.toFixed(1)}px`);
-          inlinePanelScrollbarRail.style.setProperty("--sensor-scroll-thumb-top", `${top.toFixed(1)}px`);
-        });
+        detailScrollIndicators?.update?.();
+        detailPersistentScrollbar?.update?.();
       }
 
       function handleSensorTableWheel(event) {
@@ -12420,6 +12753,8 @@
           if (inlinePanelCount) inlinePanelCount.textContent = "";
           detailsEmpty.hidden = true;
           detailsTableWrap.hidden = true;
+          detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          syncSortHeaders();
           updateInlinePanelHeight(0);
           networkSummary.hidden = false;
           updateNetworkSummary();
@@ -12459,6 +12794,8 @@
           detailsEmpty.textContent = "No sensors found for this local authority.";
           detailsEmpty.hidden = false;
           detailsTableWrap.hidden = true;
+          detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          syncSortHeaders();
           networkSummary.hidden = true;
           detailsTableBody.innerHTML = "";
           updateInlinePanelHeight(0);
@@ -12483,6 +12820,8 @@
         }
         detailsEmpty.hidden = true;
         detailsTableWrap.hidden = false;
+        detailsTableWrap.classList.toggle("sensor-list-sort-hidden", entries.length <= 1);
+        syncSortHeaders();
         networkSummary.hidden = true;
         detailsTableBody.innerHTML = entries.map((entry) => {
           const stationName = resolveStationName(entry.row);
@@ -13483,7 +13822,7 @@
         updateSummary();
         renderMap();
         updateDetailsPanel();
-        window.hexChartMode?.syncFromMap?.("cr");
+        window.hexChartMode?.syncFromMap?.("cr", { preserveChartMode: true, updateChart: false });
         persistNetworkSelection();
       }
 
@@ -13780,10 +14119,15 @@
 	            if (laEtag) {
 	              laHeaders["If-None-Match"] = laEtag;
 	            }
-            const latestUrl = new URL(LATEST_URL);
+            const latestUrl = new URL(resolveLatestUrl(currentWindow));
             const latestCacheKey = getLatestCacheKey(requestPollutant, requestWindow, requestRegion);
-            const latestSince = latestSinceByKey.get(latestCacheKey) || null;
-            const latestSinceId = normalizeCursorId(latestSinceIdByKey.get(latestCacheKey));
+            const latestCursorEnabled = !latestUrl.pathname.endsWith("/latest-snapshot");
+            const latestSince = latestCursorEnabled
+              ? (latestSinceByKey.get(latestCacheKey) || null)
+              : null;
+            const latestSinceId = latestCursorEnabled
+              ? normalizeCursorId(latestSinceIdByKey.get(latestCacheKey))
+              : null;
             const latestEtag = latestEtagByKey.get(latestCacheKey) || null;
             latestUrl.searchParams.set("pollutant", activePollutant);
             latestUrl.searchParams.set("window", currentWindow);
@@ -13792,7 +14136,7 @@
             // scope to the selected LA hex codes immediately after fetch.
             latestUrl.searchParams.set("scope", "all");
             latestUrl.searchParams.set("limit", "10000");
-            if (latestSince) {
+            if (latestCursorEnabled && latestSince) {
               latestUrl.searchParams.set("since", latestSince);
               if (latestSinceId !== null) {
                 latestUrl.searchParams.set("since_id", String(latestSinceId));
@@ -13897,8 +14241,13 @@
               }
             }
             const latestCacheKey = getLatestCacheKey(requestPollutant, requestWindow, requestRegion);
-            const latestSince = latestSinceByKey.get(latestCacheKey) || null;
-            const latestSinceId = normalizeCursorId(latestSinceIdByKey.get(latestCacheKey));
+            const latestCursorEnabled = !new URL(resolveLatestUrl(currentWindow)).pathname.endsWith("/latest-snapshot");
+            const latestSince = latestCursorEnabled
+              ? (latestSinceByKey.get(latestCacheKey) || null)
+              : null;
+            const latestSinceId = latestCursorEnabled
+              ? normalizeCursorId(latestSinceIdByKey.get(latestCacheKey))
+              : null;
             if (latestResponse) {
               const responseEtag = latestResponse.headers.get("ETag");
               if (responseEtag) {
@@ -13931,14 +14280,18 @@
                 return !pconCodes.size || (code && pconCodes.has(code));
               });
               const responsePollutant = normalizePollutantKey(latestPayload?.pollutant) || requestPollutant;
-              const nextSince = normalizeIsoTimestamp(latestPayload?.next_since) || latestSince;
-              const nextSinceId = normalizeCursorId(latestPayload?.next_since_id)
-                ?? latestSinceId
-                ?? 0;
-              const existingLatest = latestSince
+              const nextSince = latestCursorEnabled
+                ? (normalizeIsoTimestamp(latestPayload?.next_since) || latestSince)
+                : null;
+              const nextSinceId = latestCursorEnabled
+                ? (normalizeCursorId(latestPayload?.next_since_id)
+                  ?? latestSinceId
+                  ?? 0)
+                : 0;
+              const existingLatest = (latestCursorEnabled && latestSince)
                 ? (pollutantCache.get(latestCacheKey)?.latestRows || baseLatestRows)
                 : [];
-              const mergedLatest = latestSince
+              const mergedLatest = (latestCursorEnabled && latestSince)
                 ? mergeLatestRows(existingLatest, scopedLatest)
                 : scopedLatest;
               if (!isStale()) {
@@ -13951,9 +14304,12 @@
                   nextSince,
                   nextSinceId,
                 });
-                if (nextSince) {
+                if (latestCursorEnabled && nextSince) {
                   latestSinceByKey.set(latestCacheKey, nextSince);
                   latestSinceIdByKey.set(latestCacheKey, nextSinceId);
+                } else {
+                  latestSinceByKey.delete(latestCacheKey);
+                  latestSinceIdByKey.delete(latestCacheKey);
                 }
               }
             } else if (!isStale()) {
@@ -14369,12 +14725,12 @@
       }
 
       async function fetchAllRegionsForSearch() {
-        if (!LATEST_URL) return;
+        if (!LATEST_SNAPSHOT_URL && !LATEST_LEGACY_URL) return;
         if (allRegionsFetchState === "fetching") return;
         allRegionsFetchState = "fetching";
         const fetchPollutant = activePollutant;
         try {
-          const url = new URL(LATEST_URL);
+          const url = new URL(resolveLatestUrl(currentWindow));
           url.searchParams.set("pollutant", fetchPollutant);
           url.searchParams.set("window", currentWindow);
           url.searchParams.set("scope", "all");
@@ -14525,10 +14881,11 @@
     <script>
 (() => {
   const MAX_SELECTED_SENSORS = 5;
+  const CHART_SENSOR_SCROLL_THRESHOLD = 4;
+  const CHART_SENSOR_TABLE_HEADER_HEIGHT = 44;
   const DAY_MS = 24 * 60 * 60 * 1000;
   const HOUR_MS = 60 * 60 * 1000;
   const AQI_HISTORY_ROW_LIMIT = 20000;
-  const SERIES_COLORS = ["#3C78AC", "#8b1e3f", "#35b56a", "#a65f2d", "#672C7F"];
   const params = new URLSearchParams(window.location.search);
   const cacheBaseUrl = resolveCacheBaseUrl(params.get("cache_base"));
   const seriesUrl = cacheBaseUrl ? `${cacheBaseUrl}/timeseries` : "";
@@ -14556,10 +14913,15 @@
     chartSortDir: "desc",
     loadToken: 0,
     selectedPrimaryId: null,
+    loadAbortController: null,
   };
+
+  const seriesDataCache = new Map(); // key: `${timeseriesId}|${windowValue}`
+  const aqiBandCache    = new Map(); // key: `${timeseriesId}|${pollutantKey}|${windowValue}`
 
   function collectChartDom(prefix) {
     const panel = document.getElementById(`${prefix}-hex-chart-mode`);
+    const sensorWrap = document.getElementById(`${prefix}-hex-chart-sensor-wrap`);
     return {
       panel,
       canvasWrap: panel?.closest(".map-canvas-wrap") || null,
@@ -14568,6 +14930,12 @@
       reading: document.getElementById(`${prefix}-hex-chart-reading`),
       windowSelect: document.getElementById(`${prefix}-hex-chart-window`),
       sensorBody: document.getElementById(`${prefix}-hex-chart-sensor-body`),
+      sensorWrap,
+      scrollIndicators: window.attachScrollIndicators?.(sensorWrap),
+      persistentScrollbar: window.attachPersistentScrollbar?.(sensorWrap, {
+        isHidden: () => !sensorWrap?.classList.contains("is-scrollable"),
+        trackOffsetTop: CHART_SENSOR_TABLE_HEADER_HEIGHT,
+      }),
       valueLabel: document.getElementById(`${prefix}-hex-chart-value-label`),
       message: document.getElementById(`${prefix}-hex-chart-message`),
       chartWrap: document.getElementById(`${prefix}-hex-chart-wrap`),
@@ -14781,20 +15149,25 @@
     if (dom.valueLabel) {
       dom.valueLabel.textContent = context?.pollutantLabel || "Pollutant";
     }
+    const sortingHidden = state.visibleEntries.length <= 1;
     dom.sortButtons?.forEach((button) => {
       const key = button.dataset.chartSortKey;
       const isActive = key === state.chartSortKey;
       const direction = isActive ? state.chartSortDir : getDefaultChartSortDir(key);
-      button.classList.toggle("is-active", isActive);
+      button.classList.toggle("is-active", isActive && !sortingHidden);
+      button.disabled = sortingHidden;
+      button.tabIndex = sortingHidden ? -1 : 0;
       const th = button.closest("th");
       if (th) {
-        th.setAttribute("aria-sort", isActive ? (state.chartSortDir === "asc" ? "ascending" : "descending") : "none");
+        th.setAttribute("aria-sort", !sortingHidden && isActive ? (state.chartSortDir === "asc" ? "ascending" : "descending") : "none");
       }
       const icon = button.querySelector(".sort-icon,.sort-arrow");
       if (icon) {
-        icon.textContent = direction === "asc" ? "↑" : "↓";
+        icon.textContent = sortingHidden ? "" : (direction === "asc" ? "↑" : "↓");
       }
-      if (isActive) {
+      if (sortingHidden) {
+        button.title = "";
+      } else if (isActive) {
         const nextDir = state.chartSortDir === "asc" ? "desc" : "asc";
         button.title = `Sort ${nextDir === "asc" ? "A→Z / low→high / oldest→newest" : "Z→A / high→low / newest→oldest"}`;
       } else {
@@ -14845,7 +15218,7 @@
     syncPanels();
     syncWindowControl();
     renderSensorList(context);
-    loadChartData();
+    loadChartData("area-change");
   }
 
   function exit() {
@@ -14881,13 +15254,81 @@
     if (!state.chartModeSelectedSensors.size && entries.length) state.chartModeSelectedSensors.add(entries[0].stationId);
     if (!state.chartModeSelectedSensors.has(state.selectedPrimaryId)) state.selectedPrimaryId = Array.from(state.chartModeSelectedSensors)[0] || null;
     renderSensorList(context);
-    loadChartData();
+    // updateChart: false lets the caller handle the chart refresh (e.g. delta-only refresh).
+    if (options.updateChart !== false) {
+      loadChartData("sensor-change");
+    }
+  }
+
+  // refreshChartData — fetches only the slice of time since the chart's current right edge.
+  // If new points arrive they are merged into the cache and the chart animates to the new range.
+  // If nothing is new the chart is left untouched.
+  async function refreshChartData() {
+    if (!state.isChartMode) return;
+    const dom = domByMap[state.mapKey];
+    const cf = dom?.chartFrame;
+    if (!cf?.currentSeriesData?.entries?.length) return;
+
+    const windowValue = state.chartModeTimeRange || "24h";
+    const newRange    = resolveRange(windowValue);
+    const token       = state.loadToken; // snapshot — do NOT increment
+
+    const usableEntries = cf.currentSeriesData.entries;
+    const units         = cf.currentSeriesData.units || "";
+
+    // Only fetch the delta since the chart's current right-edge timestamp.
+    const prevEnd  = cf.xScale.domain()[1];
+    const deltaMs  = newRange.endDate.getTime() - prevEnd.getTime();
+    if (deltaMs < 30 * 1000) return; // < 30 s elapsed — nothing meaningful to fetch
+
+    const deltaChunk = { startIso: prevEnd.toISOString(), endIso: newRange.endIso };
+    let anyNewData     = false;
+    let primaryGuideline = cf.currentGuideline;
+    const primaryId      = state.selectedPrimaryId || usableEntries[0]?.stationId;
+
+    for (const entry of usableEntries) {
+      if (state.loadToken !== token) return; // superseded by a user action
+      try {
+        const result = await fetchObservationSeriesChunk(entry, deltaChunk, null);
+        if (result.points.length > 0) {
+          const cacheKey = `${entry.timeseriesId}|${windowValue}`;
+          const cached   = seriesDataCache.get(cacheKey);
+          const merged   = mergeSeriesPoints(cached?.points || [], result.points);
+          seriesDataCache.set(cacheKey, { points: merged, guideline: result.guideline || cached?.guideline || null });
+          if (!primaryGuideline && entry.stationId === primaryId && result.guideline) {
+            primaryGuideline = result.guideline;
+          }
+          anyNewData = true;
+        }
+      } catch (_err) {}
+    }
+
+    if (state.loadToken !== token || !anyNewData) return; // nothing changed
+
+    // Build updated pointsMap from merged cache.
+    const seriesPointsMap = new Map();
+    usableEntries.forEach((entry) => {
+      const cached = seriesDataCache.get(`${entry.timeseriesId}|${windowValue}`);
+      seriesPointsMap.set(entry.stationId, cached?.points || cf.currentSeriesData.pointsMap.get(entry.stationId) || []);
+    });
+
+    const newYDomain = computeYDomainNiced(seriesPointsMap, usableEntries, primaryGuideline);
+
+    // Animate to the new time range, then redraw fully once animation completes.
+    animateChartDomains(cf, newRange, newYDomain, token, () => {
+      if (state.loadToken !== token) return;
+      updateChart(dom, seriesPointsMap, usableEntries, newRange, primaryGuideline, units);
+    });
   }
 
   async function refresh() {
     if (!state.isChartMode) return;
+    // Refresh map data (updates sensor readings in the table) — cache is NOT cleared
+    // so the chart can delta-fetch rather than fully re-render.
     await getAdapter()?.refreshForChartMode?.();
-    syncFromMap(state.mapKey, { preserveChartMode: true });
+    // applyNetworkFilters inside loadMapData already called syncFromMap (sensor list only).
+    // Now fetch any new chart data since the current range end.
+    await refreshChartData();
   }
 
   function renderSensorList(context) {
@@ -14906,20 +15347,30 @@
       dom.reading.innerHTML = `<span class="sensor-panel-value">${escapeHtml(valueLabel)}</span> <span class="sensor-panel-method">${escapeHtml(methodLabel)}</span>`;
     }
     syncChartSortHeaders(context);
+    const visibleEntriesForRender = getVisibleEntriesForRender();
+    dom.sensorWrap?.classList.toggle("sensor-list-sort-hidden", visibleEntriesForRender.length <= 1);
+    const chartScrollable = visibleEntriesForRender.length > CHART_SENSOR_SCROLL_THRESHOLD;
+    dom.sensorWrap?.classList.toggle("is-scrollable", chartScrollable);
     if (!state.visibleEntries.length) {
-      dom.sensorBody.innerHTML = `<tr><td colspan="5" class="hex-chart-sensor-muted">No sensors are visible for the selected filters.</td></tr>`;
+      dom.sensorBody.innerHTML = `<tr><td colspan="6" class="hex-chart-sensor-muted">No sensors are visible for the selected filters.</td></tr>`;
+      dom.scrollIndicators?.update?.();
+      dom.persistentScrollbar?.update?.();
       setMessage("Select a sensor to view its history.");
       renderEmptyChart("Select a sensor to view its history.");
       return;
     }
     const adapter = getAdapter();
-    dom.sensorBody.innerHTML = getVisibleEntriesForRender().map((entry) => {
+    const selectedSensorIds = Array.from(state.chartModeSelectedSensors);
+    dom.sensorBody.innerHTML = visibleEntriesForRender.map((entry) => {
       const selected = state.chartModeSelectedSensors.has(entry.stationId);
+      const symbolIndex = selected ? selectedSensorIds.indexOf(entry.stationId) : -1;
+      const glyph = symbolIndex >= 0 ? (window.ChartCore?.SYMBOL_GLYPHS?.[symbolIndex] || "") : "";
       const valueLabel = Number.isFinite(Number(entry.value)) ? `${formatChartValue(entry.value)} ${entry.units || context.units || ""}`.trim() : "-";
       const readingColor = adapter?.getSensorCurrentColor?.(entry.stationId) || "var(--no-data)";
       return `
         <tr class="${selected ? "is-selected" : ""}">
           <td><button type="button" class="hex-chart-selector" data-station-id="${escapeHtml(entry.stationId)}" aria-label="${selected ? "Remove" : "Add"} ${escapeHtml(entry.stationName)} from chart" aria-pressed="${selected ? "true" : "false"}"></button></td>
+          <td>${glyph ? `<span class="hex-chart-symbol-glyph" aria-hidden="true">${escapeHtml(glyph)}</span>` : ""}</td>
           <td class="hex-chart-sensor-name">${escapeHtml(entry.stationName)}</td>
           <td>${escapeHtml(entry.networkLabel || "Unknown network")}</td>
           <td><span class="sensor-reading-cell"><span class="sensor-reading-dot" style="--sensor-reading-color:${escapeHtml(readingColor)}"></span><span class="sensor-reading-text">${escapeHtml(valueLabel)}</span></span></td>
@@ -14927,6 +15378,8 @@
         </tr>
       `;
     }).join("");
+    dom.scrollIndicators?.update?.();
+    dom.persistentScrollbar?.update?.();
     setMessage(state.chartModeSelectedSensors.size ? "" : "Select a sensor to view its history.");
   }
 
@@ -14944,7 +15397,7 @@
       state.selectedPrimaryId = state.selectedPrimaryId || stationId;
     }
     renderSensorList(getCurrentContext() || {});
-    loadChartData();
+    loadChartData("sensor-change");
   }
 
   function getCacheFetch() {
@@ -14959,15 +15412,58 @@
     return response.json();
   }
 
-  async function fetchObservationSeries(entry, range) {
+  async function fetchObservationSeriesChunk(entry, chunk, signal) {
     if (!seriesUrl || !entry?.timeseriesId) return { entry, points: [], guideline: null };
     const url = new URL(seriesUrl);
     url.searchParams.set("timeseries_id", entry.timeseriesId);
-    url.searchParams.set("start", range.startIso);
-    url.searchParams.set("end", range.endIso);
+    url.searchParams.set("start", chunk.startIso);
+    url.searchParams.set("end", chunk.endIso);
     url.searchParams.set("format", "compact");
-    const payload = await fetchChartJson(url.toString());
+    const init = { credentials: "include", headers: { Accept: "application/json" }, signal };
+    const cacheFetch = getCacheFetch();
+    const response = cacheFetch ? await cacheFetch(url.toString(), init) : await fetch(url.toString(), init);
+    if (!response.ok) throw new Error(`Chart request failed: ${response.status}`);
+    const payload = await response.json();
     return { entry, points: parseSeriesPayloadPoints(payload), guideline: payload?.guideline || null };
+  }
+
+  function mergeSeriesPoints(existingPoints, newPoints) {
+    const byTime = new Map();
+    [...existingPoints, ...newPoints].forEach((p) => byTime.set(p.date.getTime(), p));
+    return Array.from(byTime.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  function buildChunkWorkQueue(usableEntries, range, windowValue) {
+    const chunkSpanMs = windowValue === "24h" ? 6 * HOUR_MS
+      : windowValue === "7d"  ? DAY_MS
+      : windowValue === "31d" ? 3 * DAY_MS
+      : windowValue === "90d" ? 7 * DAY_MS
+      : DAY_MS;
+    const allEntryChunks = usableEntries.map((entry) => {
+      const chunks = [];
+      let end = range.endMs;
+      while (end > range.startMs) {
+        const start = Math.max(range.startMs, end - chunkSpanMs);
+        chunks.push({
+          entry,
+          chunk: {
+            startMs: start, endMs: end,
+            startIso: new Date(start).toISOString(),
+            endIso: new Date(end).toISOString(),
+          },
+        });
+        end = start;
+      }
+      return chunks;
+    });
+    const maxLen = Math.max(0, ...allEntryChunks.map((c) => c.length));
+    const workQueue = [];
+    for (let i = 0; i < maxLen; i++) {
+      allEntryChunks.forEach((entryChunks) => {
+        if (i < entryChunks.length) workQueue.push(entryChunks[i]);
+      });
+    }
+    return workQueue;
   }
 
   function buildAqiHistoryRequestCandidates(entry, pollutantKey, range) {
@@ -15001,10 +15497,94 @@
     return [];
   }
 
-  async function loadChartData() {
+  function clearCacheForCurrentSensors() {
+    const tidSet = new Set();
+    Array.from(state.chartModeSelectedSensors).forEach((id) => {
+      const entry = state.visibleEntries.find((e) => e.stationId === id);
+      if (entry?.timeseriesId) tidSet.add(entry.timeseriesId);
+    });
+    seriesDataCache.forEach((_v, key) => { if (tidSet.has(key.split("|")[0])) seriesDataCache.delete(key); });
+    aqiBandCache.forEach((_v, key)    => { if (tidSet.has(key.split("|")[0])) aqiBandCache.delete(key); });
+  }
+
+  function computeYDomainNiced(seriesPointsMap, usableEntries, guideline) {
+    const allPoints = [];
+    usableEntries.forEach((e) => allPoints.push(...(seriesPointsMap.get(e.stationId) || [])));
+    const yExtent = d3.extent(allPoints, (p) => p.value);
+    const guidelineValue = Number(guideline?.limit_value);
+    const hasGuideline = Number.isFinite(guidelineValue);
+    const yMin    = Math.min(0, Number.isFinite(yExtent[0]) ? yExtent[0] : 0, hasGuideline ? guidelineValue : 0);
+    const yMaxRaw = Math.max(Number.isFinite(yExtent[1]) ? yExtent[1] : 1, hasGuideline ? guidelineValue : 1);
+    return d3.scaleLinear().domain([yMin, yMaxRaw === yMin ? yMin + 1 : yMaxRaw]).nice(5).domain();
+  }
+
+  function animateChartDomains(cf, newRange, newYDomain, token, onComplete) {
+    if (cf.animFrameId != null) cancelAnimationFrame(cf.animFrameId);
+    cf.animFrameId = null;
+    // Hide symbols for the duration of the animation; updateChart redraws them on completion.
+    cf.seriesSymbolGroups?.forEach((g) => g.style("opacity", 0));
+    const startX = cf.xScale.domain().map((d) => d.getTime());
+    const startY = cf.yScale.domain().slice();
+    const endX   = [newRange.startDate.getTime(), newRange.endDate.getTime()];
+    const endY   = newYDomain;
+    const t0 = performance.now();
+    const DURATION = 240;
+    const rangeMs = newRange.endMs - newRange.startMs;
+    const lineFn  = d3.line().x((p) => cf.xScale(p.date)).y((p) => cf.yScale(p.value));
+
+    function frame(now) {
+      if (token !== state.loadToken) return;
+      const raw  = Math.min(1, (now - t0) / DURATION);
+      const ease = raw < 0.5 ? 2 * raw * raw : -1 + (4 - 2 * raw) * raw;
+
+      cf.xScale.domain([new Date(startX[0] + (endX[0] - startX[0]) * ease), new Date(startX[1] + (endX[1] - startX[1]) * ease)]);
+      cf.yScale.domain([startY[0] + (endY[0] - startY[0]) * ease, startY[1] + (endY[1] - startY[1]) * ease]);
+
+      cf.xAxisGroup.call(d3.axisBottom(cf.xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+      cf.yAxisGroup.call(d3.axisLeft(cf.yScale).ticks(5).tickSizeOuter(0));
+
+      const csd = cf.currentSeriesData;
+      if (csd?.seriesSegments) {
+        csd.entries.forEach((entry, i) => {
+          const segs = csd.seriesSegments[i] || [];
+          if (cf.seriesPaths[i]) cf.seriesPaths[i].attr("d", segs.map((s) => lineFn(s)).join(" ") || null);
+        });
+      }
+      if (cf.currentGuideline && Number.isFinite(Number(cf.currentGuideline.limit_value))) {
+        const gy = cf.yScale(Number(cf.currentGuideline.limit_value));
+        cf.guidelineEl.attr("y1", gy).attr("y2", gy);
+        cf.guidelineLabelEl.attr("y", Math.max(cf.margin.top + 12, gy - 6));
+      }
+
+      if (raw < 1) {
+        cf.animFrameId = requestAnimationFrame(frame);
+      } else {
+        cf.animFrameId = null;
+        cf.xScale.domain([newRange.startDate, newRange.endDate]);
+        cf.yScale.domain(newYDomain);
+        if (typeof onComplete === "function") onComplete();
+      }
+    }
+    cf.animFrameId = requestAnimationFrame(frame);
+  }
+
+  async function loadChartData(reason = "sensor-change") {
     if (!state.isChartMode) return;
+
+    // Abort any in-flight load.
+    if (state.loadAbortController) state.loadAbortController.abort();
+    const abortController = new AbortController();
+    state.loadAbortController = abortController;
+    const signal = abortController.signal;
+
     const token = ++state.loadToken;
-    const selectedEntries = state.visibleEntries.filter((entry) => state.chartModeSelectedSensors.has(entry.stationId));
+    setLoading(false);
+
+    // Build ordered usableEntries by Set insertion order (consistent symbol indices).
+    const selectedIds    = Array.from(state.chartModeSelectedSensors);
+    const entryById      = new Map(state.visibleEntries.map((e) => [e.stationId, e]));
+    const selectedEntries = selectedIds.map((id) => entryById.get(id)).filter(Boolean);
+
     if (!selectedEntries.length) {
       renderEmptyChart("Select a sensor to view its history.");
       setMessage("Select a sensor to view its history.");
@@ -15016,26 +15596,168 @@
       setMessage("This pollutant is not available for the selected sensor.", { error: true });
       return;
     }
-    setLoading(true);
+
+    const windowValue = state.chartModeTimeRange || "24h";
+    const range       = resolveRange(windowValue);
+    const dom         = domByMap[state.mapKey];
+    const units       = usableEntries[0]?.units || getCurrentContext()?.units || "";
+    const svgEl       = dom?.svg?.node();
+    if (!svgEl) return;
+
+    // Check whether the existing frame can be reused.
+    const svgWidth  = svgEl.clientWidth  || 960;
+    const svgHeight = svgEl.clientHeight || 390;
+    const cf        = dom.chartFrame;
+    const frameValid = !!(cf
+      && cf.areaCode === state.chartModeAreaCode
+      && cf.mapKey   === state.mapKey
+      && cf.width    === svgWidth
+      && cf.height   === svgHeight);
+
+    // Populate seriesPointsMap from cache; collect entries that still need fetching.
+    const seriesPointsMap = new Map();
+    const needsFetch      = [];
+    let primaryGuideline  = null;
+    const primaryId       = state.selectedPrimaryId || usableEntries[0]?.stationId;
+
+    usableEntries.forEach((entry) => {
+      const cacheKey = `${entry.timeseriesId}|${windowValue}`;
+      const cached   = seriesDataCache.get(cacheKey);
+      if (cached) {
+        seriesPointsMap.set(entry.stationId, cached.points);
+        if (!primaryGuideline && entry.stationId === primaryId && cached.guideline) {
+          primaryGuideline = cached.guideline;
+        }
+      } else {
+        seriesPointsMap.set(entry.stationId, []);
+        needsFetch.push(entry);
+      }
+    });
+
+    // Build or reuse the SVG frame.
+    if (!frameValid) {
+      initChartFrame(dom, range, MAX_SELECTED_SENSORS);
+      if (token !== state.loadToken) return;
+    }
+
+    const hasCachedData = Array.from(seriesPointsMap.values()).some((pts) => pts.length > 0);
+
+    if (frameValid) {
+      if (reason === "window-change") {
+        // Animate x to the new range; keep y steady until data arrives.
+        animateChartDomains(dom.chartFrame, range, dom.chartFrame.yScale.domain(), token);
+      } else if (hasCachedData) {
+        // Show cached data immediately (snap, no animation).
+        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+      }
+    } else if (hasCachedData) {
+      // New frame — render cached data before fetching anything.
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+    }
+
+    // --- Fast path: everything is cached (no network needed). ---
+    if (!needsFetch.length) {
+      const primary      = usableEntries.find((e) => e.stationId === primaryId) || usableEntries[0];
+      const pollutantKey = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
+      const aqiCacheKey  = `${primary?.timeseriesId}|${pollutantKey}|${windowValue}`;
+      let aqiPoints      = aqiBandCache.get(aqiCacheKey);
+      if (aqiPoints === undefined && primary && pollutantKey) {
+        try { aqiPoints = await fetchAqiBands(primary, pollutantKey, range); } catch (_err) { aqiPoints = []; }
+        if (token !== state.loadToken) return;
+        aqiBandCache.set(aqiCacheKey, aqiPoints);
+      }
+      if (token !== state.loadToken) return;
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || []);
+      setMessage(Array.from(seriesPointsMap.values()).reduce((s, pts) => s + pts.length, 0) ? "" : "No history available for this sensor.");
+      return;
+    }
+
+    // --- Fetch path: some entries need network data. ---
     setMessage("Loading chart data…");
-    const range = resolveRange(state.chartModeTimeRange || "24h");
+
+    // Create a fresh progress bar on the existing frame, or use the one from initChartFrame.
+    if (frameValid) {
+      const pf = { margin: dom.chartFrame.margin, width: dom.chartFrame.width, height: dom.chartFrame.height };
+      dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, pf);
+    }
+
+    const workQueue   = buildChunkWorkQueue(needsFetch, range, windowValue);
+    const totalChunks = workQueue.length;
+    let completedChunks = 0;
+
+    // Track fetched points and guidelines per entry for caching after all chunks arrive.
+    const fetchedPoints   = new Map(needsFetch.map((e) => [e.stationId, []]));
+    const fetchedGuideline = new Map();
+
     try {
-      const seriesResults = await Promise.all(usableEntries.map((entry) => fetchObservationSeries(entry, range)));
+      for (const { entry, chunk } of workQueue) {
+        if (token !== state.loadToken || signal.aborted) return;
+        let result;
+        try {
+          result = await fetchObservationSeriesChunk(entry, chunk, signal);
+        } catch (chunkErr) {
+          if (signal.aborted || token !== state.loadToken) return;
+          completedChunks++;
+          dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
+          continue;
+        }
+        if (token !== state.loadToken) return;
+
+        if (result.guideline && !fetchedGuideline.has(entry.stationId)) {
+          fetchedGuideline.set(entry.stationId, result.guideline);
+        }
+        if (!primaryGuideline && entry.stationId === primaryId && result.guideline) {
+          primaryGuideline = result.guideline;
+        }
+
+        const prev = fetchedPoints.get(entry.stationId) || [];
+        fetchedPoints.set(entry.stationId, mergeSeriesPoints(prev, result.points));
+        seriesPointsMap.set(entry.stationId, mergeSeriesPoints(seriesPointsMap.get(entry.stationId) || [], result.points));
+
+        completedChunks++;
+        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+        dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
+        if (dom.chartFrame?.svgEl) ChartCore.applyChunkFade(dom.chartFrame.svgEl);
+      }
+
       if (token !== state.loadToken) return;
-      const primary = seriesResults.find((result) => result.entry.stationId === state.selectedPrimaryId) || seriesResults[0] || null;
-      const pollutantKey = normalizeAqiSupportedPollutant(primary?.entry?.pollutant || getCurrentContext()?.pollutant || "");
-      const aqiPoints = primary ? await fetchAqiBands(primary.entry, pollutantKey, range) : [];
+
+      // Cache completed data for each fetched entry.
+      needsFetch.forEach((entry) => {
+        const cacheKey = `${entry.timeseriesId}|${windowValue}`;
+        seriesDataCache.set(cacheKey, {
+          points:   seriesPointsMap.get(entry.stationId) || [],
+          guideline: fetchedGuideline.get(entry.stationId) || null,
+        });
+      });
+
+      // Fetch AQI bands (cache-first).
+      const primary      = usableEntries.find((e) => e.stationId === primaryId) || usableEntries[0];
+      const pollutantKey = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
+      const aqiCacheKey  = `${primary?.timeseriesId}|${pollutantKey}|${windowValue}`;
+      let aqiPoints      = aqiBandCache.get(aqiCacheKey);
+      if (aqiPoints === undefined && primary && pollutantKey) {
+        try { aqiPoints = await fetchAqiBands(primary, pollutantKey, range); } catch (_err) { aqiPoints = []; }
+        if (token !== state.loadToken) return;
+        aqiBandCache.set(aqiCacheKey, aqiPoints);
+      }
       if (token !== state.loadToken) return;
-      renderChart(seriesResults, { aqiPoints, guideline: primary?.guideline || null, range, units: primary?.entry?.units || getCurrentContext()?.units || "" });
-      const totalPoints = seriesResults.reduce((sum, result) => sum + result.points.length, 0);
+
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || []);
+      const totalPoints = Array.from(seriesPointsMap.values()).reduce((s, pts) => s + pts.length, 0);
       setMessage(totalPoints ? "" : "No history available for this sensor.");
+
     } catch (error) {
-      if (token !== state.loadToken) return;
+      if (signal.aborted || token !== state.loadToken) return;
       console.warn("Could not load chart mode data.", error);
       renderEmptyChart("Could not load chart data. Try Refresh.");
       setMessage("Could not load chart data. Try Refresh.", { error: true });
     } finally {
-      if (token === state.loadToken) setLoading(false);
+      if (token === state.loadToken) {
+        dom.chartFrame?.progressBar?.remove();
+        if (dom.chartFrame) dom.chartFrame.progressBar = null;
+        setLoading(false);
+      }
     }
   }
 
@@ -15049,6 +15771,7 @@
   function renderEmptyChart(message) {
     const dom = domByMap[state.mapKey];
     if (!dom?.svg?.node()) return;
+    dom.chartFrame = null;
     const width = dom.svg.node().clientWidth || 960;
     const height = dom.svg.node().clientHeight || 390;
     ensureChartFrame(dom, { width, height });
@@ -15098,75 +15821,274 @@
     drawBand("EAQI", 16 + bandHeight + gap, "eaqi", eaqiColors);
   }
 
-  function renderChart(seriesResults, options) {
-    const dom = domByMap[state.mapKey];
+  function initChartFrame(dom, range, numSeries) {
     if (!dom?.svg?.node()) return;
-    const width = dom.svg.node().clientWidth || 960;
-    const height = dom.svg.node().clientHeight || 390;
+    const svgEl = dom.svg.node();
+    const width  = svgEl.clientWidth  || 960;
+    const height = svgEl.clientHeight || 390;
     const margin = { top: 78, right: 24, bottom: 44, left: 58 };
-    const frame = { width, height, margin, startMs: options.range.startMs, endMs: options.range.endMs };
-    const svg = ensureChartFrame(dom, frame);
-    const allPoints = seriesResults.flatMap((result) => result.points || []);
-    if (!allPoints.length) {
-      renderEmptyChart("No history available for this sensor.");
-      return;
+
+    dom.svg.selectAll("*").remove();
+    dom.svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+    const clipPathId = "hex-chart-clip";
+    const defs = dom.svg.append("defs");
+    defs.append("clipPath").attr("id", clipPathId)
+      .append("rect")
+      .attr("x", margin.left).attr("y", 0)
+      .attr("width",  Math.max(0, width  - margin.left - margin.right))
+      .attr("height", Math.max(0, height - margin.bottom));
+
+    // AQI bands container (rendered below everything else)
+    const aqiBandsContainer = dom.svg.append("g").attr("class", "aqi-bands");
+
+    const xScale = d3.scaleTime()
+      .domain([range.startDate, range.endDate])
+      .range([margin.left, width - margin.right]);
+    const yScale = d3.scaleLinear()
+      .domain([0, 1])
+      .range([height - margin.bottom, margin.top]);
+
+    const rangeMs = range.endMs - range.startMs;
+    const xAxisGroup = dom.svg.append("g")
+      .attr("class", "chart-axis")
+      .attr("transform", `translate(0, ${height - margin.bottom})`)
+      .call(d3.axisBottom(xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+    const yAxisGroup = dom.svg.append("g")
+      .attr("class", "chart-axis")
+      .attr("transform", `translate(${margin.left}, 0)`);
+
+    const guidelineEl = dom.svg.append("line").attr("class", "chart-guideline").style("opacity", 0);
+    const guidelineLabelEl = dom.svg.append("text")
+      .attr("class", "chart-guideline-label").attr("text-anchor", "end").style("opacity", 0);
+
+    const seriesPaths = [];
+    const seriesSymbolGroups = [];
+    for (let i = 0; i < (numSeries || MAX_SELECTED_SENSORS); i++) {
+      seriesPaths.push(
+        dom.svg.append("path")
+          .attr("class", "chart-line")
+          .attr("clip-path", `url(#${clipPathId})`)
+      );
+      seriesSymbolGroups.push(
+        dom.svg.append("g")
+          .attr("class", `chart-symbols-${i}`)
+          .attr("clip-path", `url(#${clipPathId})`)
+      );
     }
-    const yExtent = d3.extent(allPoints, (point) => point.value);
-    const guidelineValue = Number(options.guideline?.limit_value);
-    const hasGuideline = Number.isFinite(guidelineValue);
-    const yMin = Math.min(0, Number.isFinite(yExtent[0]) ? yExtent[0] : 0, hasGuideline ? guidelineValue : 0);
-    const yMaxRaw = Math.max(Number.isFinite(yExtent[1]) ? yExtent[1] : 1, hasGuideline ? guidelineValue : 1);
-    const yScale = d3.scaleLinear().domain([yMin, yMaxRaw === yMin ? yMin + 1 : yMaxRaw]).nice().range([height - margin.bottom, margin.top]);
-    const xScale = d3.scaleTime().domain([options.range.startDate, options.range.endDate]).range([margin.left, width - margin.right]);
-    renderAqiBands(svg, options.aqiPoints, frame, xScale);
-    svg.append("g").attr("class", "chart-axis").attr("transform", `translate(0, ${height - margin.bottom})`).call(d3.axisBottom(xScale).ticks((options.range.endMs - options.range.startMs) <= DAY_MS ? 8 : 7).tickSizeOuter(0));
-    svg.append("g").attr("class", "chart-axis").attr("transform", `translate(${margin.left}, 0)`).call(d3.axisLeft(yScale).ticks(5).tickSizeOuter(0));
-    if (hasGuideline) {
-      const y = yScale(guidelineValue);
-      svg.append("line").attr("class", "chart-guideline").attr("x1", margin.left).attr("x2", width - margin.right).attr("y1", y).attr("y2", y);
-      svg.append("text").attr("class", "chart-guideline-label").attr("x", width - margin.right - 4).attr("y", Math.max(margin.top + 12, y - 6)).attr("text-anchor", "end").text(`WHO ${formatChartValue(guidelineValue)}${options.guideline?.uom ? ` ${options.guideline.uom}` : ""}`);
-    }
-    const line = d3.line().defined((point) => Number.isFinite(point.value)).x((point) => xScale(point.date)).y((point) => yScale(point.value));
-    seriesResults.forEach((result, index) => {
-      if (!result.points.length) return;
-      svg.append("path").datum(result.points).attr("class", "chart-line").attr("stroke", SERIES_COLORS[index % SERIES_COLORS.length]).attr("d", line);
-    });
-    const dot = svg.append("circle").attr("class", "chart-dot").attr("r", 5).style("opacity", 0);
-    const overlay = svg.append("rect").attr("x", margin.left).attr("y", margin.top).attr("width", Math.max(0, width - margin.left - margin.right)).attr("height", Math.max(0, height - margin.top - margin.bottom)).attr("fill", "transparent").style("pointer-events", "all");
+
+    const dot = dom.svg.append("circle").attr("class", "chart-dot").attr("r", 5).style("opacity", 0);
+    const overlay = dom.svg.append("rect")
+      .attr("x", margin.left).attr("y", margin.top)
+      .attr("width",  Math.max(0, width  - margin.left - margin.right))
+      .attr("height", Math.max(0, height - margin.top  - margin.bottom))
+      .attr("fill", "transparent").style("pointer-events", "all");
+
+    // Overlay handler reads current data from chartFrame.currentSeriesData at call time.
     overlay.on("mousemove", (event) => {
+      const cf = dom.chartFrame;
+      if (!cf?.currentSeriesData) return;
+      const { entries, pointsMap, units } = cf.currentSeriesData;
       const [mx] = d3.pointer(event);
-      const targetDate = xScale.invert(Math.max(margin.left, Math.min(mx, width - margin.right)));
+      const targetDate = cf.xScale.invert(Math.max(margin.left, Math.min(mx, cf.width - margin.right)));
       let closest = null;
-      seriesResults.forEach((result) => {
-        result.points.forEach((point) => {
-          const distance = Math.abs(point.date - targetDate);
-          if (!closest || distance < closest.distance) closest = { point, entry: result.entry, distance };
+      let closestSeriesIdx = -1;
+      entries.forEach((entry, si) => {
+        (pointsMap.get(entry.stationId) || []).forEach((point) => {
+          const dist = Math.abs(point.date - targetDate);
+          if (!closest || dist < closest.distance) {
+            closest = { point, entry, distance: dist };
+            closestSeriesIdx = si;
+          }
         });
       });
       if (!closest) return;
-      const x = xScale(closest.point.date);
-      const y = yScale(closest.point.value);
-      dot.attr("cx", x).attr("cy", y).style("opacity", 1);
+      const x = cf.xScale(closest.point.date);
+      const y = cf.yScale(closest.point.value);
+      cf.dot.attr("cx", x).attr("cy", y).style("opacity", 1);
       if (dom.tooltip) {
-        dom.tooltip.innerHTML = `<strong>${escapeHtml(closest.entry.stationName)}</strong><br>${escapeHtml(closest.point.date.toLocaleString())}<br>${formatChartValue(closest.point.value)} ${escapeHtml(options.units || "")}`;
-        dom.tooltip.style.left = `${Math.max(8, Math.min(x - 90, width - 180))}px`;
-        dom.tooltip.style.top = `${Math.max(8, y - 72)}px`;
+        const glyph = closestSeriesIdx >= 0 ? (window.ChartCore?.SYMBOL_GLYPHS?.[closestSeriesIdx] || "") : "";
+        const nameHtml = glyph
+          ? `${escapeHtml(glyph)} ${escapeHtml(closest.entry.stationName)}`
+          : escapeHtml(closest.entry.stationName);
+        dom.tooltip.innerHTML = `<strong>${nameHtml}</strong><br>${escapeHtml(closest.point.date.toLocaleString())}<br>${formatChartValue(closest.point.value)} ${escapeHtml(units || "")}`;
+        dom.tooltip.style.left = `${Math.max(8, Math.min(x - 90, cf.width - 180))}px`;
+        dom.tooltip.style.top  = `${Math.max(8, y - 72)}px`;
         dom.tooltip.classList.add("visible");
       }
     });
     overlay.on("mouseleave", () => {
-      dot.style("opacity", 0);
+      dom.chartFrame?.dot?.style("opacity", 0);
       dom.tooltip?.classList.remove("visible");
     });
+
+    const progressBar = ChartCore.renderProgressBar(svgEl, { margin, width, height });
+
+    dom.chartFrame = {
+      svgEl, xScale, yScale,
+      xAxisGroup, yAxisGroup,
+      aqiBandsContainer,
+      guidelineEl, guidelineLabelEl,
+      seriesPaths, seriesSymbolGroups,
+      dot, overlay, progressBar,
+      margin, width, height,
+      frame: { width, height, margin, startMs: range.startMs, endMs: range.endMs },
+      areaCode: state.chartModeAreaCode,
+      mapKey: state.mapKey,
+      animFrameId: null,
+      currentGuideline: null,
+      currentSeriesData: null,
+    };
+  }
+
+  function updateChart(dom, seriesPointsMap, usableEntries, range, guideline, units, aqiPoints) {
+    const cf = dom.chartFrame;
+    if (!cf) return;
+
+    // Cancel any running domain animation — we now have real data.
+    if (cf.animFrameId != null) {
+      cancelAnimationFrame(cf.animFrameId);
+      cf.animFrameId = null;
+    }
+
+    // Update x-axis domain to match the current range.
+    cf.xScale.domain([range.startDate, range.endDate]);
+    const rangeMs = range.endMs - range.startMs;
+    cf.xAxisGroup.call(d3.axisBottom(cf.xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+
+    // Snapshot current y-domain before computing the new one.
+    const currentYDomain = cf.yScale.domain().slice();
+    const newYDomain     = computeYDomainNiced(seriesPointsMap, usableEntries, guideline);
+    const yChanged = Math.abs(newYDomain[0] - currentYDomain[0]) > 1e-9 ||
+                     Math.abs(newYDomain[1] - currentYDomain[1]) > 1e-9;
+
+    // Store guideline for animation redraws.
+    cf.currentGuideline = guideline || null;
+
+    // Update AQI bands synchronously (positioned by x-scale / frame height, not y-scale).
+    if (aqiPoints !== undefined) {
+      cf.aqiBandsContainer.selectAll("*").remove();
+      if (Array.isArray(aqiPoints) && aqiPoints.length) {
+        renderAqiBands(cf.aqiBandsContainer, aqiPoints, cf.frame, cf.xScale);
+      }
+    }
+
+    // Build line generator and segments (used every animation frame and at finalize).
+    const lineFn = d3.line()
+      .x((p) => cf.xScale(p.date))
+      .y((p) => cf.yScale(p.value));
+    const windowValue = state.chartModeTimeRange || "24h";
+    const intervalMs  = ChartCore.getSymbolIntervalMs(windowValue);
+    const seriesSegments = [];
+    usableEntries.forEach((entry) => {
+      seriesSegments.push(ChartCore.buildSegments(seriesPointsMap.get(entry.stationId) || []));
+    });
+
+    // Clear paths/symbols for slots beyond the active series count.
+    for (let i = usableEntries.length; i < cf.seriesPaths.length; i++) {
+      cf.seriesPaths[i]?.attr("d", null);
+      cf.seriesSymbolGroups[i]?.selectAll("*").remove();
+    }
+
+    // Expose current data immediately so the hover handler works during animation.
+    cf.currentSeriesData = { entries: usableEntries, pointsMap: seriesPointsMap, seriesSegments, units };
+
+    // Redraws y-axis, all series paths, and the guideline line position each RAF frame.
+    function applyScales() {
+      cf.yAxisGroup.call(d3.axisLeft(cf.yScale).ticks(5).tickSizeOuter(0));
+      usableEntries.forEach((entry, i) => {
+        const segs = seriesSegments[i] || [];
+        if (cf.seriesPaths[i]) cf.seriesPaths[i].attr("d", segs.map((s) => lineFn(s)).join(" ") || null);
+      });
+      const guidelineValue = Number(guideline?.limit_value);
+      if (Number.isFinite(guidelineValue)) {
+        const gy = cf.yScale(guidelineValue);
+        cf.guidelineEl.attr("y1", gy).attr("y2", gy);
+        cf.guidelineLabelEl.attr("y", Math.max(cf.margin.top + 12, gy - 6));
+      }
+    }
+
+    // Called once the y-domain has reached its final value: sets guideline visibility and redraws symbols.
+    function finalizeSymbols() {
+      const guidelineValue = Number(guideline?.limit_value);
+      const hasGuideline   = Number.isFinite(guidelineValue);
+      const allPoints = [];
+      usableEntries.forEach((e) => allPoints.push(...(seriesPointsMap.get(e.stationId) || [])));
+      if (hasGuideline && allPoints.length) {
+        const gy = cf.yScale(guidelineValue);
+        cf.guidelineEl.style("opacity", 0.85)
+          .attr("x1", cf.margin.left).attr("x2", cf.width - cf.margin.right)
+          .attr("y1", gy).attr("y2", gy);
+        cf.guidelineLabelEl.style("opacity", 1)
+          .attr("x", cf.width - cf.margin.right - 4)
+          .attr("y", Math.max(cf.margin.top + 12, gy - 6))
+          .text(`WHO ${formatChartValue(guidelineValue)}${guideline?.uom ? ` ${guideline.uom}` : ""}`);
+      } else {
+        cf.guidelineEl.style("opacity", 0);
+        cf.guidelineLabelEl.style("opacity", 0);
+      }
+      usableEntries.forEach((entry, i) => {
+        const points   = seriesPointsMap.get(entry.stationId) || [];
+        const segments = seriesSegments[i] || [];
+        const symGroup = cf.seriesSymbolGroups[i];
+        if (symGroup) {
+          symGroup.selectAll("*").remove();
+          symGroup.style("opacity", 1);
+          if (points.length && segments.length) {
+            const symbolSet = ChartCore.getSymbolPositions(points, segments, intervalMs);
+            ChartCore.renderSeriesSymbols(symGroup, points, symbolSet, cf.xScale, cf.yScale, i);
+          }
+        }
+      });
+    }
+
+    if (!yChanged) {
+      // Domain unchanged — snap and finalize with no animation.
+      cf.yScale.domain(newYDomain);
+      applyScales();
+      finalizeSymbols();
+      return;
+    }
+
+    // y-domain is changing: hide symbols and animate over 150 ms.
+    cf.seriesSymbolGroups?.forEach((g) => g.style("opacity", 0));
+    const startY   = currentYDomain;
+    const t0       = performance.now();
+    const DURATION = 150;
+
+    function frame(now) {
+      const raw  = Math.min(1, (now - t0) / DURATION);
+      const ease = raw < 0.5 ? 2 * raw * raw : -1 + (4 - 2 * raw) * raw;
+      cf.yScale.domain([
+        startY[0] + (newYDomain[0] - startY[0]) * ease,
+        startY[1] + (newYDomain[1] - startY[1]) * ease,
+      ]);
+      applyScales();
+      if (raw < 1) {
+        cf.animFrameId = requestAnimationFrame(frame);
+      } else {
+        cf.animFrameId = null;
+        cf.yScale.domain(newYDomain);
+        applyScales();
+        finalizeSymbols();
+      }
+    }
+    cf.animFrameId = requestAnimationFrame(frame);
   }
 
   Object.values(domByMap).forEach((dom) => {
+    // Prevent clicks inside the chart panel from bubbling to the map's background-click
+    // handler, which would otherwise clear the selected hex (selectedPconCode) and cause
+    // the next syncFromMap call to exit chart mode unexpectedly.
+    dom.panel?.addEventListener("click", (event) => { event.stopPropagation(); });
+
     dom.sensorBody?.addEventListener("click", (event) => {
       const button = event.target instanceof Element ? event.target.closest(".hex-chart-selector") : null;
       if (button) toggleSensor(button.dataset.stationId || "");
     });
     dom.sortButtons?.forEach((button) => {
       button.addEventListener("click", () => {
+        if (state.visibleEntries.length <= 1) return;
         const key = button.dataset.chartSortKey;
         if (!key) return;
         if (state.chartSortKey === key) {
@@ -15180,15 +16102,15 @@
     });
     dom.windowSelect?.addEventListener("change", () => {
       state.chartModeTimeRange = dom.windowSelect.value || "24h";
-      loadChartData();
+      loadChartData("window-change");
     });
   });
   backButton?.addEventListener("click", exit);
   window.addEventListener("pollutantchange", () => {
-    if (state.isChartMode) window.setTimeout(() => syncFromMap(state.mapKey), 0);
+    if (state.isChartMode) window.setTimeout(() => syncFromMap(state.mapKey, { preserveChartMode: true }), 0);
   });
   window.addEventListener("resize", () => {
-    if (state.isChartMode) loadChartData();
+    if (state.isChartMode) loadChartData("resize");
   });
 
   window.hexChartMode = {
@@ -16140,6 +17062,24 @@
       inputEl.placeholder = getPlaceholder(kind);
     }
 
+    function setActiveIndex(nextIndex, { scrollIntoView = false } = {}) {
+      if (!Number.isFinite(nextIndex) || nextIndex < 0 || nextIndex >= state.results.length) {
+        state.activeIndex = -1;
+      } else {
+        state.activeIndex = nextIndex;
+      }
+
+      resultsEl.querySelectorAll("[data-result-index]").forEach((el) => {
+        const index = Number.parseInt(el.getAttribute("data-result-index"), 10);
+        const isActive = index === state.activeIndex;
+        el.classList.toggle("is-active", isActive);
+        el.setAttribute("aria-selected", isActive ? "true" : "false");
+        if (isActive && scrollIntoView) {
+          el.scrollIntoView({ block: "nearest" });
+        }
+      });
+    }
+
     function setExpanded(expanded) {
       inputEl.setAttribute("aria-expanded", expanded ? "true" : "false");
     }
@@ -16168,16 +17108,6 @@
       resultsEl.innerHTML = `${destinationHeader}${rows.join("")}${messageRow}`;
       resultsEl.hidden = false;
       setExpanded(true);
-      resultsEl.querySelectorAll("[data-result-index]").forEach((button) => {
-        button.addEventListener("mouseenter", () => {
-          const nextIndex = Number.parseInt(button.getAttribute("data-result-index"), 10);
-          if (!Number.isFinite(nextIndex)) {
-            return;
-          }
-          state.activeIndex = nextIndex;
-          renderCurrentResults();
-        });
-      });
     }
 
     function getLocalResultGroups(queryText) {
@@ -16425,8 +17355,8 @@
           return;
         }
         event.preventDefault();
-        state.activeIndex = state.activeIndex < state.results.length - 1 ? state.activeIndex + 1 : 0;
-        renderCurrentResults();
+        const nextIndex = state.activeIndex < state.results.length - 1 ? state.activeIndex + 1 : 0;
+        setActiveIndex(nextIndex, { scrollIntoView: true });
         return;
       }
       if (event.key === "ArrowUp") {
@@ -16434,8 +17364,8 @@
           return;
         }
         event.preventDefault();
-        state.activeIndex = state.activeIndex > 0 ? state.activeIndex - 1 : state.results.length - 1;
-        renderCurrentResults();
+        const nextIndex = state.activeIndex > 0 ? state.activeIndex - 1 : state.results.length - 1;
+        setActiveIndex(nextIndex, { scrollIntoView: true });
         return;
       }
       if (event.key === "Enter") {
@@ -16454,17 +17384,28 @@
       }
     });
 
-    resultsEl.addEventListener("click", (event) => {
+    resultsEl.addEventListener("mouseover", (event) => {
+      const target = event.target instanceof Element ? event.target.closest("[data-result-index]") : null;
+      if (!target) return;
+      const nextIndex = Number.parseInt(target.getAttribute("data-result-index"), 10);
+      if (Number.isFinite(nextIndex) && nextIndex !== state.activeIndex) {
+        setActiveIndex(nextIndex);
+      }
+    });
+
+    resultsEl.addEventListener("mousedown", (event) => {
       const target = event.target instanceof Element ? event.target.closest("[data-result-index]") : null;
       if (!target) {
         return;
       }
+      // Use mousedown to ensure the selection happens before any document-level close handlers fire.
+      // preventDefault keeps the input focus.
+      event.preventDefault();
       const nextIndex = Number.parseInt(target.getAttribute("data-result-index"), 10);
-      if (!Number.isFinite(nextIndex) || nextIndex < 0 || nextIndex >= state.results.length) {
-        return;
+      if (Number.isFinite(nextIndex) && nextIndex >= 0 && nextIndex < state.results.length) {
+        setActiveIndex(nextIndex);
+        void selectResult(state.results[nextIndex]);
       }
-      state.activeIndex = nextIndex;
-      void selectResult(state.results[nextIndex]);
     });
 
     clearEl.addEventListener("click", () => {
