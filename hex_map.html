@@ -52,6 +52,20 @@
         --line-soft:   #eef0f3;
         --accent:      #3C78AC;
         --accent-deep: #285A84;
+        --ukaq-control-selected-bg: color-mix(in oklab, var(--accent) 12%, white);
+        --ukaq-control-selected-text: var(--accent-deep);
+        --ukaq-control-selected-border: rgba(60, 120, 172, 0.45);
+        --ukaq-control-selectable-bg: var(--surface-2);
+        --ukaq-control-selectable-text: var(--ink-1);
+        --ukaq-control-selectable-border: var(--line);
+        --ukaq-control-selectable-hover-bg: #DDEFF7;
+        --ukaq-control-hover-shadow: 0 8px 18px rgba(60, 120, 172, 0.22);
+        --ukaq-control-hover-border: rgba(60, 120, 172, 0.35);
+        --ukaq-control-disabled-bg: #F1F3F5;
+        --ukaq-control-disabled-text: var(--ink-4);
+        --ukaq-control-disabled-border: rgba(20, 34, 37, 0.12);
+        --ukaq-action-bg: var(--accent);
+        --ukaq-action-text: #ffffff;
         /* legacy aliases kept for JS-populated elements */
         --ink-soft:    var(--ink-2);
         --mist:        var(--surface-3);
@@ -1599,117 +1613,50 @@
       }
 
       .network-panel {
-        padding: 8px 0 12px 16px;
-        border-radius: 0;
-        background: transparent;
-        border: none;
-        border-left: 2px solid var(--line);
-        display: grid;
-        gap: 12px;
-        align-content: start;
-      }
-
-      .network-heading {
-        font-size: 0.85rem;
-        color: var(--ink-soft);
-        font-weight: 600;
-      }
-
-      .network-list-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 10px 6px 14px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        color: var(--ink-soft);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        border-bottom: 1px solid var(--line-soft);
-        margin-bottom: 2px;
+        display: none !important;
       }
 
       .network-count {
         margin-left: auto;
         font-variant-numeric: tabular-nums;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: var(--accent);
         flex-shrink: 0;
-        padding-left: 8px;
-      }
-
-      .network-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .network-actions button {
-        border: none;
-        background: var(--clay);
-        color: var(--ink);
-        padding: 8px 10px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .network-actions button:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 14px rgba(20, 34, 37, 0.12);
-      }
-
-      .network-actions button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-
-      .network-panel .checkbox {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        padding: 4px 10px;
-        font-weight: 600;
-        color: var(--ink);
-        font-size: 0.85rem;
-      }
-
-      .network-panel .checkbox span {
-        min-width: 0;
-      }
-
-      .network-panel input[type="checkbox"] {
-        width: 14px;
-        height: 14px;
-        accent-color: #3c78ac;
+        padding-left: 10px;
       }
 
       .network-list {
         display: grid;
-        gap: 8px;
-        max-height: 360px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 4px;
+        gap: 6px;
       }
 
       .network-empty {
         color: var(--ink-soft);
         font-size: 0.85rem;
+        padding: 6px 2px;
       }
 
-      .network-panel .network-option {
-        display: grid;
-        gap: 5px;
-        padding: 5px 10px;
+      .network-option {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        font-size: 0.9rem;
         border-radius: 8px;
-        transition: opacity 0.15s ease, color 0.15s ease;
+        border: 1px solid transparent;
+        padding: 7px 10px;
+        color: var(--ink-1);
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+      }
+
+      .network-option:hover {
+        background: color-mix(in oklab, var(--accent) 8%, white);
+      }
+
+      .network-option:focus-within {
+        background: color-mix(in oklab, var(--accent) 9%, white);
+        border-color: color-mix(in oklab, var(--accent) 30%, #d8dde3);
       }
 
       .network-option-main {
@@ -1723,7 +1670,7 @@
       .network-option-left {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         min-width: 0;
       }
 
@@ -1732,12 +1679,20 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-weight: 600;
+      }
+
+      .network-option input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--accent);
       }
 
       .network-share-bar {
         display: block;
         width: 100%;
         height: 4px;
+        margin-top: 6px;
         border-radius: 999px;
         background: #d0d4da;
         overflow: hidden;
@@ -1753,12 +1708,16 @@
       }
 
       .network-option.is-unselected {
-        color: var(--ink-4);
+        color: var(--ink-3);
       }
 
       .network-option.is-unselected .network-name,
       .network-option.is-unselected .network-count {
-        color: var(--ink-4);
+        color: var(--ink-3);
+      }
+
+      .network-option.is-unselected .network-count {
+        color: var(--accent);
       }
 
       .network-option.is-unselected .network-share-fill {
@@ -1893,23 +1852,13 @@
 
         .map-wrap #uk-toolbar-slot,
         .map-wrap #cr-toolbar-slot {
-          grid-column: 1;
+          grid-column: 1 / -1;
           grid-row: 2;
         }
 
         .map-wrap .map-canvas {
-          grid-column: 1;
+          grid-column: 1 / -1;
           grid-row: 3;
-        }
-
-        .map-wrap .network-panel {
-          grid-column: 2;
-          grid-row: 2 / span 3;
-          align-self: stretch;
-          margin-top: -8px;
-          margin-bottom: -8px;
-          padding-top: 16px;
-          padding-bottom: 20px;
         }
 
         .map-wrap .map-legend {
@@ -2572,7 +2521,7 @@
         flex-shrink: 0;
       }
       .field-label {
-        font-size: 12px;
+        font-size: 13px;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         font-weight: 600;
@@ -2583,7 +2532,7 @@
       /* Segmented control */
       .segmented {
         display: inline-flex;
-        background: var(--surface-2);
+        background: var(--ukaq-control-selectable-bg);
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 3px;
@@ -2591,21 +2540,32 @@
       }
       .segmented button {
         border: 0;
-        background: transparent;
+        background: var(--ukaq-control-selectable-bg);
         padding: 6px 14px;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 500;
-        color: var(--ink-2);
+        color: var(--ukaq-control-selectable-text);
         border-radius: 6px;
         cursor: pointer;
         font-family: inherit;
-        transition: background 0.12s, color 0.12s;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
       }
       .segmented button.active {
-        background: var(--surface);
-        color: var(--accent-deep);
-        box-shadow: 0 1px 3px rgba(16, 24, 34, 0.10);
+        background: var(--ukaq-control-selected-bg);
+        color: var(--ukaq-control-selected-text);
+        border: 1px solid var(--ukaq-control-selected-border);
+        box-shadow: none;
         font-weight: 600;
+        cursor: default;
+      }
+      .segmented button:not(.active):hover {
+        background: var(--ukaq-control-selectable-bg);
+      }
+      .segmented button.active:hover,
+      .segmented button.active:active {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--ukaq-control-selected-border);
       }
 
       /* Pollutant pills (toolbar) */
@@ -2614,10 +2574,10 @@
         gap: 3px;
       }
       .pill {
-        border: 1px solid var(--line);
-        background: var(--surface-2);
-        color: var(--ink-2);
-        font-size: 15px;
+        border: 1px solid var(--ukaq-control-selectable-border);
+        background: var(--ukaq-control-selectable-bg);
+        color: var(--ukaq-control-selectable-text);
+        font-size: 16px;
         font-weight: 500;
         padding: 5px 12px;
         border-radius: 999px;
@@ -2627,10 +2587,543 @@
       }
       .pill[aria-checked="true"],
       .pill.active {
-        background: color-mix(in oklab, var(--accent) 12%, white);
-        color: var(--accent-deep);
-        border-color: color-mix(in oklab, var(--accent) 35%, white);
+        background: var(--ukaq-control-selected-bg);
+        color: var(--ukaq-control-selected-text);
+        border-color: var(--ukaq-control-selected-border);
         font-weight: 600;
+        cursor: default;
+      }
+      .pill[aria-checked="false"]:hover {
+        background: var(--ukaq-control-selectable-bg);
+      }
+      .pill[aria-checked="true"]:hover,
+      .pill[aria-checked="true"]:active,
+      .pill.active:hover,
+      .pill.active:active {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--ukaq-control-selected-border);
+      }
+
+      .window-stepper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .window-stepper-label {
+        margin-right: 2px;
+      }
+      .window-stepper-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        height: auto;
+        overflow: visible;
+      }
+      .window-stepper-arrow {
+        width: 24px;
+        height: 24px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        font-size: 0;
+        line-height: 1;
+      }
+      .window-stepper-arrow::before {
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border-top: 9px solid transparent;
+        border-bottom: 9px solid transparent;
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      .window-stepper-arrow--left::before {
+        border-right: 14px solid var(--ukaq-control-selectable-text);
+      }
+      .window-stepper-arrow--right::before {
+        border-left: 14px solid var(--ukaq-control-selectable-text);
+      }
+      .window-stepper-arrow:hover:not(:disabled) {
+        background: transparent;
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+      .window-stepper-arrow:hover:not(:disabled)::before {
+        transform: translateY(-1px);
+        filter:
+          drop-shadow(0 0 6px rgba(60, 120, 172, 0.28))
+          drop-shadow(0 8px 18px rgba(60, 120, 172, 0.22));
+      }
+      .window-stepper-arrow:active:not(:disabled) {
+        background: transparent;
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+      .window-stepper-arrow:active:not(:disabled)::before {
+        transform: translateY(0);
+        filter: none;
+      }
+      .window-stepper-arrow:focus-visible {
+        outline: none;
+      }
+      .window-stepper-arrow:focus-visible:not(:disabled)::before {
+        transform: translateY(-1px);
+        filter:
+          drop-shadow(0 0 6px rgba(60, 120, 172, 0.28))
+          drop-shadow(0 8px 18px rgba(60, 120, 172, 0.22));
+      }
+      .window-stepper-arrow:disabled {
+        color: transparent;
+        background: transparent;
+        border-color: transparent;
+        cursor: not-allowed;
+        pointer-events: none;
+        transform: none;
+        box-shadow: none;
+      }
+      .window-stepper-arrow--left:disabled::before {
+        border-right-color: var(--ukaq-control-disabled-text);
+      }
+      .window-stepper-arrow--right:disabled::before {
+        border-left-color: var(--ukaq-control-disabled-text);
+      }
+      .window-stepper-value-box {
+        position: relative;
+        width: 112px;
+        height: 30px;
+        border: 1px solid var(--ukaq-control-selected-border);
+        border-radius: 6px;
+        background: var(--ukaq-control-selected-bg);
+        overflow: hidden;
+      }
+      .window-stepper-value {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ukaq-control-selected-text);
+        white-space: nowrap;
+        transform: translateX(0);
+        transition: transform 180ms ease, opacity 180ms ease;
+      }
+      .window-stepper-value--incoming.from-right {
+        transform: translateX(115%);
+        opacity: 0.8;
+      }
+      .window-stepper-value--incoming.from-left {
+        transform: translateX(-115%);
+        opacity: 0.8;
+      }
+      .window-stepper-value-box.is-animating.is-moving-next .window-stepper-value--outgoing {
+        transform: translateX(-115%);
+        opacity: 0;
+      }
+      .window-stepper-value-box.is-animating.is-moving-prev .window-stepper-value--outgoing {
+        transform: translateX(115%);
+        opacity: 0;
+      }
+      .window-stepper-value-box.is-animating .window-stepper-value--incoming {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .window-stepper-value {
+          transition: none;
+        }
+      }
+
+      .network-dropdown-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .network-dropdown-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--accent-deep);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        width: 15ch;
+        min-width: 15ch;
+        max-width: 15ch;
+        justify-content: space-between;
+      }
+
+      .network-dropdown-trigger-value {
+        color: var(--accent-deep);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 15ch;
+      }
+
+      .network-dropdown-trigger.is-open {
+        background: #ffffff;
+        color: var(--ink-1);
+        border-color: var(--ukaq-control-selected-border);
+      }
+
+      .network-dropdown-trigger.is-open .network-dropdown-trigger-value {
+        color: var(--accent-deep);
+      }
+
+      .network-dropdown-trigger-chevron {
+        transition: transform 0.15s ease;
+        color: currentColor;
+      }
+
+      .network-dropdown-trigger.is-open .network-dropdown-trigger-chevron {
+        transform: rotate(180deg);
+      }
+
+      .network-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: min(350px, calc(100vw - 28px));
+        min-width: 270px;
+        max-height: min(68vh, 520px);
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(16, 24, 34, 0.18);
+        padding: 10px;
+        z-index: 340;
+      }
+
+      .network-dropdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid var(--line-soft);
+        padding: 2px 2px 8px;
+      }
+
+      .network-dropdown-count {
+        font-variant-numeric: tabular-nums;
+        font-size: 0.88rem;
+        color: var(--accent-deep);
+      }
+
+      .network-dropdown-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 0 2px 2px;
+      }
+
+      .network-dropdown-action {
+        border: none;
+        background: transparent;
+        color: var(--accent);
+        border-radius: 0;
+        font-family: inherit;
+        font-size: 0;
+        font-weight: 600;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .network-dropdown-action:disabled {
+        background: transparent;
+        color: var(--ukaq-control-disabled-text);
+        cursor: not-allowed;
+      }
+
+      .network-dropdown-actions-divider {
+        color: var(--accent);
+        font-size: 1.25rem;
+        line-height: 1;
+        font-weight: 700;
+        user-select: none;
+      }
+
+      .network-dropdown-action-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        position: relative;
+        display: block;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .network-dropdown-action-icon--select-all {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+      }
+
+      .network-dropdown-action-icon--select-all::before {
+        content: "✓";
+        position: absolute;
+        inset: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1;
+        transform: translateY(-0.5px);
+      }
+
+      .network-dropdown-action-icon--clear-all {
+        border: 1px solid var(--accent);
+        background: transparent;
+      }
+
+      .network-dropdown-action:disabled .network-dropdown-action-icon--select-all {
+        background: var(--ink-4);
+        border-color: var(--ink-4);
+      }
+
+      .network-dropdown-action:disabled .network-dropdown-action-icon--clear-all {
+        border-color: var(--ink-4);
+      }
+
+      .network-dropdown-action:hover:not(:disabled),
+      .network-dropdown-action:focus-visible:not(:disabled) {
+        outline: none;
+      }
+
+      .network-dropdown-action:hover:not(:disabled) .network-dropdown-action-icon,
+      .network-dropdown-action:focus-visible:not(:disabled) .network-dropdown-action-icon {
+        transform: translateY(-1px);
+        box-shadow: var(--ukaq-control-hover-shadow);
+      }
+
+      .network-dropdown-action:disabled .network-dropdown-action-icon {
+        box-shadow: none;
+        transform: none;
+      }
+
+      .network-dropdown-list {
+        min-height: 0;
+        max-height: min(44vh, 360px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 4px;
+      }
+
+      .network-dropdown-list .network-option {
+        margin: 0;
+      }
+
+      .network-dropdown-list .network-option:hover,
+      .network-dropdown-list .network-option:focus-within {
+        transform: none;
+        box-shadow: none;
+      }
+
+      @media (max-width: 720px) {
+        .network-dropdown-menu {
+          right: auto;
+          left: 0;
+          min-width: min(300px, calc(100vw - 28px));
+        }
+      }
+
+      /* Toolbar right-aligned status + refresh slots */
+      .toolbar-right {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .toolbar-status-slot:empty,
+      .toolbar-refresh-slot:empty {
+        display: none;
+      }
+      .toolbar-status-slot,
+      .toolbar-refresh-slot {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      /* Networks pill (lives inside each map-canvas, top-right) */
+      .networks-pill-anchor {
+        position: relative;
+        display: inline-flex;
+      }
+      .networks-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 11px;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.2;
+        color: var(--accent-deep);
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--line, #e5e7eb);
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        white-space: nowrap;
+        min-width: 17ch;
+        justify-content: flex-start;
+        transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      }
+      .networks-pill:hover:not([aria-expanded="true"]) {
+        background: var(--surface-hover, #f8fafc);
+        border-color: var(--line-strong, #d1d5db);
+      }
+      .networks-pill:focus-visible {
+        outline: 2px solid var(--accent, #2563eb);
+        outline-offset: 2px;
+      }
+      .networks-pill[aria-expanded="true"] {
+        background: var(--accent-soft, #eff6ff);
+        border-color: var(--accent, #2563eb);
+        color: var(--accent, #2563eb);
+      }
+      .networks-pill-text {
+        font-variant-numeric: tabular-nums;
+      }
+      .networks-pill-chevron {
+        margin-left: auto;
+        flex-shrink: 0;
+        transition: transform 0.15s ease;
+      }
+      .networks-pill[aria-expanded="true"] .networks-pill-chevron {
+        transform: rotate(180deg);
+      }
+
+      /* Floating networks panel — re-uses .network-dropdown-* internals */
+      .networks-panel-floating {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        min-width: 280px;
+        max-width: min(360px, calc(100vw - 24px));
+        max-height: min(70vh, 480px);
+        padding: 10px 12px;
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--line, #e5e7eb);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+      }
+      .networks-panel-floating[hidden] {
+        display: none;
+      }
+      .networks-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .networks-panel-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted, #6b7280);
+      }
+      .networks-panel-spacer {
+        flex: 1 1 auto;
+      }
+      .networks-panel-pin {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        margin-left: 6px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-muted, #6b7280);
+        cursor: pointer;
+        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+      }
+      .networks-panel-pin:hover {
+        background: var(--surface-hover, #f3f4f6);
+        color: var(--text, #1f2937);
+      }
+      .networks-panel-pin:focus-visible {
+        outline: 2px solid var(--accent, #2563eb);
+        outline-offset: 2px;
+      }
+      .networks-panel-pin[aria-pressed="true"] {
+        background: var(--accent-soft, #eff6ff);
+        color: var(--accent, #2563eb);
+        border-color: var(--accent, #2563eb);
+      }
+      .networks-panel-pin[aria-pressed="true"] svg {
+        transform: rotate(-30deg);
+      }
+      .networks-panel-footer {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line, #e5e7eb);
+        font-size: 11px;
+        color: var(--text-muted, #6b7280);
+      }
+
+      /* Map-topbar layout: now hosts the Networks pill on the right.
+         Status pill + Refresh button are hidden here while they live in the toolbar. */
+      .map-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .map-topbar > .status-indicator,
+      .map-topbar > .btn-refresh {
+        display: none;
+      }
+      .map-topbar > .networks-pill-anchor {
+        margin-left: auto;
+      }
+
+      @media (max-width: 720px) {
+        .networks-panel-floating {
+          min-width: min(280px, calc(100vw - 28px));
+        }
       }
 
       /* Region popover */
@@ -2643,18 +3136,35 @@
         background: var(--surface);
         padding: 6px 11px;
         border-radius: 6px;
-        font-size: 15px;
-        color: var(--ink-1);
+        font-size: 16px;
+        color: var(--accent-deep);
         font-family: inherit;
         cursor: pointer;
         font-weight: 500;
         transition: border-color 0.12s;
+        width: 16.5ch;
+        min-width: 16.5ch;
+        max-width: 16.5ch;
+        justify-content: flex-start;
+      }
+      #toolbar-region-label {
+        display: inline-block;
+        min-width: 0;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
       }
       .popover-trigger.open {
         border-color: var(--accent);
         color: var(--accent-deep);
       }
-      .popover-trigger .chevron { transition: transform 0.15s; }
+      .popover-trigger .chevron {
+        margin-left: auto;
+        flex-shrink: 0;
+        transition: transform 0.15s;
+      }
       .popover-trigger.open .chevron { transform: rotate(180deg); }
       .popover-menu {
         position: absolute;
@@ -2679,7 +3189,7 @@
       .popover-item {
         padding: 6px 10px;
         border-radius: 6px;
-        font-size: 12.5px;
+        font-size: 0.9rem;
         color: var(--ink-2);
         cursor: pointer;
         display: flex;
@@ -2694,8 +3204,9 @@
       .popover-item.active::after {
         content: '✓';
         margin-left: auto;
-        font-size: 11px;
-        opacity: 0.8;
+        font-size: 15px;
+        font-weight: 700;
+        opacity: 1;
       }
       .popover-divider {
         height: 1px;
@@ -3017,9 +3528,9 @@
         box-shadow: 0 1px 4px rgba(16, 24, 34, 0.08);
       }
       .btn-refresh {
-        background: var(--accent);
-        border: 1px solid var(--accent);
-        color: #fff;
+        background: var(--ukaq-action-bg);
+        border: 1px solid var(--ukaq-action-bg);
+        color: var(--ukaq-action-text);
         padding: 5px 12px;
         border-radius: 6px;
         font-weight: 600;
@@ -3030,8 +3541,8 @@
         transition: transform 0.15s, box-shadow 0.15s;
       }
       .btn-refresh:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(16, 24, 34, 0.16);
+        background: var(--accent-deep);
+        border-color: var(--accent-deep);
       }
       /* Hide old tab bar (kept in DOM for JS) */
       .tab-bar { display: none; }
@@ -3059,7 +3570,7 @@
         padding: 18px;
         margin-top: 10px;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 320px;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto auto auto auto;
         column-gap: 0;
         row-gap: 0;
@@ -3172,7 +3683,7 @@
       }
 
       .map-controls-row {
-        grid-column: 1;
+        grid-column: 1 / -1;
         grid-row: 3;
         min-height: 0;
         display: flex;
@@ -3186,7 +3697,7 @@
 
       .map-dashboard-card #uk-toolbar-slot,
       .map-dashboard-card #cr-toolbar-slot {
-        grid-column: 1;
+        grid-column: 1 / -1;
         grid-row: 3;
       }
 
@@ -3204,13 +3715,14 @@
       }
 
       .map-dashboard-card .map-canvas-wrap {
-        grid-column: 1;
+        grid-column: 1 / -1;
         grid-row: 4;
         --map-footer-safe: 64px;
         --sensor-panel-height: 240px;
+        --networks-panel-safe-right: 0px;
         border: 1px solid var(--line-soft);
         border-bottom: none;
-        border-radius: 0 0 0 18px;
+        border-radius: 0 0 18px 18px;
         background: var(--map-wrap);
         margin-left: -18px;
         margin-bottom: -18px;
@@ -3229,6 +3741,9 @@
         cursor: default;
         touch-action: none;
         transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .map-canvas-wrap.has-networks-panel-safe-area .map-svg-viewport {
+        right: var(--networks-panel-safe-right, 0px);
       }
 
       /* is-pannable is set by JS when scale > 1; cursor stays default — no grab hint while idle */
@@ -3403,10 +3918,8 @@
       .map-floating-tools,
       .map-zoom-controls button,
       .btn-refresh,
-      .network-actions button,
       .toolbar button,
       .tab-button,
-      .pill,
       .popover-trigger {
         box-shadow: none;
         transition:
@@ -3419,14 +3932,12 @@
 
       .map-floating-tools:hover,
       .btn-refresh:hover,
-      .network-actions button:hover:not(:disabled),
-      .toolbar button:hover,
+      .toolbar button:hover:not(:disabled):not(.active):not([aria-checked="true"]),
       .tab-button:hover,
-      .pill:hover,
       .popover-trigger:hover {
         transform: translateY(-1px);
-        box-shadow: 0 8px 18px rgba(60, 120, 172, 0.22);
-        border-color: rgba(60, 120, 172, 0.35);
+        box-shadow: var(--ukaq-control-hover-shadow);
+        border-color: var(--ukaq-control-hover-border);
       }
 
       .map-search-clear:hover {
@@ -3439,6 +3950,46 @@
         background: rgba(255, 255, 255, 0.98);
       }
 
+      .toolbar .pill[aria-checked="false"]:hover {
+        border-color: var(--ukaq-control-selectable-border);
+      }
+      .toolbar .network-dropdown-trigger.is-open:hover,
+      .toolbar .network-dropdown-trigger.is-open:active {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--ukaq-control-selected-border);
+      }
+      .toolbar .network-dropdown-action:hover:not(:disabled):not(.active):not([aria-checked="true"]),
+      .toolbar .network-dropdown-action:active:not(:disabled):not(.active):not([aria-checked="true"]),
+      .toolbar .network-dropdown-action:focus-visible:not(:disabled) {
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+        background: transparent;
+        outline: none;
+      }
+      .toolbar .window-stepper-arrow:hover:not(:disabled),
+      .toolbar .window-stepper-arrow:active:not(:disabled),
+      .toolbar .window-stepper-arrow:disabled:hover,
+      .toolbar .window-stepper-arrow:disabled:active {
+        background: transparent;
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+      .toolbar .window-stepper-arrow:focus-visible {
+        outline: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+      .toolbar button.window-stepper-arrow:hover:not(:disabled):not(.active):not([aria-checked="true"]),
+      .toolbar button.window-stepper-arrow:active:not(:disabled):not(.active):not([aria-checked="true"]) {
+        background: transparent;
+        transform: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+
       .map-zoom-controls button:hover {
         background: rgba(255, 255, 255, 0.98);
       }
@@ -3446,10 +3997,8 @@
       .map-floating-tools:active,
       .map-zoom-controls button:active,
       .btn-refresh:active,
-      .network-actions button:active:not(:disabled),
-      .toolbar button:active,
+      .toolbar button:active:not(:disabled):not(.active):not([aria-checked="true"]),
       .tab-button:active,
-      .pill:active,
       .popover-trigger:active {
         transform: translateY(0);
         box-shadow: none;
@@ -3470,10 +4019,8 @@
       .map-floating-tools:focus-visible,
       .map-zoom-controls button:focus-visible,
       .btn-refresh:focus-visible,
-      .network-actions button:focus-visible,
-      .toolbar button:focus-visible,
+      .toolbar button:focus-visible:not(:disabled),
       .tab-button:focus-visible,
-      .pill:focus-visible,
       .popover-trigger:focus-visible {
         outline: 2px solid rgba(60, 120, 172, 0.45);
         outline-offset: 2px;
@@ -3481,28 +4028,6 @@
 
       .map-search-clear:focus-visible {
         outline: none;
-      }
-
-      .map-dashboard-card .network-panel {
-        grid-column: 2;
-        grid-row: 3 / span 3;
-        border-left: 2px solid var(--line);
-        border-top: 1px solid var(--line-soft);
-        border-radius: 0;
-        background: var(--map-wrap);
-        padding: 6px 12px 18px 12px;
-        margin-top: 0;
-        margin-right: 0;
-        margin-bottom: -18px;
-        display: grid;
-        gap: 12px;
-        align-content: start;
-        align-self: stretch;
-      }
-
-      .map-dashboard-card .network-list-header {
-        margin: 0;
-        padding: 6px 10px 8px 14px;
       }
 
       .map-dashboard-card .map-legend {
@@ -3513,9 +4038,6 @@
       }
 
       @media (max-width: 1200px) {
-        .map-dashboard-card {
-          grid-template-columns: minmax(0, 1fr) 300px;
-        }
         .map-summary-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -3537,7 +4059,7 @@
           padding: 0;
         }
         .map-dashboard-card .map-canvas-wrap {
-          grid-column: 1;
+          grid-column: 1 / -1;
           grid-row: 4;
           border: none;
           border-radius: 0;
@@ -3545,22 +4067,12 @@
           margin-left: 0;
           margin-bottom: 0;
         }
-        .map-dashboard-card .network-panel {
-          grid-column: 1;
-          grid-row: 5;
-          border-left: none;
-          border-top: 1px solid var(--line);
-          padding: 10px 0 0;
-          margin-right: 0;
-          margin-bottom: 0;
-          min-height: 0;
-        }
         .map-zoom-controls {
           bottom: 60px;
         }
         .map-dashboard-card .map-legend {
           grid-column: 1;
-          grid-row: 6;
+          grid-row: 5;
         }
       }
 
@@ -3605,32 +4117,41 @@
         bottom: 8px;
         left: 50%;
         transform: translateX(-50%);
-        display: inline-flex !important;
-        flex-direction: row;
+        display: grid !important;
+        grid-template-columns: minmax(88px, 148px) auto minmax(108px, 156px);
         align-items: center;
-        gap: 12px;
+        column-gap: 10px;
         white-space: nowrap;
         background: color-mix(in srgb, var(--no-data) 78%, white 22%);
         border: 1px solid rgba(20, 34, 37, 0.12);
         border-radius: 999px;
-        padding: 10px 16px;
+        padding: 7px 10px;
         box-shadow: 0 1px 6px rgba(16, 24, 34, 0.1);
         font-size: 0.85rem;
         line-height: 1.2;
         color: var(--ink-soft);
         z-index: 15;
-        grid-template-columns: unset;
         margin: 0;
       }
 
       .legend-pill > span:first-child,
       .legend-pill > #legend-label,
       .legend-pill > #cr-legend-label {
-        display: inline-flex;
+        display: flex;
         align-items: center;
+        width: 100%;
         min-height: 18px;
-        text-align: center;
-        justify-self: auto;
+      }
+
+      .legend-pill > span:first-child {
+        text-align: right;
+        justify-content: flex-end;
+      }
+
+      .legend-pill > #legend-label,
+      .legend-pill > #cr-legend-label {
+        text-align: left;
+        justify-content: flex-start;
       }
 
       .legend-pill .legend-bar-wrap {
@@ -3651,16 +4172,20 @@
         top: 17px;
       }
 
-      /* Remove fixed 56px slot so min/max values sit flush against the bar */
       .legend-pill .legend-value {
-        width: auto;
-        min-width: 0;
-        flex: 0 0 auto;
+        width: 44px;
+        min-width: 44px;
+        flex: 0 0 44px;
       }
 
       /* Keep map controls/legend close to map frame */
       .map-canvas-wrap {
         padding-bottom: 0;
+      }
+      @media (max-width: 900px) {
+        .map-canvas-wrap.has-networks-panel-safe-area .map-svg-viewport {
+          right: 0;
+        }
       }
 
       .hex-chart-mode-panel {
@@ -4073,6 +4598,21 @@
                         <button type="button" class="pill" data-pollutant="no2" role="radio" aria-checked="false" tabindex="-1">NO₂</button>
                       </div>
                     </div>
+                    <div class="toolbar-divider" aria-hidden="true"></div>
+                    <div class="window-stepper" id="window-stepper" data-window-stepper>
+                      <span class="field-label window-stepper-label">Window</span>
+                      <div class="window-stepper-control" role="group" aria-label="Averaging window">
+                        <button type="button" class="window-stepper-arrow window-stepper-arrow--left" data-window-step="prev" aria-label="Use shorter window">‹</button>
+                        <div class="window-stepper-value-box" aria-live="polite" aria-atomic="true">
+                          <span class="window-stepper-value" data-window-value>6 Hours</span>
+                        </div>
+                        <button type="button" class="window-stepper-arrow window-stepper-arrow--right" data-window-step="next" aria-label="Use longer window">›</button>
+                      </div>
+                    </div>
+                    <div class="toolbar-right">
+                      <div class="toolbar-status-slot" id="toolbar-status-slot" aria-live="polite"></div>
+                      <div class="toolbar-refresh-slot" id="toolbar-refresh-slot"></div>
+                    </div>
                   </div>
                 </div>
                 <div class="tab-slot" data-tab-slot style="display:none">
@@ -4086,7 +4626,7 @@
                   <article class="map-summary-card">
                     <div class="map-summary-label">Total Active Sensors</div>
                     <div class="map-summary-value" id="top-total-sensors">—</div>
-                    <div class="map-summary-subtext">from selected networks</div>
+                    <div class="map-summary-subtext" id="top-total-sensors-subtext">from selected networks</div>
                   </article>
                   <article class="map-summary-card">
                     <div class="map-summary-label">Coverage</div>
@@ -4141,12 +4681,34 @@
                     <div class="map-search-results" id="uk-map-search-results" role="listbox" hidden></div>
                   </div>
                   <div class="map-topbar">
-                  <span class="status-indicator status-pill" data-state="loading">
-                    <span class="pulse-dot" aria-hidden="true"></span>
-                    <span class="hint" id="status">Loading...</span>
-                  </span>
-                  <button class="btn-refresh" id="refresh">Refresh</button>
-                </div>
+                    <!-- Live + Refresh live in the toolbar via JS; this container holds them when UK tab is inactive -->
+                    <span
+                      class="status-indicator status-pill"
+                      id="status-pill-uk"
+                      data-state="loading"
+                      data-status-pill
+                    >
+                      <span class="pulse-dot" aria-hidden="true"></span>
+                      <span class="hint" id="status">Loading...</span>
+                    </span>
+                    <button class="btn-refresh" id="refresh" data-refresh-button>Refresh</button>
+                    <div class="networks-pill-anchor" id="uk-networks-pill-anchor">
+                      <button
+                        type="button"
+                        class="networks-pill"
+                        id="uk-networks-pill"
+                        data-networks-pill
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="networks-panel-floating"
+                      >
+                        <span class="networks-pill-text">Networks: All</span>
+                        <svg class="networks-pill-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 <section class="hex-chart-mode-panel" id="uk-hex-chart-mode" aria-label="Selected constituency sensors chart" hidden>
                   <div class="hex-chart-mode-header">
                     <div class="sensor-panel-title-line hex-chart-mode-title-line">
@@ -4218,31 +4780,6 @@
                     <button type="button" class="map-settings-close" id="map-settings-close" aria-label="Close colour scale">
                       <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
                     </button>
-                  </div>
-                  <div class="map-settings-section">
-                    <span class="map-settings-label">Updated within:</span>
-                    <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
-                      <label class="window-option">
-                        <input type="radio" name="averagingWindow" value="3h" />
-                        <span class="window-text">3 Hours</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="averagingWindow" value="6h" />
-                        <span class="window-text">6 Hours</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="averagingWindow" value="1d" />
-                        <span class="window-text">1 Day</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="averagingWindow" value="7d" />
-                        <span class="window-text">7 Days</span>
-                      </label>
-                      <label class="window-option">
-                        <input type="radio" name="averagingWindow" value="all" checked />
-                        <span class="window-text">No limit</span>
-                      </label>
-                    </div>
                   </div>
                   <div class="map-settings-section">
                     <span class="map-settings-label">Averaging Method</span>
@@ -4380,19 +4917,6 @@
             </div>
           </div>
               </div>
-              <aside class="network-panel">
-                <div class="network-list-header">
-                  <span>Network</span>
-                  <span>Active sensors</span>
-                </div>
-                <div class="network-list" id="network-list">
-                  <span class="network-empty">Loading networks...</span>
-                </div>
-                <div class="network-actions" role="group" aria-label="Network selection actions">
-                  <button type="button" id="network-select-all">Select All</button>
-                  <button type="button" id="network-deselect-all">Deselect All</button>
-                </div>
-              </aside>
             </div>
           </div>
         </div>
@@ -4739,7 +5263,7 @@
                   <article class="map-summary-card">
                     <div class="map-summary-label">Total Active Sensors</div>
                     <div class="map-summary-value" id="cr-top-total-sensors">—</div>
-                    <div class="map-summary-subtext">from selected networks</div>
+                    <div class="map-summary-subtext" id="cr-top-total-sensors-subtext">from selected networks</div>
                   </article>
                   <article class="map-summary-card">
                     <div class="map-summary-label">Coverage</div>
@@ -4772,19 +5296,6 @@
                     <div class="map-summary-update-line">Oldest: <span id="cr-top-oldest-update">—</span></div>
                   </article>
                 </section>
-                <aside class="network-panel">
-                  <div class="network-list-header">
-                    <span>Network</span>
-                    <span>Active sensors</span>
-                  </div>
-                  <div class="network-list" id="cr-network-list">
-                    <span class="network-empty">Loading networks...</span>
-                  </div>
-                  <div class="network-actions" role="group" aria-label="Network selection actions">
-                    <button type="button" id="cr-network-select-all">Select All</button>
-                    <button type="button" id="cr-network-deselect-all">Deselect All</button>
-                  </div>
-                </aside>
                 <div class="map-canvas map-canvas-wrap">
                   <div class="map-search map-floating-search" data-map-search data-map-kind="cr">
                     <span class="map-search-icon" aria-hidden="true">
@@ -4807,11 +5318,33 @@
                     <div class="map-search-results" id="cr-map-search-results" role="listbox" hidden></div>
                   </div>
                   <div class="map-topbar">
-                    <span class="status-indicator status-pill" data-state="loading">
+                    <!-- Live + Refresh live in the toolbar via JS; this container holds them when CR tab is inactive -->
+                    <span
+                      class="status-indicator status-pill"
+                      id="status-pill-cr"
+                      data-state="loading"
+                      data-status-pill
+                    >
                       <span class="pulse-dot" aria-hidden="true"></span>
                       <span class="hint" id="cr-status">Loading...</span>
                     </span>
-                    <button class="btn-refresh" id="cr-refresh">Refresh</button>
+                    <button class="btn-refresh" id="cr-refresh" data-refresh-button>Refresh</button>
+                    <div class="networks-pill-anchor" id="cr-networks-pill-anchor">
+                      <button
+                        type="button"
+                        class="networks-pill"
+                        id="cr-networks-pill"
+                        data-networks-pill
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="networks-panel-floating"
+                      >
+                        <span class="networks-pill-text">Networks: All</span>
+                        <svg class="networks-pill-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <section class="hex-chart-mode-panel" id="cr-hex-chart-mode" aria-label="Selected local authority sensors chart" hidden>
                     <div class="hex-chart-mode-header">
@@ -4876,7 +5409,7 @@
                     </div>
                   </section>
                   <div class="map-svg-viewport">
-                    <svg id="cr-hex-map" role="img" aria-label="Hex cartogram of PM2.5 by local authority"></svg>
+                    <svg id="cr-hex-map" role="img" aria-label="Hex cartogram of PM2.5 by local authority" data-region="London"></svg>
                   </div>
                   <div class="map-settings-panel" id="cr-map-settings-panel" role="dialog" aria-label="Sensor data settings">
                     <div class="map-settings-header">
@@ -4884,31 +5417,6 @@
                       <button type="button" class="map-settings-close" id="cr-map-settings-close" aria-label="Close colour scale">
                         <img src="images/Red-Square-Button-White-Cross-200x200.svg" alt="" aria-hidden="true" />
                       </button>
-                    </div>
-                    <div class="map-settings-section">
-                      <span class="map-settings-label">Updated within:</span>
-                      <div class="map-settings-options window-group" role="radiogroup" aria-label="Averaging window">
-                        <label class="window-option">
-                          <input type="radio" name="cr-averagingWindow" value="3h" />
-                          <span class="window-text">3 Hours</span>
-                        </label>
-                        <label class="window-option">
-                          <input type="radio" name="cr-averagingWindow" value="6h" />
-                          <span class="window-text">6 Hours</span>
-                        </label>
-                        <label class="window-option">
-                          <input type="radio" name="cr-averagingWindow" value="1d" />
-                          <span class="window-text">1 Day</span>
-                        </label>
-                        <label class="window-option">
-                          <input type="radio" name="cr-averagingWindow" value="7d" />
-                          <span class="window-text">7 Days</span>
-                        </label>
-                        <label class="window-option">
-                          <input type="radio" name="cr-averagingWindow" value="all" checked />
-                          <span class="window-text">No limit</span>
-                        </label>
-                      </div>
                     </div>
                     <div class="map-settings-section">
                       <span class="map-settings-label">Averaging Method</span>
@@ -5365,7 +5873,49 @@
     <div class="tooltip" id="tooltip"></div>
     <div class="tooltip" id="cr-tooltip"></div>
 
+    <!-- Shared floating networks panel — positioned near the active Networks pill on open -->
+    <div
+      class="networks-panel-floating"
+      id="networks-panel-floating"
+      role="dialog"
+      aria-label="Networks"
+      aria-modal="false"
+      hidden
+    >
+      <div class="network-dropdown-header networks-panel-header">
+        <span class="networks-panel-title">NETWORKS</span>
+        <span class="networks-panel-spacer" aria-hidden="true"></span>
+        <span class="network-dropdown-count" id="network-dropdown-count">0 / 0</span>
+        <button
+          type="button"
+          class="networks-panel-pin"
+          id="networks-panel-pin"
+          aria-pressed="false"
+          title="Pin networks panel"
+          aria-label="Pin networks panel"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 4l6 6-3 1-3 6-2-2-5 5-1-1 5-5-2-2 6-3 -1-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="network-dropdown-actions" role="group" aria-label="Network selection actions">
+        <button type="button" class="network-dropdown-action" id="network-select-all" aria-label="Select all networks" title="Select all networks">
+          <span class="network-dropdown-action-icon network-dropdown-action-icon--select-all" aria-hidden="true"></span>
+        </button>
+        <span class="network-dropdown-actions-divider" aria-hidden="true">/</span>
+        <button type="button" class="network-dropdown-action" id="network-deselect-all" aria-label="Clear all networks" title="Clear all networks">
+          <span class="network-dropdown-action-icon network-dropdown-action-icon--clear-all" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="network-dropdown-list network-list" id="network-list">
+        <span class="network-empty">Loading networks...</span>
+      </div>
+      <div class="networks-panel-footer">Counts are active sensors in the current window.</div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
+    <script src="timeseries-client.js"></script>
     <script src="chart-core.js"></script>
     <script>
       // ── Top summary boxes — shared updater ───────────────────────────────────
@@ -5774,7 +6324,7 @@
       const LATEST_LEGACY_URL = cacheBaseUrl
         ? `${cacheBaseUrl}/latest`
         : "";
-      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d"]);
+      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d", "7d", "all"]);
       function resolveLatestUrl(windowLabel) {
         const normalizedWindow = String(windowLabel || "").trim().toLowerCase();
         if (LATEST_SNAPSHOT_URL && SNAPSHOT_WINDOWS.has(normalizedWindow)) {
@@ -5838,7 +6388,7 @@
         "6h": "6 Hours",
         "1d": "1 Day",
         "7d": "7 Days",
-        all: "No limit",
+        all: "No Limit",
       };
       const GOVUK_NETWORK_MATCHERS = ["aurn", "uk air sos", "uk-air-sos", "uk_air_sos"];
       const GOVUK_AURN_CODE = "aurn";
@@ -5848,6 +6398,12 @@
       const BREATHE_LONDON_MATCHERS = ["breathe london", "breathe-london", "breathe_london"];
       const LAQN_NETWORK_MATCHERS = ["laqn", "london air"];
       const SENSOR_COMMUNITY_MATCHERS = ["sensorcommunity", "sensor community", "sensor.community"];
+      const NETWORK_FILTER_BASE_DEFS = [
+        { code: GOVUK_AURN_CODE, label: GOVUK_AURN_LABEL },
+        { code: "openaq", label: "OpenAQ" },
+        { code: "breathe_london", label: "Breathe London" },
+        { code: "sensorcommunity", label: "Sensor.Community" },
+      ];
       const TOTAL_PCON_COUNT = 650;
       const CONNECTOR_DEFS = [
         { code: "uk_air_sos", label: "UK AIR SOS" },
@@ -5911,10 +6467,8 @@
         legendLabel.style.minWidth = "";
         let maxW = 0;
         for (const mk of Object.keys(METRIC_LABELS)) {
-          for (const wk of Object.keys(WINDOW_OPTIONS)) {
-            legendLabel.textContent = `${METRIC_LABELS[mk]} · Window: ${formatWindowLabel(wk)}`;
-            maxW = Math.max(maxW, legendLabel.scrollWidth);
-          }
+          legendLabel.textContent = METRIC_LABELS[mk];
+          maxW = Math.max(maxW, legendLabel.scrollWidth);
         }
         legendLabel.textContent = saved;
         if (maxW > 0) legendLabel.style.minWidth = `${maxW}px`;
@@ -6973,10 +7527,6 @@
         loadMapData();
       }
 
-      function formatWindowLabel(value) {
-        return WINDOW_LABELS[value] || WINDOW_LABELS.all;
-      }
-
       function getPollutantLabel(key) {
         const match = POLLUTANT_OPTIONS.find((option) => option.key === key);
         return match ? match.label : "PM2.5";
@@ -7384,12 +7934,14 @@
       }
 
       function syncSettingsPanelWidth() {
-        if (!mapSettingsPanel || !networkPanel) {
+        if (!mapSettingsPanel) {
           return;
         }
-        const panelWidth = networkPanel.getBoundingClientRect().width;
+        const panelWidth = networkPanel?.getBoundingClientRect().width || 0;
         if (panelWidth > 0) {
           mapSettingsPanel.style.width = `${panelWidth}px`;
+        } else {
+          mapSettingsPanel.style.removeProperty("width");
         }
       }
 
@@ -7531,11 +8083,16 @@
             label: row?.connector_label || row?.connector?.label || null,
           }];
         }
-        return remapGovUkNetworksForPm25(row, entries);
+        return canonicalizeNetworkEntries(entries);
       }
 
       function buildNetworkDefs(rows) {
-        const byCode = new Map();
+        const byCode = new Map(
+          NETWORK_FILTER_BASE_DEFS.map((def) => [
+            def.code,
+            { code: def.code, label: def.label, count: 0 },
+          ])
+        );
         rows.forEach((row) => {
           const seen = new Set();
           collectNetworkEntries(row).forEach((entry) => {
@@ -7544,7 +8101,11 @@
             if (!byCode.has(entry.code)) {
               byCode.set(entry.code, { code: entry.code, label: entry.label || entry.code, count: 0 });
             }
-            byCode.get(entry.code).count++;
+            const def = byCode.get(entry.code);
+            if (entry.label && (!def.label || def.label === def.code)) {
+              def.label = entry.label;
+            }
+            def.count++;
           });
         });
         return Array.from(byCode.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -7684,11 +8245,11 @@
           count.className = "network-count";
           if (def.count > 0) count.textContent = def.count.toLocaleString();
           mainRow.append(leftGroup, count);
-          const shareBar = document.createElement("span");
-          shareBar.className = "network-share-bar";
           const tooltipCount = Number(def.count) || 0;
           const tooltipPct = Math.round(sharePercent);
           label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
+          const shareBar = document.createElement("span");
+          shareBar.className = "network-share-bar";
           const shareFill = document.createElement("span");
           shareFill.className = "network-share-fill";
           shareFill.style.width = `${sharePercent.toFixed(1)}%`;
@@ -7711,12 +8272,14 @@
         networkSelectAll.disabled = !hasNetworks;
         networkDeselectAll.disabled = !hasNetworks;
         if (!hasNetworks) {
+          window.dispatchEvent(new CustomEvent("networkselectionchange"));
           return;
         }
         const allChecked = networkInputs.every((input) => input.checked);
         const noneChecked = networkInputs.every((input) => !input.checked);
         networkSelectAll.disabled = allChecked;
         networkDeselectAll.disabled = noneChecked;
+        window.dispatchEvent(new CustomEvent("networkselectionchange"));
       }
 
       function syncNetworkRowMutedState() {
@@ -7903,37 +8466,52 @@
         return rows.filter((row) => rowMatchesPollutant(row, activePollutant));
       }
 
-      function remapGovUkNetworksForPm25(row, entries) {
+      function canonicalizeNetworkEntries(entries) {
         if (!entries.length) {
-          return entries;
-        }
-        const hasPm25Context = activePollutant === "pm25" || getPollutantKeyFromRow(row) === "pm25";
-        if (!hasPm25Context) {
           return entries;
         }
         const remapped = entries.map((entry) => {
           const code = String(entry.code || "").toLowerCase();
           const label = String(entry.label || "").toLowerCase();
           const combined = `${code} ${label}`;
-          if (combined.includes("aurn")) {
+          if (combined.includes("aurn") || GOVUK_REMAP_MATCHERS.some((token) => combined.includes(token))) {
             return {
               ...entry,
               code: GOVUK_AURN_CODE,
               label: GOVUK_AURN_LABEL,
             };
           }
-          const shouldRemap = GOVUK_REMAP_MATCHERS.some((token) => combined.includes(token));
-          if (!shouldRemap) {
-            return entry;
+          if (OPENAQ_NETWORK_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "openaq",
+              label: "OpenAQ",
+            };
           }
-          return {
-            ...entry,
-            code: GOVUK_AURN_CODE,
-            label: GOVUK_AURN_LABEL,
-          };
+          if (BREATHE_LONDON_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "breathe_london",
+              label: "Breathe London",
+            };
+          }
+          if (SENSOR_COMMUNITY_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "sensorcommunity",
+              label: "Sensor.Community",
+            };
+          }
+          if (LAQN_NETWORK_MATCHERS.some((token) => combined.includes(token))) {
+            return null;
+          }
+          return null;
         });
         const seen = new Set();
         return remapped.filter((entry) => {
+          if (!entry?.code) {
+            return false;
+          }
           const key = String(entry.code || "").toLowerCase();
           if (seen.has(key)) {
             return false;
@@ -8246,7 +8824,7 @@
       }
 
       function updateLegend(minValue, maxValue, capValue) {
-        legendLabel.textContent = `${METRIC_LABELS[currentMetric]} · Window: ${formatWindowLabel(currentWindow)}`;
+        legendLabel.textContent = METRIC_LABELS[currentMetric];
         if (minValue === null || maxValue === null || capValue === null) {
           legendMin.textContent = "-";
           legendMax.textContent = "-";
@@ -9336,12 +9914,15 @@
         if (!networkInputs.length) {
           return;
         }
+        const actionButton = event.currentTarget instanceof HTMLButtonElement
+          ? event.currentTarget
+          : (event.target instanceof Element ? event.target.closest("button") : null);
         networkSelectionMismatch = false;
-        if (event.target === networkSelectAll) {
+        if (actionButton === networkSelectAll) {
           networkInputs.forEach((input) => {
             input.checked = true;
           });
-        } else if (event.target === networkDeselectAll) {
+        } else if (actionButton === networkDeselectAll) {
           networkInputs.forEach((input) => {
             input.checked = false;
           });
@@ -9544,6 +10125,7 @@
           latestUrl.searchParams.set("window", currentWindow);
           latestUrl.searchParams.set("scope", "all");
           latestUrl.searchParams.set("limit", "10000");
+          latestUrl.searchParams.set("caller", "hex_map");
           if (latestCursorEnabled && latestSince) {
             latestUrl.searchParams.set("since", latestSince);
             if (latestSinceId !== null) {
@@ -10132,6 +10714,12 @@
           }
           syncSettingsPanelWidth();
         },
+        renderLayout: () => {
+          requestAnimationFrame(() => {
+            renderMap();
+          });
+          syncSettingsPanelWidth();
+        },
         restoreNetworks: () => {
           applyStoredNetworkSelection();
           applyNetworkFilters();
@@ -10227,7 +10815,7 @@
         sharedSettings.colorScale = (colorScaleParam === "linear" || colorScaleParam === "power") ? colorScaleParam : "power";
       }
       if (!sharedSettings.window) {
-        sharedSettings.window = "all";
+        sharedSettings.window = "6h";
       }
       const inferredProjectRef = inferProjectRefFromHost();
       const projectRef = PROJECT_REF_PLACEHOLDER.includes("__SUPABASE_PROJECT_REF__")
@@ -10252,7 +10840,7 @@
       const LATEST_LEGACY_URL = cacheBaseUrl
         ? `${cacheBaseUrl}/latest`
         : "";
-      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d"]);
+      const SNAPSHOT_WINDOWS = new Set(["3h", "6h", "1d", "7d", "all"]);
       function resolveLatestUrl(windowLabel) {
         const normalizedWindow = String(windowLabel || "").trim().toLowerCase();
         if (LATEST_SNAPSHOT_URL && SNAPSHOT_WINDOWS.has(normalizedWindow)) {
@@ -10342,13 +10930,22 @@
         "6h": "6 Hours",
         "1d": "1 Day",
         "7d": "7 Days",
-        all: "No limit",
+        all: "No Limit",
       };
       const GOVUK_NETWORK_MATCHERS = ["aurn", "uk air sos", "uk-air-sos", "uk_air_sos"];
+      const GOVUK_AURN_CODE = "aurn";
+      const GOVUK_AURN_LABEL = "GOV.UK AURN";
+      const GOVUK_REMAP_MATCHERS = ["uk air sos", "uk-air-sos", "uk_air_sos", "gov.uk", "govuk"];
       const OPENAQ_NETWORK_MATCHERS = ["openaq", "open aq", "open-aq", "open_aq"];
       const BREATHE_LONDON_MATCHERS = ["breathe london", "breathe-london", "breathe_london"];
       const LAQN_NETWORK_MATCHERS = ["laqn", "london air"];
       const SENSOR_COMMUNITY_MATCHERS = ["sensorcommunity", "sensor community", "sensor.community"];
+      const NETWORK_FILTER_BASE_DEFS = [
+        { code: GOVUK_AURN_CODE, label: GOVUK_AURN_LABEL },
+        { code: "openaq", label: "OpenAQ" },
+        { code: "breathe_london", label: "Breathe London" },
+        { code: "sensorcommunity", label: "Sensor.Community" },
+      ];
       const AREA_LABEL_PLURAL = "local authorities";
       const CONNECTOR_DEFS = [
         { code: "uk_air_sos", label: "UK AIR SOS" },
@@ -10412,10 +11009,8 @@
         legendLabel.style.minWidth = "";
         let maxW = 0;
         for (const mk of Object.keys(METRIC_LABELS)) {
-          for (const wk of Object.keys(WINDOW_OPTIONS)) {
-            legendLabel.textContent = `${METRIC_LABELS[mk]} · Window: ${formatWindowLabel(wk)}`;
-            maxW = Math.max(maxW, legendLabel.scrollWidth);
-          }
+          legendLabel.textContent = METRIC_LABELS[mk];
+          maxW = Math.max(maxW, legendLabel.scrollWidth);
         }
         legendLabel.textContent = saved;
         if (maxW > 0) legendLabel.style.minWidth = `${maxW}px`;
@@ -10558,9 +11153,10 @@
       const colorScaleGroup = query(".colour-scale-group");
       const colorScaleToggle = colorScaleGroup ? colorScaleGroup.querySelector(".colour-scale-toggle") : null;
       const networkPanel = query(".network-panel");
-      const networkList = byId("network-list");
-      const networkSelectAll = byId("network-select-all");
-      const networkDeselectAll = byId("network-deselect-all");
+      // Shared toolbar dropdown controls (single DOM instance moved between UK/CR tabs).
+      const networkList = document.getElementById("network-list");
+      const networkSelectAll = document.getElementById("network-select-all");
+      const networkDeselectAll = document.getElementById("network-deselect-all");
       const sortHeaders = detailsTableWrap
         ? Array.from(detailsTableWrap.querySelectorAll("th[data-sort-key]"))
         : [];
@@ -11219,10 +11815,6 @@
         loadMapData();
       }
 
-      function formatWindowLabel(value) {
-        return WINDOW_LABELS[value] || WINDOW_LABELS.all;
-      }
-
       function getPollutantLabel(key) {
         const match = POLLUTANT_OPTIONS.find((option) => option.key === key);
         return match ? match.label : "PM2.5";
@@ -11573,12 +12165,14 @@
       }
 
       function syncSettingsPanelWidth() {
-        if (!mapSettingsPanel || !networkPanel) {
+        if (!mapSettingsPanel) {
           return;
         }
-        const panelWidth = networkPanel.getBoundingClientRect().width;
+        const panelWidth = networkPanel?.getBoundingClientRect().width || 0;
         if (panelWidth > 0) {
           mapSettingsPanel.style.width = `${panelWidth}px`;
+        } else {
+          mapSettingsPanel.style.removeProperty("width");
         }
       }
 
@@ -11710,20 +12304,25 @@
       function collectNetworkEntries(row) {
         const memberships = resolveNetworkMemberships(row);
         if (memberships.length) {
-          return memberships;
+          return canonicalizeNetworkEntries(memberships);
         }
         const fallbackCode = resolveConnectorCode(row);
         if (!fallbackCode) {
           return [];
         }
-        return [{
+        return canonicalizeNetworkEntries([{
           code: fallbackCode,
           label: row?.connector_label || row?.connector?.label || null,
-        }];
+        }]);
       }
 
       function buildNetworkDefs(rows) {
-        const byCode = new Map();
+        const byCode = new Map(
+          NETWORK_FILTER_BASE_DEFS.map((def) => [
+            def.code,
+            { code: def.code, label: def.label, count: 0 },
+          ])
+        );
         rows.forEach((row) => {
           const seen = new Set();
           collectNetworkEntries(row).forEach((entry) => {
@@ -11732,7 +12331,11 @@
             if (!byCode.has(entry.code)) {
               byCode.set(entry.code, { code: entry.code, label: entry.label || entry.code, count: 0 });
             }
-            byCode.get(entry.code).count++;
+            const def = byCode.get(entry.code);
+            if (entry.label && (!def.label || def.label === def.code)) {
+              def.label = entry.label;
+            }
+            def.count++;
           });
         });
         return Array.from(byCode.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -11873,11 +12476,11 @@
           count.className = "network-count";
           if (def.count > 0) count.textContent = def.count.toLocaleString();
           mainRow.append(leftGroup, count);
-          const shareBar = document.createElement("span");
-          shareBar.className = "network-share-bar";
           const tooltipCount = Number(def.count) || 0;
           const tooltipPct = Math.round(sharePercent);
           label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
+          const shareBar = document.createElement("span");
+          shareBar.className = "network-share-bar";
           const shareFill = document.createElement("span");
           shareFill.className = "network-share-fill";
           shareFill.style.width = `${sharePercent.toFixed(1)}%`;
@@ -11900,12 +12503,14 @@
         networkSelectAll.disabled = !hasNetworks;
         networkDeselectAll.disabled = !hasNetworks;
         if (!hasNetworks) {
+          window.dispatchEvent(new CustomEvent("networkselectionchange"));
           return;
         }
         const allChecked = networkInputs.every((input) => input.checked);
         const noneChecked = networkInputs.every((input) => !input.checked);
         networkSelectAll.disabled = allChecked;
         networkDeselectAll.disabled = noneChecked;
+        window.dispatchEvent(new CustomEvent("networkselectionchange"));
       }
 
       function syncNetworkRowMutedState() {
@@ -12123,6 +12728,61 @@
           return rows;
         }
         return rows.filter((row) => rowMatchesPollutant(row, activePollutant));
+      }
+
+      function canonicalizeNetworkEntries(entries) {
+        if (!entries.length) {
+          return entries;
+        }
+        const remapped = entries.map((entry) => {
+          const code = String(entry.code || "").toLowerCase();
+          const label = String(entry.label || "").toLowerCase();
+          const combined = `${code} ${label}`;
+          if (combined.includes("aurn") || GOVUK_REMAP_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: GOVUK_AURN_CODE,
+              label: GOVUK_AURN_LABEL,
+            };
+          }
+          if (OPENAQ_NETWORK_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "openaq",
+              label: "OpenAQ",
+            };
+          }
+          if (BREATHE_LONDON_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "breathe_london",
+              label: "Breathe London",
+            };
+          }
+          if (SENSOR_COMMUNITY_MATCHERS.some((token) => combined.includes(token))) {
+            return {
+              ...entry,
+              code: "sensorcommunity",
+              label: "Sensor.Community",
+            };
+          }
+          if (LAQN_NETWORK_MATCHERS.some((token) => combined.includes(token))) {
+            return null;
+          }
+          return null;
+        });
+        const seen = new Set();
+        return remapped.filter((entry) => {
+          if (!entry?.code) {
+            return false;
+          }
+          const key = String(entry.code || "").toLowerCase();
+          if (seen.has(key)) {
+            return false;
+          }
+          seen.add(key);
+          return true;
+        });
       }
 
       function collectStationEntries(rows, pconCode) {
@@ -12411,7 +13071,7 @@
       }
 
       function updateLegend(minValue, maxValue, capValue) {
-        legendLabel.textContent = `${METRIC_LABELS[currentMetric]} · Window: ${formatWindowLabel(currentWindow)}`;
+        legendLabel.textContent = METRIC_LABELS[currentMetric];
         if (minValue === null || maxValue === null || capValue === null) {
           legendMin.textContent = "-";
           legendMax.textContent = "-";
@@ -13803,6 +14463,14 @@
         renderNetworkFiltersIfNeeded(windowNetworkDefs, previousSelection, hadAllSelected);
         updateNetworkSummaryCardVisibility();
         if (!basePconRows.length && !baseLatestRows.length) {
+          scopedLatestRows = [];
+          latestRows = [];
+          pconRows = [];
+          pconLookup = new Map();
+          updateRowCountText();
+          updateSummary();
+          renderMap();
+          updateDetailsPanel();
           persistNetworkSelection();
           return;
         }
@@ -13847,12 +14515,15 @@
         if (!networkInputs.length) {
           return;
         }
+        const actionButton = event.currentTarget instanceof HTMLButtonElement
+          ? event.currentTarget
+          : (event.target instanceof Element ? event.target.closest("button") : null);
         networkSelectionMismatch = false;
-        if (event.target === networkSelectAll) {
+        if (actionButton === networkSelectAll) {
           networkInputs.forEach((input) => {
             input.checked = true;
           });
-        } else if (event.target === networkDeselectAll) {
+        } else if (actionButton === networkDeselectAll) {
           networkInputs.forEach((input) => {
             input.checked = false;
           });
@@ -14047,6 +14718,10 @@
         }
         activeRegion = normalized;
         mapState.lastCrMap = normalized;
+        const crSvgNode = svg.node();
+        if (crSvgNode) {
+          crSvgNode.dataset.region = normalized;
+        }
         if (mapSelect) {
           mapSelect.value = normalized;
         }
@@ -14054,6 +14729,9 @@
         if (updateUrl) {
           updateMapParam(normalized, true);
         }
+        window.dispatchEvent(new CustomEvent("crregionchange", {
+          detail: { region: activeRegion },
+        }));
         loadMapData();
       }
 
@@ -14136,6 +14814,7 @@
             // scope to the selected LA hex codes immediately after fetch.
             latestUrl.searchParams.set("scope", "all");
             latestUrl.searchParams.set("limit", "10000");
+            latestUrl.searchParams.set("caller", "hex_map");
             if (latestCursorEnabled && latestSince) {
               latestUrl.searchParams.set("since", latestSince);
               if (latestSinceId !== null) {
@@ -14808,6 +15487,12 @@
           }
           syncSettingsPanelWidth();
         },
+        renderLayout: () => {
+          requestAnimationFrame(() => {
+            renderMap();
+          });
+          syncSettingsPanelWidth();
+        },
         restoreNetworks: () => {
           applyStoredNetworkSelection();
           applyNetworkFilters();
@@ -14889,6 +15574,12 @@
   const params = new URLSearchParams(window.location.search);
   const cacheBaseUrl = resolveCacheBaseUrl(params.get("cache_base"));
   const seriesUrl = cacheBaseUrl ? `${cacheBaseUrl}/timeseries` : "";
+  // chart-core.js is rendering-only; timeseries-client.js owns URL/payload normalization.
+  const sharedTimeseriesClient = window.UkAqTimeseriesClient || null;
+  const UK_AQ_CHART_TIMESERIES_PROXY_V2_ENABLED = parseBooleanFlag(
+    params.get("timeseries_v2"),
+    true
+  );
   const aqiHistoryBaseUrl = resolveAqiHistoryBaseUrl(params.get("aqi_history_base"));
   const cacheAqiHistoryBase = cacheBaseUrl ? `${cacheBaseUrl}/aqi-history` : "";
   const aqiHistoryBaseCandidates = dedupeStrings([
@@ -14971,6 +15662,16 @@
     return result;
   }
 
+  function parseBooleanFlag(rawValue, fallbackValue) {
+    if (rawValue === null || rawValue === undefined || rawValue === "") {
+      return Boolean(fallbackValue);
+    }
+    const normalized = String(rawValue).trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) return true;
+    if (["0", "false", "no", "off"].includes(normalized)) return false;
+    return Boolean(fallbackValue);
+  }
+
   function escapeHtml(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -15021,6 +15722,9 @@
   }
 
   function parseSeriesPayloadPoints(payload) {
+    if (sharedTimeseriesClient?.parseTimeseriesPayloadPoints) {
+      return sharedTimeseriesClient.parseTimeseriesPayloadPoints(payload);
+    }
     const raw = Array.isArray(payload?.data) ? payload.data : [];
     const dataFormat = String(payload?.data_format || "").toLowerCase();
     const columns = Array.isArray(payload?.columns) ? payload.columns : [];
@@ -15035,6 +15739,65 @@
       }
       return { date: new Date(row?.observed_at), value: parseObservationNumericValue(row?.value) };
     }).filter((row) => Number.isFinite(row.date?.getTime()) && Number.isFinite(row.value) && row.value >= 0);
+  }
+
+  function normalizeTimeseriesDebugMeta(payload) {
+    if (sharedTimeseriesClient?.normalizeTimeseriesMeta) {
+      return sharedTimeseriesClient.normalizeTimeseriesMeta(payload);
+    }
+    const meta = payload?.meta || {};
+    return {
+      source_mode: meta?.source_mode || payload?.source_mode || null,
+      r2_coverage_end: meta?.r2_coverage_end || null,
+      ingest_tail_start: meta?.ingest_tail_start || null,
+      has_gap: Object.prototype.hasOwnProperty.call(meta, "has_gap") ? meta.has_gap : null,
+      cache_status: meta?.cache_status || null,
+    };
+  }
+
+  function logTimeseriesDebugMeta(contextLabel, payload, entry, chunk) {
+    const meta = normalizeTimeseriesDebugMeta(payload);
+    if (!meta) return;
+    if (
+      meta.source_mode === null &&
+      meta.r2_coverage_end === null &&
+      meta.ingest_tail_start === null &&
+      meta.has_gap === null &&
+      meta.cache_status === null
+    ) {
+      return;
+    }
+    console.debug("[uk-aq timeseries]", contextLabel, {
+      timeseries_id: entry?.timeseriesId || null,
+      chunk_start: chunk?.startIso || null,
+      chunk_end: chunk?.endIso || null,
+      source_mode: meta.source_mode,
+      r2_coverage_end: meta.r2_coverage_end,
+      ingest_tail_start: meta.ingest_tail_start,
+      has_gap: meta.has_gap,
+      cache_status: meta.cache_status,
+    });
+  }
+
+  function buildObservationSeriesRequestUrl(timeseriesId, chunk) {
+    if (!seriesUrl || !timeseriesId) return null;
+    if (sharedTimeseriesClient?.buildCanonicalTimeseriesUrl) {
+      return sharedTimeseriesClient.buildCanonicalTimeseriesUrl({
+        baseUrl: seriesUrl,
+        timeseriesId,
+        windowLabel: state.chartModeTimeRange || "24h",
+        startIso: chunk?.startIso || null,
+        endIso: chunk?.endIso || null,
+        proxyV2Enabled: UK_AQ_CHART_TIMESERIES_PROXY_V2_ENABLED,
+        format: "compact",
+      });
+    }
+    const url = new URL(seriesUrl);
+    url.searchParams.set("timeseries_id", String(timeseriesId));
+    url.searchParams.set("start", chunk.startIso);
+    url.searchParams.set("end", chunk.endIso);
+    url.searchParams.set("format", "compact");
+    return url;
   }
 
   function parseAqiBandPayload(payload, pollutantKey) {
@@ -15414,16 +16177,14 @@
 
   async function fetchObservationSeriesChunk(entry, chunk, signal) {
     if (!seriesUrl || !entry?.timeseriesId) return { entry, points: [], guideline: null };
-    const url = new URL(seriesUrl);
-    url.searchParams.set("timeseries_id", entry.timeseriesId);
-    url.searchParams.set("start", chunk.startIso);
-    url.searchParams.set("end", chunk.endIso);
-    url.searchParams.set("format", "compact");
+    const url = buildObservationSeriesRequestUrl(entry.timeseriesId, chunk);
+    if (!url) return { entry, points: [], guideline: null };
     const init = { credentials: "include", headers: { Accept: "application/json" }, signal };
     const cacheFetch = getCacheFetch();
     const response = cacheFetch ? await cacheFetch(url.toString(), init) : await fetch(url.toString(), init);
     if (!response.ok) throw new Error(`Chart request failed: ${response.status}`);
     const payload = await response.json();
+    logTimeseriesDebugMeta("hex_map", payload, entry, chunk);
     return { entry, points: parseSeriesPayloadPoints(payload), guideline: payload?.guideline || null };
   }
 
@@ -16290,35 +17051,500 @@
 (() => {
   const toolbarTabUk = document.getElementById("toolbar-tab-uk");
   const toolbarTabCr = document.getElementById("toolbar-tab-cr");
+  const windowStepper = document.getElementById("window-stepper");
+  const windowStepperPrev = windowStepper?.querySelector("[data-window-step='prev']");
+  const windowStepperNext = windowStepper?.querySelector("[data-window-step='next']");
+  const windowStepperValueBox = windowStepper?.querySelector(".window-stepper-value-box");
   const regionSection = document.getElementById("toolbar-region-section");
   const regionTrigger = document.getElementById("toolbar-region-trigger");
   const regionLabel = document.getElementById("toolbar-region-label");
   const regionMenu = document.getElementById("toolbar-region-menu");
   const popoverWrap = document.getElementById("toolbar-popover-wrap");
+  const networkDropdownMenu = document.getElementById("networks-panel-floating");
+  const networkDropdownCount = document.getElementById("network-dropdown-count");
+  const networkList = document.getElementById("network-list");
+  const networkSelectAll = document.getElementById("network-select-all");
+  const networkDeselectAll = document.getElementById("network-deselect-all");
+  const networkPanelPin = document.getElementById("networks-panel-pin");
+  const networkPills = Array.from(document.querySelectorAll("[data-networks-pill]"));
   const tabUk = document.getElementById("tab-uk");
   const tabCr = document.getElementById("tab-cr");
+  let networkPanelPinned = false;
+  let networkPanelAnchorPill = null;
+  const WINDOW_ORDER = ["3h", "6h", "1d", "7d", "all"];
+  const WINDOW_LABELS_FALLBACK = {
+    "3h": "3 Hours",
+    "6h": "6 Hours",
+    "1d": "1 Day",
+    "7d": "7 Days",
+    all: "No Limit",
+  };
+  const reduceMotionQuery = typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+  let prefersReducedMotion = !!reduceMotionQuery?.matches;
+  let windowStepperKey = null;
+  let windowStepperTimer = null;
+  let cachedNetworkPanelWidth = 0;
+  const LONDON_NETWORK_MAP_GAP_PX = -72;
+
+  function getNetworkInputs() {
+    if (!networkList) {
+      return [];
+    }
+    return Array.from(networkList.querySelectorAll("input[data-network]"));
+  }
+
+  function isPillVisible(pill) {
+    if (!pill || !document.body.contains(pill)) return false;
+    const panel = pill.closest(".tab-panel");
+    return panel ? !panel.hidden : true;
+  }
+
+  function getActivePill() {
+    // Only reuse the existing anchor if its tab is still active.
+    if (isPillVisible(networkPanelAnchorPill)) {
+      return networkPanelAnchorPill;
+    }
+    const visible = networkPills.find(isPillVisible);
+    return visible || networkPills[0] || null;
+  }
+
+  function getMapKeyForWrap(wrap) {
+    const panel = wrap?.closest(".tab-panel");
+    if (panel?.id === "tab-panel-uk") return "uk";
+    if (panel?.id === "tab-panel-cr") return "cr";
+    return null;
+  }
+
+  function isLondonRegionActive() {
+    return String(window.crMap?.getRegion?.() || "").toLowerCase() === "london";
+  }
+
+  function isCrTabActive() {
+    return window.mapTabController?.getActiveTab?.() === "cr";
+  }
+
+  function getNetworkPanelWidth() {
+    if (!networkDropdownMenu) return 0;
+    if (cachedNetworkPanelWidth > 0) return cachedNetworkPanelWidth;
+    const previousHidden = networkDropdownMenu.hidden;
+    const previousDisplay = networkDropdownMenu.style.display;
+    const previousVisibility = networkDropdownMenu.style.visibility;
+    const previousLeft = networkDropdownMenu.style.left;
+    const previousTop = networkDropdownMenu.style.top;
+    networkDropdownMenu.hidden = false;
+    networkDropdownMenu.style.display = "flex";
+    networkDropdownMenu.style.visibility = "hidden";
+    networkDropdownMenu.style.left = "-99999px";
+    networkDropdownMenu.style.top = "-99999px";
+    const measuredWidth = networkDropdownMenu.getBoundingClientRect().width;
+    networkDropdownMenu.style.display = previousDisplay;
+    networkDropdownMenu.style.visibility = previousVisibility;
+    networkDropdownMenu.style.left = previousLeft;
+    networkDropdownMenu.style.top = previousTop;
+    networkDropdownMenu.hidden = previousHidden;
+    cachedNetworkPanelWidth = Number.isFinite(measuredWidth) ? measuredWidth : 0;
+    return cachedNetworkPanelWidth;
+  }
+
+  function renderMapForKey(mapKey) {
+    if (mapKey === "uk") {
+      if (typeof window.ukMap?.renderLayout === "function") {
+        window.ukMap.renderLayout();
+      } else {
+        window.ukMap?.render?.();
+      }
+      return;
+    }
+    if (mapKey === "cr") {
+      if (typeof window.crMap?.renderLayout === "function") {
+        window.crMap.renderLayout();
+      } else {
+        window.crMap?.render?.();
+      }
+    }
+  }
+
+  function renderActiveMap() {
+    const activeMap = window.mapTabController?.getActiveTab?.();
+    if (activeMap === "uk" || activeMap === "cr") {
+      renderMapForKey(activeMap);
+      return;
+    }
+    window.ukMap?.render?.();
+    window.crMap?.render?.();
+  }
+
+  function rerenderChangedMapSafeAreas(changedMapKeys) {
+    if (!(changedMapKeys instanceof Set) || changedMapKeys.size === 0) {
+      return;
+    }
+    const rendered = new Set();
+    changedMapKeys.forEach((mapKey) => {
+      if (mapKey === "uk" || mapKey === "cr") {
+        renderMapForKey(mapKey);
+        rendered.add(mapKey);
+      }
+    });
+    if (rendered.size !== changedMapKeys.size) {
+      renderActiveMap();
+    }
+  }
+
+  function updateNetworkPanelSafeArea() {
+    const safeAreaEnabled = window.innerWidth > 900;
+    let targetWrap = null;
+    let targetSafeRight = null;
+
+    if (safeAreaEnabled && isCrTabActive() && isLondonRegionActive()) {
+      const pill = getActivePill();
+      const wrap = pill?.closest(".map-canvas-wrap");
+      const pillRect = pill?.getBoundingClientRect?.();
+      const panelWidth = getNetworkPanelWidth();
+      if (wrap && pillRect && panelWidth > 0) {
+        const wrapRect = wrap.getBoundingClientRect();
+        const margin = 8;
+        let left = pillRect.right - panelWidth;
+        if (left < margin) left = margin;
+        if (left + panelWidth > window.innerWidth - margin) {
+          left = Math.max(margin, window.innerWidth - panelWidth - margin);
+        }
+        const safeRight = Math.max(0, wrapRect.right - left + LONDON_NETWORK_MAP_GAP_PX);
+        targetWrap = wrap;
+        targetSafeRight = `${Math.ceil(safeRight)}px`;
+      }
+    }
+
+    const changedMapKeys = new Set();
+    document.querySelectorAll(".map-canvas-wrap").forEach((wrap) => {
+      const shouldApply = Boolean(targetWrap && wrap === targetWrap && targetSafeRight);
+      const hadClass = wrap.classList.contains("has-networks-panel-safe-area");
+      const previousSafeRight = wrap.style.getPropertyValue("--networks-panel-safe-right");
+      if (shouldApply) {
+        wrap.classList.add("has-networks-panel-safe-area");
+        wrap.style.setProperty("--networks-panel-safe-right", targetSafeRight);
+      } else {
+        wrap.classList.remove("has-networks-panel-safe-area");
+        wrap.style.removeProperty("--networks-panel-safe-right");
+      }
+      const hasClass = wrap.classList.contains("has-networks-panel-safe-area");
+      const nextSafeRight = wrap.style.getPropertyValue("--networks-panel-safe-right");
+      if (hadClass !== hasClass || previousSafeRight !== nextSafeRight) {
+        changedMapKeys.add(getMapKeyForWrap(wrap));
+      }
+    });
+
+    rerenderChangedMapSafeAreas(changedMapKeys);
+  }
+
+  function positionNetworkPanel(pill) {
+    if (!networkDropdownMenu) return;
+    if (!pill) {
+      updateNetworkPanelSafeArea();
+      return;
+    }
+    const rect = pill.getBoundingClientRect();
+    const panelRect = networkDropdownMenu.getBoundingClientRect();
+    const margin = 8;
+    // Anchor below the pill, right-aligned. Keep on-screen.
+    let top = rect.bottom + margin;
+    let left = rect.right - panelRect.width;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    if (left < margin) left = margin;
+    if (left + panelRect.width > viewportWidth - margin) {
+      left = Math.max(margin, viewportWidth - panelRect.width - margin);
+    }
+    if (top + panelRect.height > viewportHeight - margin) {
+      // Flip above the pill if it would overflow vertically.
+      const flippedTop = rect.top - panelRect.height - margin;
+      if (flippedTop >= margin) top = flippedTop;
+    }
+    networkDropdownMenu.style.top = `${Math.max(margin, top)}px`;
+    networkDropdownMenu.style.left = `${left}px`;
+    updateNetworkPanelSafeArea();
+  }
+
+  function setNetworkDropdownOpen(isOpen, anchorPill) {
+    if (!networkDropdownMenu) {
+      return;
+    }
+    networkDropdownMenu.hidden = !isOpen;
+    if (isOpen) {
+      networkPanelAnchorPill = anchorPill || getActivePill();
+      // Position after layout so getBoundingClientRect on the panel is accurate.
+      window.requestAnimationFrame(() => positionNetworkPanel(networkPanelAnchorPill));
+    } else if (!networkPanelPinned) {
+      networkPanelAnchorPill = null;
+    }
+    networkPills.forEach((pill) => {
+      pill.setAttribute("aria-expanded", String(isOpen && pill === networkPanelAnchorPill));
+    });
+  }
+
+  function setNetworkPanelPinned(isPinned) {
+    networkPanelPinned = !!isPinned;
+    if (networkPanelPin) {
+      networkPanelPin.setAttribute("aria-pressed", String(networkPanelPinned));
+      networkPanelPin.setAttribute(
+        "aria-label",
+        networkPanelPinned ? "Unpin networks panel" : "Pin networks panel",
+      );
+      networkPanelPin.setAttribute(
+        "title",
+        networkPanelPinned ? "Unpin networks panel" : "Pin networks panel",
+      );
+    }
+    if (networkDropdownMenu && !networkDropdownMenu.hidden) {
+      window.requestAnimationFrame(() => {
+        positionNetworkPanel(networkPanelAnchorPill || getActivePill());
+      });
+    }
+  }
+
+  function updateTotalSensorsSubtext(selected, total) {
+    const ids = ["top-total-sensors-subtext", "cr-top-total-sensors-subtext"];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (total === 0) {
+        el.textContent = "from selected networks";
+      } else if (selected === total) {
+        el.textContent = `from all ${total} networks`;
+      } else {
+        el.textContent = `from ${selected} of ${total} networks`;
+      }
+    });
+  }
+
+  function updateNetworkDropdownState() {
+    if (!networkDropdownCount) {
+      return;
+    }
+    const inputs = getNetworkInputs();
+    const total = inputs.length;
+    const selected = inputs.filter((input) => input.checked).length;
+    let pillText;
+    if (total === 0) {
+      pillText = "Networks: —";
+      networkDropdownCount.textContent = "0 / 0";
+    } else {
+      networkDropdownCount.textContent = `${selected} / ${total}`;
+      pillText = selected === total ? "Networks: All" : `Networks: ${selected} / ${total}`;
+    }
+    networkPills.forEach((pill) => {
+      const textEl = pill.querySelector(".networks-pill-text");
+      if (textEl) textEl.textContent = pillText;
+    });
+    updateTotalSensorsSubtext(selected, total);
+    // Re-position panel if it's currently open (count text width can shift layout).
+    if (networkDropdownMenu && !networkDropdownMenu.hidden) {
+      window.requestAnimationFrame(() => positionNetworkPanel(networkPanelAnchorPill));
+    }
+  }
+
+  function normalizeWindowKey(value) {
+    return WINDOW_ORDER.includes(value) ? value : "6h";
+  }
+
+  function getWindowLabel(key) {
+    if (typeof WINDOW_LABELS === "object" && WINDOW_LABELS && WINDOW_LABELS[key]) {
+      return WINDOW_LABELS[key];
+    }
+    return WINDOW_LABELS_FALLBACK[key] || WINDOW_LABELS_FALLBACK["6h"];
+  }
+
+  function readSharedWindowKey() {
+    return normalizeWindowKey(window.mapSettingsState?.window);
+  }
+
+  function setStepperButtons(windowKey) {
+    if (!windowStepperPrev || !windowStepperNext || !windowStepper) {
+      return;
+    }
+    const index = WINDOW_ORDER.indexOf(windowKey);
+    windowStepperPrev.disabled = index <= 0;
+    windowStepperNext.disabled = index >= WINDOW_ORDER.length - 1;
+    windowStepper.dataset.window = windowKey;
+  }
+
+  function resetWindowStepperValue(label) {
+    if (!windowStepperValueBox) {
+      return;
+    }
+    if (windowStepperTimer) {
+      window.clearTimeout(windowStepperTimer);
+      windowStepperTimer = null;
+    }
+    windowStepperValueBox.classList.remove("is-animating", "is-moving-prev", "is-moving-next");
+    windowStepperValueBox.innerHTML = `<span class="window-stepper-value" data-window-value>${label}</span>`;
+  }
+
+  function animateWindowStepper(label, direction) {
+    if (!windowStepperValueBox || prefersReducedMotion) {
+      resetWindowStepperValue(label);
+      return;
+    }
+    if (windowStepperTimer) {
+      window.clearTimeout(windowStepperTimer);
+      windowStepperTimer = null;
+    }
+    const valueNodes = Array.from(windowStepperValueBox.querySelectorAll("[data-window-value]"));
+    const currentNode = valueNodes[valueNodes.length - 1];
+    if (!currentNode) {
+      resetWindowStepperValue(label);
+      return;
+    }
+    if (valueNodes.length > 1) {
+      valueNodes.slice(0, -1).forEach((node) => node.remove());
+    }
+    const incomingNode = document.createElement("span");
+    incomingNode.className = `window-stepper-value window-stepper-value--incoming ${
+      direction === "next" ? "from-right" : "from-left"
+    }`;
+    incomingNode.setAttribute("data-window-value", "");
+    incomingNode.textContent = label;
+    currentNode.classList.add("window-stepper-value--outgoing");
+    windowStepperValueBox.appendChild(incomingNode);
+    windowStepperValueBox.classList.remove("is-moving-prev", "is-moving-next");
+    windowStepperValueBox.classList.add(direction === "next" ? "is-moving-next" : "is-moving-prev");
+    requestAnimationFrame(() => {
+      windowStepperValueBox.classList.add("is-animating");
+    });
+    windowStepperTimer = window.setTimeout(() => {
+      resetWindowStepperValue(label);
+    }, 210);
+  }
+
+  function renderWindowStepper(options = {}) {
+    if (!windowStepperValueBox) {
+      return;
+    }
+    const nextKey = readSharedWindowKey();
+    const nextLabel = getWindowLabel(nextKey);
+    const previousKey = windowStepperKey;
+    windowStepperKey = nextKey;
+    setStepperButtons(nextKey);
+    if (!previousKey || options.force || previousKey === nextKey) {
+      resetWindowStepperValue(nextLabel);
+      return;
+    }
+    const previousIndex = WINDOW_ORDER.indexOf(previousKey);
+    const nextIndex = WINDOW_ORDER.indexOf(nextKey);
+    const direction = nextIndex > previousIndex ? "next" : "prev";
+    animateWindowStepper(nextLabel, direction);
+  }
 
   // Segmented control → delegate to existing hidden tab buttons
   toolbarTabUk?.addEventListener("click", () => tabUk?.click());
   toolbarTabCr?.addEventListener("click", () => tabCr?.click());
 
+  windowStepper?.addEventListener("click", (event) => {
+    const button = event.target instanceof Element
+      ? event.target.closest("button[data-window-step]")
+      : null;
+    if (!button || button.disabled) {
+      return;
+    }
+    const direction = button.dataset.windowStep;
+    const currentKey = readSharedWindowKey();
+    const currentIndex = WINDOW_ORDER.indexOf(currentKey);
+    const offset = direction === "next" ? 1 : -1;
+    const nextIndex = Math.max(0, Math.min(WINDOW_ORDER.length - 1, currentIndex + offset));
+    const nextKey = WINDOW_ORDER[nextIndex];
+    if (nextKey === currentKey) {
+      return;
+    }
+    window.updateMapSettings?.({ window: nextKey }, "window-stepper");
+  });
+
+  window.addEventListener("mapsettingschange", (event) => {
+    if (event.detail?.window) {
+      renderWindowStepper();
+    }
+  });
+
+  if (reduceMotionQuery) {
+    const handleMotionChange = (event) => {
+      prefersReducedMotion = !!event.matches;
+      renderWindowStepper({ force: true });
+    };
+    if (typeof reduceMotionQuery.addEventListener === "function") {
+      reduceMotionQuery.addEventListener("change", handleMotionChange);
+    } else if (typeof reduceMotionQuery.addListener === "function") {
+      reduceMotionQuery.addListener(handleMotionChange);
+    }
+  }
+
   // Region popover — open/close
   regionTrigger?.addEventListener("click", () => {
     const isOpen = !regionMenu.hidden;
+    setNetworkDropdownOpen(false);
     regionMenu.hidden = isOpen;
     regionTrigger.classList.toggle("open", !isOpen);
     regionTrigger.setAttribute("aria-expanded", String(!isOpen));
     if (!isOpen) syncRegionActive();
   });
 
-  // Close on outside click
+  networkPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const isOpen = !(networkDropdownMenu?.hidden ?? true);
+      const sameAnchor = isOpen && networkPanelAnchorPill === pill;
+      regionMenu.hidden = true;
+      regionTrigger?.classList.remove("open");
+      regionTrigger?.setAttribute("aria-expanded", "false");
+      if (sameAnchor) {
+        setNetworkDropdownOpen(false);
+      } else {
+        setNetworkDropdownOpen(true, pill);
+      }
+      updateNetworkDropdownState();
+    });
+  });
+
+  networkPanelPin?.addEventListener("click", () => {
+    setNetworkPanelPinned(!networkPanelPinned);
+  });
+
+  // Close on outside click (pin-aware for networks panel)
   document.addEventListener("mousedown", (e) => {
     if (popoverWrap && !popoverWrap.contains(e.target)) {
       regionMenu.hidden = true;
       regionTrigger?.classList.remove("open");
       regionTrigger?.setAttribute("aria-expanded", "false");
     }
+    if (networkPanelPinned) return;
+    if (!networkDropdownMenu || networkDropdownMenu.hidden) return;
+    const clickedPill = networkPills.some((pill) => pill.contains(e.target));
+    if (clickedPill) return;
+    if (networkDropdownMenu.contains(e.target)) return;
+    setNetworkDropdownOpen(false);
   });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+    regionMenu.hidden = true;
+    regionTrigger?.classList.remove("open");
+    regionTrigger?.setAttribute("aria-expanded", "false");
+    if (!networkPanelPinned) {
+      setNetworkDropdownOpen(false);
+    }
+  });
+
+  // Re-position the floating panel on viewport resize/scroll while open
+  function repositionIfOpen() {
+    if (!networkDropdownMenu || networkDropdownMenu.hidden) return;
+    positionNetworkPanel(networkPanelAnchorPill || getActivePill());
+  }
+  window.addEventListener("resize", () => {
+    cachedNetworkPanelWidth = 0;
+    repositionIfOpen();
+    updateNetworkPanelSafeArea();
+  });
+  window.addEventListener("scroll", repositionIfOpen, { passive: true });
 
   // Region item clicks
   regionMenu?.querySelectorAll("[data-region]").forEach((item) => {
@@ -16330,7 +17556,38 @@
       if (regionLabel) regionLabel.textContent = region;
       syncRegionActive(region);
       window.crMap?.setRegion(region, { updateUrl: true });
+      window.requestAnimationFrame(updateNetworkPanelSafeArea);
     });
+  });
+
+  window.addEventListener("crregionchange", () => {
+    window.requestAnimationFrame(updateNetworkPanelSafeArea);
+  });
+
+  networkList?.addEventListener("change", () => {
+    updateNetworkDropdownState();
+  });
+
+  networkSelectAll?.addEventListener("click", () => {
+    window.requestAnimationFrame(updateNetworkDropdownState);
+  });
+
+  networkDeselectAll?.addEventListener("click", () => {
+    window.requestAnimationFrame(updateNetworkDropdownState);
+  });
+
+  if (networkList && typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(() => {
+      updateNetworkDropdownState();
+    });
+    observer.observe(networkList, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  window.addEventListener("networkselectionchange", () => {
+    updateNetworkDropdownState();
   });
 
   function syncRegionActive(active) {
@@ -16341,12 +17598,54 @@
     });
   }
 
+  function relocateStatusRefreshForTab(tabKey) {
+    const isUk = tabKey === "uk";
+    const statusSlot = document.getElementById("toolbar-status-slot");
+    const refreshSlot = document.getElementById("toolbar-refresh-slot");
+    const activeStatusEl = document.getElementById(isUk ? "status-pill-uk" : "status-pill-cr");
+    const activeRefreshEl = document.getElementById(isUk ? "refresh" : "cr-refresh");
+    const inactiveStatusEl = document.getElementById(isUk ? "status-pill-cr" : "status-pill-uk");
+    const inactiveRefreshEl = document.getElementById(isUk ? "cr-refresh" : "refresh");
+    const inactiveTopbar = document.querySelector(
+      isUk ? "#tab-panel-cr .map-topbar" : "#tab-panel-uk .map-topbar",
+    );
+    // Return inactive tab's elements to their original map-topbar
+    if (inactiveTopbar) {
+      if (inactiveStatusEl && inactiveStatusEl.parentElement !== inactiveTopbar) {
+        inactiveTopbar.insertBefore(inactiveStatusEl, inactiveTopbar.firstChild);
+      }
+      if (inactiveRefreshEl && inactiveRefreshEl.parentElement !== inactiveTopbar) {
+        inactiveTopbar.insertBefore(inactiveRefreshEl, inactiveTopbar.firstChild?.nextSibling || null);
+      }
+    }
+    // Move active tab's elements into the toolbar slots
+    if (statusSlot && activeStatusEl && activeStatusEl.parentElement !== statusSlot) {
+      statusSlot.appendChild(activeStatusEl);
+    }
+    if (refreshSlot && activeRefreshEl && activeRefreshEl.parentElement !== refreshSlot) {
+      refreshSlot.appendChild(activeRefreshEl);
+    }
+  }
+
   // Called by setActiveTab whenever the active tab changes
   window.syncToolbar = function (tabKey) {
     const isUk = tabKey === "uk";
     toolbarTabUk?.classList.toggle("active", isUk);
     toolbarTabCr?.classList.toggle("active", !isUk);
     if (regionSection) regionSection.classList.toggle("visible", !isUk);
+    // Pinned panel persists across tab swaps; re-anchor it to the now-visible pill.
+    // Unpinned panel closes (existing behaviour).
+    if (networkPanelPinned && networkDropdownMenu && !networkDropdownMenu.hidden) {
+      const nextPill = getActivePill();
+      networkPanelAnchorPill = nextPill;
+      networkPills.forEach((pill) => {
+        pill.setAttribute("aria-expanded", String(pill === nextPill));
+      });
+      window.requestAnimationFrame(() => positionNetworkPanel(nextPill));
+    } else {
+      setNetworkDropdownOpen(false);
+    }
+    relocateStatusRefreshForTab(tabKey);
     if (!isUk && regionLabel) {
       const region = window.crMap?.getRegion?.();
       if (region) {
@@ -16354,11 +17653,16 @@
         syncRegionActive(region);
       }
     }
+    updateNetworkDropdownState();
+    window.requestAnimationFrame(updateNetworkPanelSafeArea);
   };
 
   // Sync toolbar to the tab state that was already set before this script ran
   const initialTabKey = tabUk?.getAttribute("aria-selected") === "true" ? "uk" : "cr";
   window.syncToolbar(initialTabKey);
+  updateNetworkDropdownState();
+  window.requestAnimationFrame(updateNetworkPanelSafeArea);
+  renderWindowStepper({ force: true });
 })();
     </script>
     <script>
