@@ -341,8 +341,7 @@
       }
 
       .network-summary {
-        display: grid;
-        gap: 12px;
+        display: none !important;
       }
 
       .network-card {
@@ -921,28 +920,28 @@
         box-shadow: 0 1px 0 rgba(20, 34, 37, 0.12);
       }
 
-      .sensor-table th:nth-child(1),
-      .sensor-table td:nth-child(1) {
+      .sensor-table th.sensor-col-sensor,
+      .sensor-table td.sensor-col-sensor {
         width: 42%;
       }
 
-      .sensor-table th:nth-child(2),
-      .sensor-table td:nth-child(2) {
+      .sensor-table th.sensor-col-network,
+      .sensor-table td.sensor-col-network {
         width: 18%;
       }
 
-      .sensor-table th:nth-child(3),
-      .sensor-table td:nth-child(3) {
+      .sensor-table th.sensor-col-value,
+      .sensor-table td.sensor-col-value {
         width: 12%;
       }
 
-      .sensor-table th:nth-child(4),
-      .sensor-table td:nth-child(4) {
+      .sensor-table th.sensor-col-updated,
+      .sensor-table td.sensor-col-updated {
         width: 17%;
       }
 
-      .sensor-table th:nth-child(5),
-      .sensor-table td:nth-child(5) {
+      .sensor-table th.sensor-window-col,
+      .sensor-table td.sensor-window-col {
         width: 11%;
       }
 
@@ -1206,7 +1205,7 @@
       }
 
       .sensor-table-wrap.is-scroll-forced {
-        max-height: calc(44px + (46px * 8));
+        max-height: calc(44px + (46px * 4));
         overflow-y: scroll;
         overscroll-behavior-y: contain;
         scrollbar-gutter: auto;
@@ -1447,6 +1446,55 @@
 
       .sensor-row--excluded {
         background: #fdecec;
+      }
+
+      .sensor-table tbody tr.sensor-row--chart-selected {
+        background: rgba(60, 120, 172, 0.1);
+        box-shadow: inset 4px 0 0 #3c78ac;
+      }
+
+      .sensor-table .sensor-chart-select-col,
+      .sensor-table .sensor-chart-symbol-col {
+        display: none;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table .sensor-chart-select-col,
+      .sensor-table-wrap.is-chart-select-mode .sensor-table .sensor-chart-symbol-col {
+        display: table-cell;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table .sensor-window-col {
+        display: none;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table .sensor-chart-select-col {
+        width: 42px;
+        text-align: center;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table .sensor-chart-symbol-col {
+        width: 24px;
+        text-align: center;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table th.sensor-col-sensor,
+      .sensor-table-wrap.is-chart-select-mode .sensor-table td.sensor-col-sensor {
+        width: 36%;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table th.sensor-col-network,
+      .sensor-table-wrap.is-chart-select-mode .sensor-table td.sensor-col-network {
+        width: 18%;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table th.sensor-col-value,
+      .sensor-table-wrap.is-chart-select-mode .sensor-table td.sensor-col-value {
+        width: 15%;
+      }
+
+      .sensor-table-wrap.is-chart-select-mode .sensor-table th.sensor-col-updated,
+      .sensor-table-wrap.is-chart-select-mode .sensor-table td.sensor-col-updated {
+        width: 20%;
       }
 
       .sensor-name-button {
@@ -1726,6 +1774,18 @@
 
       .network-option.is-unselected .network-share-bar {
         background: var(--line-soft);
+      }
+
+      .network-option-coverage {
+        display: none;
+      }
+
+      .network-option-logo-link {
+        display: none;
+      }
+
+      .network-option-tag {
+        display: none;
       }
 
       .map-wrap {
@@ -3030,22 +3090,33 @@
         transform: rotate(180deg);
       }
 
-      /* Floating networks panel — re-uses .network-dropdown-* internals */
+      /* Networks panel modes — floating popover vs docked sidebar */
       .networks-panel-floating {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 40;
         display: flex;
         flex-direction: column;
         min-width: 280px;
-        max-width: min(360px, calc(100vw - 24px));
-        max-height: min(70vh, 480px);
         padding: 10px 12px;
         background: var(--surface, #ffffff);
         border: 1px solid var(--line, #e5e7eb);
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+      }
+      .networks-panel-floating.is-floating {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 40;
+        max-width: min(360px, calc(100vw - 24px));
+        max-height: min(70vh, 480px);
+      }
+      .networks-panel-floating.is-docked {
+        position: static;
+        z-index: 1;
+        display: inline-flex;
+        width: auto;
+        max-width: min(360px, calc(100vw - 24px));
+        max-height: none;
+        box-shadow: 0 6px 16px rgba(16, 24, 34, 0.08);
       }
       .networks-panel-floating[hidden] {
         display: none;
@@ -3074,35 +3145,181 @@
         height: 24px;
         padding: 0;
         margin-left: 6px;
-        border: 1px solid transparent;
-        border-radius: 6px;
+        border: 0;
+        border-radius: 0;
         background: transparent;
-        color: var(--text-muted, #6b7280);
         cursor: pointer;
-        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
-      }
-      .networks-panel-pin:hover {
-        background: var(--surface-hover, #f3f4f6);
-        color: var(--text, #1f2937);
+        transition: filter 0.12s ease;
       }
       .networks-panel-pin:focus-visible {
         outline: 2px solid var(--accent, #2563eb);
         outline-offset: 2px;
       }
-      .networks-panel-pin[aria-pressed="true"] {
-        background: var(--accent-soft, #eff6ff);
-        color: var(--accent, #2563eb);
-        border-color: var(--accent, #2563eb);
+      .networks-panel-pin:hover {
+        filter: brightness(0.95);
       }
-      .networks-panel-pin[aria-pressed="true"] svg {
-        transform: rotate(-30deg);
+      .networks-panel-pin-icon {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        pointer-events: none;
+        transform: scale(1.08);
+        transform-origin: center;
       }
       .networks-panel-footer {
         margin-top: 8px;
         padding-top: 8px;
         border-top: 1px solid var(--line, #e5e7eb);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+
+      .networks-panel-footer-note {
         font-size: 11px;
         color: var(--text-muted, #6b7280);
+        min-width: 0;
+      }
+
+      .networks-panel-expand {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border-radius: 7px;
+        border: 1px solid color-mix(in oklab, var(--accent, #2f6fab) 28%, #c9d1dd);
+        background: var(--surface-2, #f5f7fb);
+        color: var(--accent, #2f6fab);
+        cursor: pointer;
+        flex: 0 0 auto;
+      }
+
+      .networks-panel-expand:hover {
+        background: color-mix(in oklab, var(--surface-2, #f5f7fb) 72%, var(--accent, #2f6fab) 12%);
+      }
+
+      .networks-panel-expand:focus-visible {
+        outline: 2px solid var(--accent, #2f6fab);
+        outline-offset: 2px;
+      }
+
+      .networks-panel-expand-icon {
+        width: 13px;
+        height: 13px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+      }
+
+      .networks-panel-floating.is-maxi {
+        max-width: min(560px, calc(100vw - 24px));
+        max-height: min(84vh, 700px);
+      }
+
+      .networks-panel-floating.is-maxi .network-dropdown-list {
+        gap: 8px;
+      }
+
+      .networks-panel-floating.is-maxi .network-option {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          "main logo"
+          "bar logo"
+          "coverage logo";
+        column-gap: 10px;
+        row-gap: 6px;
+        align-items: center;
+        padding: 9px 10px;
+      }
+
+      .networks-panel-floating.is-maxi .network-option-main {
+        grid-area: main;
+      }
+
+      .networks-panel-floating.is-maxi .network-share-bar {
+        grid-area: bar;
+        margin-top: 0;
+      }
+
+      .networks-panel-floating.is-maxi .network-option-coverage {
+        grid-area: coverage;
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ink-2);
+        line-height: 1.25;
+      }
+
+      .networks-panel-floating.is-maxi .network-option-logo-link {
+        grid-area: logo;
+        display: inline-flex;
+        align-self: stretch;
+        min-height: 78px;
+      }
+
+      .networks-panel-floating.is-maxi .network-name-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .networks-panel-floating.is-maxi .network-option-tag {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--accent, #2f6fab);
+        border-radius: 4px;
+        padding: 1px 5px;
+        background: var(--map-wrap, #ece8df);
+        color: var(--accent-deep, #1f4d80);
+        font-size: 0.61rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1.15;
+        white-space: nowrap;
+      }
+
+      .networks-panel-floating.is-maxi .network-card-logo-box {
+        min-height: 100%;
+      }
+
+      .networks-panel-floating.is-maxi .network-card-logo {
+        height: 3.15rem;
+      }
+
+      .networks-panel-floating.is-maxi .network-card-logo--breathe {
+        height: 2.75rem;
+      }
+
+      .networks-panel-floating.is-maxi .network-card-logo-box--text {
+        font-size: 0.82rem;
+      }
+
+      .networks-panel-floating.is-maxi .network-card-link-icon {
+        width: 13px;
+        height: 13px;
+      }
+
+      @media (max-width: 720px) {
+        .networks-panel-floating.is-maxi .network-option {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas:
+            "main"
+            "bar"
+            "coverage"
+            "logo";
+        }
+
+        .networks-panel-floating.is-maxi .network-option-logo-link {
+          justify-self: start;
+          min-height: 56px;
+        }
       }
 
       /* Map-topbar layout: now hosts the Networks pill on the right.
@@ -3121,7 +3338,7 @@
       }
 
       @media (max-width: 720px) {
-        .networks-panel-floating {
+        .networks-panel-floating.is-floating {
           min-width: min(280px, calc(100vw - 28px));
         }
       }
@@ -3563,6 +3780,7 @@
       }
 
       .map-dashboard-card {
+        --networks-dock-width: 340px;
         background: var(--map-wrap);
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -3717,6 +3935,7 @@
       .map-dashboard-card .map-canvas-wrap {
         grid-column: 1 / -1;
         grid-row: 4;
+        --map-canvas-min-height: 700px;
         --map-footer-safe: 64px;
         --sensor-panel-height: 240px;
         --networks-panel-safe-right: 0px;
@@ -3727,8 +3946,25 @@
         margin-left: -18px;
         margin-bottom: -18px;
         min-width: 0;
-        min-height: 700px;
+        min-height: var(--map-canvas-min-height);
         overflow: hidden;
+      }
+
+      .map-dashboard-card .map-networks-dock {
+        display: none;
+        min-width: 0;
+      }
+
+      .map-dashboard-card.has-docked-networks .map-canvas-wrap {
+        border-radius: 0 0 0 18px;
+      }
+
+      .map-dashboard-card.has-docked-networks .map-networks-dock {
+        display: flex;
+        justify-content: flex-end;
+        grid-column: 1 / -1;
+        grid-row: 5;
+        align-self: start;
       }
 
       .map-svg-viewport {
@@ -3742,6 +3978,7 @@
         touch-action: none;
         transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       }
+
       .map-canvas-wrap.has-networks-panel-safe-area .map-svg-viewport {
         right: var(--networks-panel-safe-right, 0px);
       }
@@ -4037,6 +4274,37 @@
         margin-bottom: 2px;
       }
 
+      @media (min-width: 981px) {
+        .map-dashboard-card.has-docked-networks {
+          grid-template-columns: minmax(0, 1fr) fit-content(var(--networks-dock-width));
+        }
+
+        .map-dashboard-card.has-docked-networks .map-title-strip,
+        .map-dashboard-card.has-docked-networks .map-summary-grid,
+        .map-dashboard-card.has-docked-networks #uk-toolbar-slot,
+        .map-dashboard-card.has-docked-networks #cr-toolbar-slot,
+        .map-dashboard-card.has-docked-networks .map-controls-row {
+          grid-column: 1 / -1;
+        }
+
+        .map-dashboard-card.has-docked-networks .map-canvas-wrap {
+          grid-column: 1;
+          grid-row: 4;
+        }
+
+        .map-dashboard-card.has-docked-networks .map-networks-dock {
+          grid-column: 2;
+          grid-row: 4;
+          align-self: start;
+          justify-self: end;
+        }
+
+        .map-dashboard-card.has-docked-networks .map-legend {
+          grid-column: 1;
+          grid-row: 5;
+        }
+      }
+
       @media (max-width: 1200px) {
         .map-summary-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4073,6 +4341,23 @@
         .map-dashboard-card .map-legend {
           grid-column: 1;
           grid-row: 5;
+        }
+
+        .map-dashboard-card.has-docked-networks .map-networks-dock {
+          grid-column: 1;
+          grid-row: 5;
+          margin-top: 12px;
+        }
+
+        .map-dashboard-card.has-docked-networks .map-legend {
+          grid-column: 1;
+          grid-row: 6;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .map-canvas-wrap.has-networks-panel-safe-area .map-svg-viewport {
+          right: 0;
         }
       }
 
@@ -4182,38 +4467,42 @@
       .map-canvas-wrap {
         padding-bottom: 0;
       }
-      @media (max-width: 900px) {
-        .map-canvas-wrap.has-networks-panel-safe-area .map-svg-viewport {
-          right: 0;
-        }
-      }
 
       .hex-chart-mode-panel {
-        position: relative;
+        position: absolute;
+        inset: 0 0 var(--sensor-panel-height, 240px) 0;
         z-index: 12;
         display: none;
-        min-height: 640px;
-        padding: 72px 18px 18px;
+        min-height: 0;
+        padding: 56px 18px 14px;
         background: var(--map-wrap);
         color: var(--ink);
+        overflow: hidden;
       }
 
       .map-canvas-wrap.chart-mode {
-        min-height: 760px;
+        min-height: var(--map-canvas-min-height, 700px);
       }
 
       .map-canvas-wrap.chart-mode .hex-chart-mode-panel {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 10px;
       }
 
       .map-canvas-wrap.chart-mode .map-svg-viewport,
       .map-canvas-wrap.chart-mode .legend-pill,
-      .map-canvas-wrap.chart-mode .map-inline-sensor-panel,
       .map-canvas-wrap.chart-mode .map-settings-panel,
       .map-canvas-wrap.chart-mode .map-floating-tools,
       .map-canvas-wrap.chart-mode .map-zoom-controls {
+        display: none !important;
+      }
+
+      .map-canvas-wrap.chart-mode .map-inline-sensor-panel {
+        transform: translateY(0);
+      }
+
+      .map-canvas-wrap.chart-mode .hex-chart-sensor-wrap {
         display: none !important;
       }
 
@@ -4414,10 +4703,14 @@
       }
 
       .hex-chart-message {
-        min-height: 1.2em;
+        min-height: 0;
         color: var(--accent-deep);
         font-size: 0.84rem;
         font-weight: 700;
+      }
+
+      .hex-chart-message:empty {
+        display: none;
       }
 
       .hex-chart-message.is-error {
@@ -4427,15 +4720,20 @@
       .hex-chart-wrap {
         position: relative;
         flex: 1 1 auto;
-        min-height: 390px;
+        min-height: 0;
+        display: flex;
+        align-items: stretch;
+        overflow: hidden;
         background: var(--map-wrap);
         border: 0;
         border-radius: 0;
       }
 
       .hex-chart-svg {
+        flex: 1 1 auto;
         width: 100%;
-        height: 390px;
+        height: 100%;
+        min-height: 0;
         display: block;
       }
 
@@ -4447,6 +4745,18 @@
       .chart-axis text {
         fill: var(--ink-soft);
         font-size: 0.75rem;
+      }
+
+      .chart-y-axis-label {
+        fill: var(--ink-soft);
+        font-size: 0.74rem;
+        font-weight: 700;
+      }
+
+      .aqi-band-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        fill: var(--ink-soft);
       }
 
       .chart-line {
@@ -4509,7 +4819,7 @@
       }
 
       .hex-chart-wrap.is-loading .hex-chart-loading {
-        display: flex;
+        display: none;
       }
     </style>
   </head>
@@ -4884,31 +5194,33 @@
                 <table class="sensor-table">
                   <thead>
                     <tr>
-                      <th scope="col" data-sort-key="sensor" aria-sort="none">
+                      <th scope="col" class="sensor-chart-select-col" aria-label="Selection"></th>
+                      <th scope="col" class="sensor-chart-symbol-col" aria-label="Symbol"></th>
+                      <th scope="col" class="sensor-col-sensor" data-sort-key="sensor" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="sensor" data-sort-type="alpha" title="Sort A→Z">
                           <span class="sort-label">Sensor</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="network" aria-sort="none">
+                      <th scope="col" class="sensor-col-network" data-sort-key="network" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="network" data-sort-type="alpha" title="Sort A→Z">
                           <span class="sort-label">Network</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="pm25" aria-sort="none">
+                      <th scope="col" class="sensor-col-value" data-sort-key="pm25" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="pm25" data-sort-type="number" title="Sort high→low">
                           <span class="sort-label" id="sensor-value-label">PM2.5</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="updated" aria-sort="none">
+                      <th scope="col" class="sensor-col-updated" data-sort-key="updated" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="updated" data-sort-type="date" title="Sort newest→oldest">
                           <span class="sort-label">Updated</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th>Window</th>
+                      <th class="sensor-window-col">Window</th>
                     </tr>
                   </thead>
                   <tbody id="sensor-table-body"></tbody>
@@ -4917,12 +5229,13 @@
             </div>
           </div>
               </div>
+          <aside class="map-networks-dock" data-networks-dock hidden aria-hidden="true"></aside>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="card details-card" id="sensor-details">
+      <section class="card details-card" id="sensor-details" hidden>
         <div class="card-header">
           <h2 class="card-title" id="details-title">Constituency sensors</h2>
           <span class="details-meta" id="details-meta">Click a hex to view sensors.</span>
@@ -5521,31 +5834,33 @@
                 <table class="sensor-table">
                   <thead>
                     <tr>
-                      <th scope="col" data-sort-key="sensor" aria-sort="none">
+                      <th scope="col" class="sensor-chart-select-col" aria-label="Selection"></th>
+                      <th scope="col" class="sensor-chart-symbol-col" aria-label="Symbol"></th>
+                      <th scope="col" class="sensor-col-sensor" data-sort-key="sensor" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="sensor" data-sort-type="alpha" title="Sort A→Z">
                           <span class="sort-label">Sensor</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="network" aria-sort="none">
+                      <th scope="col" class="sensor-col-network" data-sort-key="network" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="network" data-sort-type="alpha" title="Sort A→Z">
                           <span class="sort-label">Network</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="pm25" aria-sort="none">
+                      <th scope="col" class="sensor-col-value" data-sort-key="pm25" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="pm25" data-sort-type="number" title="Sort high→low">
                           <span class="sort-label" id="cr-sensor-value-label">PM2.5</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th scope="col" data-sort-key="updated" aria-sort="none">
+                      <th scope="col" class="sensor-col-updated" data-sort-key="updated" aria-sort="none">
                         <button type="button" class="sort-header" data-sort-key="updated" data-sort-type="date" title="Sort newest→oldest">
                           <span class="sort-label">Updated</span>
                           <span class="sort-icon" aria-hidden="true"></span>
                         </button>
                       </th>
-                      <th>Window</th>
+                      <th class="sensor-window-col">Window</th>
                     </tr>
                   </thead>
                   <tbody id="cr-sensor-table-body"></tbody>
@@ -5554,12 +5869,13 @@
             </div>
           </div>
                 </div>
+          <aside class="map-networks-dock" data-networks-dock hidden aria-hidden="true"></aside>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="card details-card" id="cr-sensor-details">
+        <section class="card details-card" id="cr-sensor-details" hidden>
           <div class="card-header">
             <h2 class="card-title" id="cr-details-title">Local authority sensors</h2>
             <span class="details-meta" id="cr-details-meta">Click a hex to view sensors.</span>
@@ -5873,9 +6189,9 @@
     <div class="tooltip" id="tooltip"></div>
     <div class="tooltip" id="cr-tooltip"></div>
 
-    <!-- Shared floating networks panel — positioned near the active Networks pill on open -->
+    <!-- Shared networks panel — floating popover when unpinned, docked sidebar when pinned -->
     <div
-      class="networks-panel-floating"
+      class="networks-panel-floating is-floating"
       id="networks-panel-floating"
       role="dialog"
       aria-label="Networks"
@@ -5894,9 +6210,13 @@
           title="Pin networks panel"
           aria-label="Pin networks panel"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M14 4l6 6-3 1-3 6-2-2-5 5-1-1 5-5-2-2 6-3 -1-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
+          <img
+            class="networks-panel-pin-icon"
+            id="networks-panel-pin-icon"
+            src="images/UK-AQ_pin100_off.svg"
+            alt=""
+            aria-hidden="true"
+          />
         </button>
       </div>
       <div class="network-dropdown-actions" role="group" aria-label="Network selection actions">
@@ -5911,7 +6231,21 @@
       <div class="network-dropdown-list network-list" id="network-list">
         <span class="network-empty">Loading networks...</span>
       </div>
-      <div class="networks-panel-footer">Counts are active sensors in the current window.</div>
+      <div class="networks-panel-footer">
+        <button
+          type="button"
+          class="networks-panel-expand"
+          id="networks-panel-expand"
+          aria-expanded="false"
+          aria-label="Expand networks panel"
+          title="Expand networks panel"
+        >
+          <svg class="networks-panel-expand-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 1.5H1.5V5M11 1.5h3.5V5M1.5 11V14.5H5M11 14.5h3.5V11" />
+          </svg>
+        </button>
+        <span class="networks-panel-footer-note">Counts are active sensors in the current window.</span>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
@@ -6404,6 +6738,44 @@
         { code: "breathe_london", label: "Breathe London" },
         { code: "sensorcommunity", label: "Sensor.Community" },
       ];
+      const NETWORK_LOGO_META = Object.freeze({
+        aurn: {
+          href: "https://www.ukairquality.net/",
+          ariaLabel: "Open GOV.UK AURN website (external link)",
+          boxClass: "network-card-logo-box--light network-card-logo-box--text",
+          text: "GOV.UK AURN",
+        },
+        openaq: {
+          href: "https://openaq.org/",
+          ariaLabel: "Open OpenAQ website (external link)",
+          boxClass: "network-card-logo-box--light",
+          imgSrc: "images/openaq_logo.svg",
+          imgAlt: "OpenAQ logo",
+          imgClass: "network-card-logo",
+        },
+        breathe_london: {
+          href: "https://www.breathelondon.org/",
+          ariaLabel: "Open Breathe London website (external link)",
+          boxClass: "network-card-logo-box--light",
+          imgSrc: "images/breathelondon_logo_v2.svg",
+          imgAlt: "Breathe London logo",
+          imgClass: "network-card-logo network-card-logo--breathe",
+        },
+        laqn: {
+          href: "https://www.londonair.org.uk/",
+          ariaLabel: "Open London Air LAQN website (external link)",
+          boxClass: "network-card-logo-box--light network-card-logo-box--text",
+          text: "London Air LAQN",
+        },
+        sensorcommunity: {
+          href: "https://sensor.community/en/",
+          ariaLabel: "Open Sensor.Community website (external link)",
+          boxClass: "network-card-logo-box--dark",
+          imgSrc: "images/scomm_logo-sw.svg",
+          imgAlt: "Sensor.Community logo",
+          imgClass: "network-card-logo",
+        },
+      });
       const TOTAL_PCON_COUNT = 650;
       const CONNECTOR_DEFS = [
         { code: "uk_air_sos", label: "UK AIR SOS" },
@@ -6619,7 +6991,7 @@
       const SENSOR_PANEL_HEADER_HEIGHT = 50;
       const SENSOR_TABLE_HEADER_HEIGHT = 44;
       const SENSOR_PANEL_ROW_HEIGHT = 46;
-      const SENSOR_PANEL_MAX_VISIBLE_ROWS = 8;
+      const SENSOR_PANEL_MAX_VISIBLE_ROWS = 4;
       const detailScrollIndicators = window.attachScrollIndicators?.(detailsTableWrap);
       const detailPersistentScrollbar = window.attachPersistentScrollbar?.(detailsTableWrap, {
         isHidden: () => !detailsTableWrap?.classList.contains("is-scroll-forced"),
@@ -6654,6 +7026,21 @@
         detailsTableWrap.addEventListener("scroll", () => detailScrollIndicators?.update?.());
         detailsTableWrap.addEventListener("wheel", handleSensorTableWheel, { passive: false });
         detailsTableWrap.addEventListener("click", (event) => {
+          const selectorButton = event.target instanceof Element
+            ? event.target.closest(".hex-chart-selector[data-station-id]")
+            : null;
+          if (selectorButton && detailsTableWrap.contains(selectorButton)) {
+            event.stopPropagation();
+            const stationId = String(selectorButton.dataset.stationId || "").trim();
+            if (!stationId) {
+              return;
+            }
+            if (window.hexChartMode?.isActive?.("uk")) {
+              window.hexChartMode?.selectSensor?.(stationId, { mapKey: "uk", mode: "toggle" });
+              updateDetailsPanel();
+            }
+            return;
+          }
           const button = event.target instanceof Element
             ? event.target.closest(".sensor-name-button[data-station-id]")
             : null;
@@ -6661,9 +7048,18 @@
             return;
           }
           event.stopPropagation();
+          const stationId = String(button.dataset.stationId || "").trim();
+          if (!stationId) {
+            return;
+          }
+          if (window.hexChartMode?.isActive?.("uk")) {
+            window.hexChartMode?.selectSensor?.(stationId, { mapKey: "uk", mode: "single" });
+            updateDetailsPanel();
+            return;
+          }
           window.hexChartMode?.enter?.({
             mapKey: "uk",
-            initialStationId: button.dataset.stationId || null,
+            initialStationId: stationId,
           });
         });
       }
@@ -7729,10 +8125,16 @@
           : storedSelection.defaultAll;
         baseLatestRows = cached.latestRows;
         latestPollutant = cached.latestPollutant || activePollutant;
+        const networkRowsForWindow = getNetworkRowsForWindow();
+        const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+        const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
         renderNetworkFiltersIfNeeded(
-          buildNetworkDefs(getNetworkRowsForWindow()),
+          windowNetworkDefs,
           previousSelection,
-          hadAllSelected
+          hadAllSelected,
+          coverageByCode,
+          TOTAL_PCON_COUNT,
+          "constituencies",
         );
         applyNetworkFilters();
         requestAnimationFrame(() => {
@@ -8125,17 +8527,79 @@
         return defs.map((def) => `${def.code}:${def.label}:${def.count}`).join("|");
       }
 
-      function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll) {
-        const key = getNetworkDefsKey(defs);
+      function resolveNetworkLogoMeta(def) {
+        const code = String(def?.code || "").toLowerCase();
+        if (NETWORK_LOGO_META[code]) {
+          return NETWORK_LOGO_META[code];
+        }
+        const label = String(def?.label || "").toLowerCase();
+        if (LAQN_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.laqn;
+        }
+        if (GOVUK_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.aurn;
+        }
+        if (OPENAQ_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.openaq;
+        }
+        if (BREATHE_LONDON_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.breathe_london;
+        }
+        if (SENSOR_COMMUNITY_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.sensorcommunity;
+        }
+        return null;
+      }
+
+      function buildNetworkCoverageByCode(rows) {
+        const coverageByCode = new Map();
+        rows.forEach((row) => {
+          const areaCode = resolvePconCode(row);
+          if (!areaCode) {
+            return;
+          }
+          const seenCodes = new Set();
+          collectNetworkEntries(row).forEach((entry) => {
+            const code = String(entry?.code || "").toLowerCase();
+            if (!code || seenCodes.has(code)) {
+              return;
+            }
+            seenCodes.add(code);
+            if (!coverageByCode.has(code)) {
+              coverageByCode.set(code, new Set());
+            }
+            coverageByCode.get(code).add(areaCode);
+          });
+        });
+        return coverageByCode;
+      }
+
+      function getNetworkDefsRenderKey(defs, coverageByCode, coverageTotal) {
+        if (!defs.length) {
+          return "empty";
+        }
+        return defs.map((def) => {
+          const code = String(def.code || "").toLowerCase();
+          const covered = coverageByCode.get(code)?.size || 0;
+          const pct = coverageTotal > 0 ? Math.round((covered / coverageTotal) * 100) : 0;
+          return `${def.code}:${def.label}:${def.count}:${covered}:${pct}`;
+        }).join("|");
+      }
+
+      function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel) {
+        const key = `${getNetworkDefsKey(defs)}|${getNetworkDefsRenderKey(defs, coverageByCode, coverageTotal)}`;
         if (key === networkDefsKey) {
           return false;
         }
         networkDefsKey = key;
-        renderNetworkFilters(defs, selectedCodes, defaultAll);
+        renderNetworkFilters(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel);
         return true;
       }
 
       function getCurrentNetworkSelection() {
+        networkInputs = networkList
+          ? Array.from(networkList.querySelectorAll("input[data-network]"))
+          : [];
         if (!networkInputs.length) {
           return null;
         }
@@ -8209,7 +8673,7 @@
         syncNetworkRowMutedState();
       }
 
-      function renderNetworkFilters(defs, selectedCodes, defaultAll) {
+      function renderNetworkFilters(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel) {
         if (!networkList) {
           return;
         }
@@ -8237,10 +8701,19 @@
           mainRow.className = "network-option-main";
           const leftGroup = document.createElement("span");
           leftGroup.className = "network-option-left";
+          const nameWrap = document.createElement("span");
+          nameWrap.className = "network-name-wrap";
           const text = document.createElement("span");
           text.className = "network-name";
           text.textContent = def.label;
-          leftGroup.append(input, text);
+          nameWrap.appendChild(text);
+          if (String(def.code || "").toLowerCase() === "openaq") {
+            const openaqTag = document.createElement("span");
+            openaqTag.className = "network-option-tag";
+            openaqTag.textContent = "AGGREGATOR";
+            nameWrap.appendChild(openaqTag);
+          }
+          leftGroup.append(input, nameWrap);
           const count = document.createElement("span");
           count.className = "network-count";
           if (def.count > 0) count.textContent = def.count.toLocaleString();
@@ -8250,11 +8723,54 @@
           label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
           const shareBar = document.createElement("span");
           shareBar.className = "network-share-bar";
+          shareBar.setAttribute("role", "progressbar");
+          shareBar.setAttribute("aria-label", `${def.label} share of active sensors`);
+          shareBar.setAttribute("aria-valuemin", "0");
+          shareBar.setAttribute("aria-valuemax", "100");
+          shareBar.setAttribute("aria-valuenow", String(tooltipPct));
+          shareBar.setAttribute("aria-valuetext", `${tooltipPct}% of active sensors`);
           const shareFill = document.createElement("span");
           shareFill.className = "network-share-fill";
           shareFill.style.width = `${sharePercent.toFixed(1)}%`;
           shareBar.appendChild(shareFill);
-          label.append(mainRow, shareBar);
+          const code = String(def.code || "").toLowerCase();
+          const coverageCount = coverageByCode?.get(code)?.size || 0;
+          const coveragePercent = coverageTotal > 0 ? Math.round((coverageCount / coverageTotal) * 100) : 0;
+          const coverageText = document.createElement("span");
+          coverageText.className = "network-option-coverage";
+          coverageText.textContent = `${coveragePercent}% coverage`;
+          coverageText.setAttribute(
+            "aria-label",
+            `${def.label} coverage ${coveragePercent}% (${coverageCount} of ${coverageTotal} ${coverageAreaLabel})`,
+          );
+          label.append(mainRow, shareBar, coverageText);
+          const logoMeta = resolveNetworkLogoMeta(def);
+          if (logoMeta?.href) {
+            const logoLink = document.createElement("a");
+            logoLink.className = `network-option-logo-link network-card-logo-link network-card-logo-box ${logoMeta.boxClass || ""}`.trim();
+            logoLink.href = logoMeta.href;
+            logoLink.target = "_blank";
+            logoLink.rel = "noopener noreferrer";
+            logoLink.setAttribute("aria-label", logoMeta.ariaLabel || `Open ${def.label} website (external link)`);
+            logoLink.addEventListener("mousedown", (event) => event.stopPropagation());
+            logoLink.addEventListener("click", (event) => event.stopPropagation());
+            if (logoMeta.text) {
+              logoLink.appendChild(document.createTextNode(logoMeta.text));
+            } else if (logoMeta.imgSrc) {
+              const logoImg = document.createElement("img");
+              logoImg.className = logoMeta.imgClass || "network-card-logo";
+              logoImg.src = logoMeta.imgSrc;
+              logoImg.alt = logoMeta.imgAlt || `${def.label} logo`;
+              logoLink.appendChild(logoImg);
+            }
+            const linkIcon = document.createElement("img");
+            linkIcon.className = "network-card-link-icon";
+            linkIcon.src = "images/Link Icon.svg";
+            linkIcon.alt = "";
+            linkIcon.setAttribute("aria-hidden", "true");
+            logoLink.appendChild(linkIcon);
+            label.appendChild(logoLink);
+          }
           fragment.appendChild(label);
         });
         networkList.appendChild(fragment);
@@ -8782,6 +9298,10 @@
           const pollutantLabel = getPollutantLabel(activePollutant);
           const pollutantUnits = getPollutantUnits(activePollutant);
           const capValue = getLegendCapValue();
+          const totalSensorsForTopSummary = pconRows.reduce((total, row) => {
+            const count = normalizeNumber(row.station_count);
+            return total + (count ?? 0);
+          }, 0);
           const baseRows = filterRowsByWindow(scopedLatestRows);
           const pollutantRows = getRowsForActivePollutant(baseRows);
           const candidates = pollutantRows
@@ -8798,7 +9318,7 @@
             highestNetwork = resolveConnectorLabel(h.row);
           }
           window.updateTopSummary({
-            totalSensors: summary.totalSensors,
+            totalSensors: totalSensorsForTopSummary,
             pconCovered: summary.pconCovered,
             pconTotal: summary.pconTotal,
             areaLabel: 'constituencies',
@@ -9114,14 +9634,14 @@
       }
 
       function updateDetailsPanel() {
-        if (!detailsTitle || !detailsMeta || !detailsEmpty || !detailsTableWrap || !detailsTableBody || !networkSummary) {
+        if (!detailsTitle || !detailsMeta || !detailsEmpty || !detailsTableWrap || !detailsTableBody) {
           return;
         }
         const pollutantUnits = getPollutantUnits(activePollutant);
         if (!selectedPconCode) {
-          if (sensorDetailsSection) sensorDetailsSection.hidden = false;
-          detailsTitle.textContent = "Selected Networks";
-          detailsMeta.textContent = "Network summary for the current window.";
+          if (sensorDetailsSection) sensorDetailsSection.hidden = true;
+          detailsTitle.textContent = "Constituency sensors";
+          detailsMeta.textContent = "Click a hex to view sensors.";
           if (inlinePanelWindowLabel) inlinePanelWindowLabel.textContent = "Select a hex";
           if (inlinePanelTitle) inlinePanelTitle.textContent = "";
           if (inlinePanelReading) inlinePanelReading.textContent = "";
@@ -9130,15 +9650,15 @@
           detailsEmpty.hidden = true;
           detailsTableWrap.hidden = true;
           detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          detailsTableWrap.classList.remove("is-chart-select-mode");
           syncSortHeaders();
           updateInlinePanelHeight(0);
-          networkSummary.hidden = false;
-          updateNetworkSummary();
+          if (networkSummary) networkSummary.hidden = true;
           detailsTableBody.innerHTML = "";
           return;
         }
-        if (sensorDetailsSection) sensorDetailsSection.hidden = true;
-        networkSummary.hidden = true;
+        if (sensorDetailsSection) sensorDetailsSection.hidden = false;
+        if (networkSummary) networkSummary.hidden = true;
         const row = pconLookup.get(selectedPconCode);
         const areaName = selectedCell?.pcon_name || row?.pcon_name || selectedPconCode;
         detailsTitle.textContent = areaName;
@@ -9171,6 +9691,7 @@
           detailsEmpty.hidden = false;
           detailsTableWrap.hidden = true;
           detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          detailsTableWrap.classList.remove("is-chart-select-mode");
           syncSortHeaders();
           detailsTableBody.innerHTML = "";
           updateInlinePanelHeight(0);
@@ -9193,9 +9714,11 @@
         if (inlinePanelHexIcon) {
           inlinePanelHexIcon.classList.remove("sensor-panel-hex-icon--outlined");
         }
+        const chartModeActive = window.hexChartMode?.isActive?.("uk") === true;
         detailsEmpty.hidden = true;
         detailsTableWrap.hidden = false;
         detailsTableWrap.classList.toggle("sensor-list-sort-hidden", entries.length <= 1);
+        detailsTableWrap.classList.toggle("is-chart-select-mode", chartModeActive);
         syncSortHeaders();
         networkSummary.hidden = true;
         detailsTableBody.innerHTML = entries.map((entry) => {
@@ -9204,18 +9727,32 @@
           const networkLabel = resolvePrimaryNetworkLabel(entry.row) || resolveConnectorLabel(entry.row);
           const updatedText = formatSummaryTimestamp(entry.timestamp);
           const windowLabel = entry.inWindow ? "Included" : "Outside window";
-          const rowClass = entry.inWindow ? "" : "sensor-row--excluded";
+          const chartSelected = window.hexChartMode?.isSensorSelected?.("uk", stationId) === true;
+          const symbolIndex = window.hexChartMode?.getSelectedSensorIndex?.("uk", stationId) ?? -1;
+          const glyph = symbolIndex >= 0 ? (window.ChartCore?.SYMBOL_GLYPHS?.[symbolIndex] || "") : "";
+          const rowClass = [
+            entry.inWindow ? "" : "sensor-row--excluded",
+            chartSelected ? "sensor-row--chart-selected" : "",
+          ].filter(Boolean).join(" ");
           const statusClass = entry.inWindow
             ? "sensor-status"
             : "sensor-status sensor-status--excluded";
           const readingColor = colorScale && Number.isFinite(entry.value) ? colorScale(entry.value) : "var(--no-data)";
           return `
             <tr class="${rowClass}">
-              <td><button type="button" class="sensor-name-button" data-station-id="${escapeHtmlLocal(stationId)}">${escapeHtmlLocal(stationName)}</button></td>
-              <td>${escapeHtmlLocal(networkLabel)}</td>
-              <td><span class="sensor-reading-cell"><span class="sensor-reading-dot" style="--sensor-reading-color:${readingColor}"></span><span class="sensor-reading-text">${formatValue(entry.value)} ${pollutantUnits}</span></span></td>
-              <td>${updatedText}</td>
-              <td class="${statusClass}">${windowLabel}</td>
+              <td class="sensor-chart-select-col">${
+                chartModeActive
+                  ? `<button type="button" class="hex-chart-selector" data-station-id="${escapeHtmlLocal(stationId)}" aria-label="${chartSelected ? "Remove" : "Add"} ${escapeHtmlLocal(stationName)} from chart" aria-pressed="${chartSelected ? "true" : "false"}"></button>`
+                  : ""
+              }</td>
+              <td class="sensor-chart-symbol-col">${
+                glyph ? `<span class="hex-chart-symbol-glyph" aria-hidden="true">${escapeHtmlLocal(glyph)}</span>` : ""
+              }</td>
+              <td class="sensor-col-sensor"><button type="button" class="sensor-name-button" data-station-id="${escapeHtmlLocal(stationId)}">${escapeHtmlLocal(stationName)}</button></td>
+              <td class="sensor-col-network">${escapeHtmlLocal(networkLabel)}</td>
+              <td class="sensor-col-value"><span class="sensor-reading-cell"><span class="sensor-reading-dot" style="--sensor-reading-color:${readingColor}"></span><span class="sensor-reading-text">${formatValue(entry.value)} ${pollutantUnits}</span></span></td>
+              <td class="sensor-col-updated">${updatedText}</td>
+              <td class="sensor-window-col ${statusClass}">${windowLabel}</td>
             </tr>
           `;
         }).join("");
@@ -9787,13 +10324,25 @@
       }
 
       function applyNetworkFilters() {
+        networkInputs = networkList
+          ? Array.from(networkList.querySelectorAll("input[data-network]"))
+          : [];
         const storedSelection = getStoredNetworkSelection();
         const previousSelection = getCurrentNetworkSelection() || storedSelection.selectedCodes;
         const hadAllSelected = networkInputs.length > 0
           ? networkInputs.every((input) => input.checked)
           : storedSelection.defaultAll;
-        const windowNetworkDefs = buildNetworkDefs(getNetworkRowsForWindow());
-        renderNetworkFiltersIfNeeded(windowNetworkDefs, previousSelection, hadAllSelected);
+        const networkRowsForWindow = getNetworkRowsForWindow();
+        const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+        const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
+        renderNetworkFiltersIfNeeded(
+          windowNetworkDefs,
+          previousSelection,
+          hadAllSelected,
+          coverageByCode,
+          TOTAL_PCON_COUNT,
+          "constituencies",
+        );
         updateNetworkSummaryCardVisibility();
         if (!basePconRows.length && !baseLatestRows.length) {
           scopedLatestRows = [];
@@ -10288,10 +10837,16 @@
           if (isStale()) {
             return;
           }
+          const networkRowsForWindow = getNetworkRowsForWindow();
+          const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+          const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
           renderNetworkFiltersIfNeeded(
-            buildNetworkDefs(getNetworkRowsForWindow()),
+            windowNetworkDefs,
             previousSelection,
-            hadAllSelected
+            hadAllSelected,
+            coverageByCode,
+            TOTAL_PCON_COUNT,
+            "constituencies",
           );
           if (populationResponse && populationResponse.ok) {
             const populationPayload = await populationResponse.json();
@@ -10469,6 +11024,14 @@
         if (detail.window) {
           setWindow(detail.window, { silent: true });
         }
+      });
+
+      window.addEventListener("hexchartselectionchange", (event) => {
+        const detail = event.detail || {};
+        if (detail.mapKey && detail.mapKey !== "uk") {
+          return;
+        }
+        updateDetailsPanel();
       });
 
       document.addEventListener("click", (event) => {
@@ -10724,6 +11287,9 @@
           applyStoredNetworkSelection();
           applyNetworkFilters();
         },
+        reapplyNetworkFilters: () => {
+          applyNetworkFilters();
+        },
         selectPconByCode: (code) => selectPconByCode(code),
         getActivePconCode: () => selectedPconCode,
         getChartModeContext: () => {
@@ -10946,6 +11512,44 @@
         { code: "breathe_london", label: "Breathe London" },
         { code: "sensorcommunity", label: "Sensor.Community" },
       ];
+      const NETWORK_LOGO_META = Object.freeze({
+        aurn: {
+          href: "https://www.ukairquality.net/",
+          ariaLabel: "Open GOV.UK AURN website (external link)",
+          boxClass: "network-card-logo-box--light network-card-logo-box--text",
+          text: "GOV.UK AURN",
+        },
+        openaq: {
+          href: "https://openaq.org/",
+          ariaLabel: "Open OpenAQ website (external link)",
+          boxClass: "network-card-logo-box--light",
+          imgSrc: "images/openaq_logo.svg",
+          imgAlt: "OpenAQ logo",
+          imgClass: "network-card-logo",
+        },
+        breathe_london: {
+          href: "https://www.breathelondon.org/",
+          ariaLabel: "Open Breathe London website (external link)",
+          boxClass: "network-card-logo-box--light",
+          imgSrc: "images/breathelondon_logo_v2.svg",
+          imgAlt: "Breathe London logo",
+          imgClass: "network-card-logo network-card-logo--breathe",
+        },
+        laqn: {
+          href: "https://www.londonair.org.uk/",
+          ariaLabel: "Open London Air LAQN website (external link)",
+          boxClass: "network-card-logo-box--light network-card-logo-box--text",
+          text: "London Air LAQN",
+        },
+        sensorcommunity: {
+          href: "https://sensor.community/en/",
+          ariaLabel: "Open Sensor.Community website (external link)",
+          boxClass: "network-card-logo-box--dark",
+          imgSrc: "images/scomm_logo-sw.svg",
+          imgAlt: "Sensor.Community logo",
+          imgClass: "network-card-logo",
+        },
+      });
       const AREA_LABEL_PLURAL = "local authorities";
       const CONNECTOR_DEFS = [
         { code: "uk_air_sos", label: "UK AIR SOS" },
@@ -11176,7 +11780,7 @@
       const SENSOR_PANEL_HEADER_HEIGHT = 50;
       const SENSOR_TABLE_HEADER_HEIGHT = 44;
       const SENSOR_PANEL_ROW_HEIGHT = 46;
-      const SENSOR_PANEL_MAX_VISIBLE_ROWS = 8;
+      const SENSOR_PANEL_MAX_VISIBLE_ROWS = 4;
       const detailScrollIndicators = window.attachScrollIndicators?.(detailsTableWrap);
       const detailPersistentScrollbar = window.attachPersistentScrollbar?.(detailsTableWrap, {
         isHidden: () => !detailsTableWrap?.classList.contains("is-scroll-forced"),
@@ -11211,6 +11815,21 @@
         detailsTableWrap.addEventListener("scroll", () => detailScrollIndicators?.update?.());
         detailsTableWrap.addEventListener("wheel", handleSensorTableWheel, { passive: false });
         detailsTableWrap.addEventListener("click", (event) => {
+          const selectorButton = event.target instanceof Element
+            ? event.target.closest(".hex-chart-selector[data-station-id]")
+            : null;
+          if (selectorButton && detailsTableWrap.contains(selectorButton)) {
+            event.stopPropagation();
+            const stationId = String(selectorButton.dataset.stationId || "").trim();
+            if (!stationId) {
+              return;
+            }
+            if (window.hexChartMode?.isActive?.("cr")) {
+              window.hexChartMode?.selectSensor?.(stationId, { mapKey: "cr", mode: "toggle" });
+              updateDetailsPanel();
+            }
+            return;
+          }
           const button = event.target instanceof Element
             ? event.target.closest(".sensor-name-button[data-station-id]")
             : null;
@@ -11218,9 +11837,18 @@
             return;
           }
           event.stopPropagation();
+          const stationId = String(button.dataset.stationId || "").trim();
+          if (!stationId) {
+            return;
+          }
+          if (window.hexChartMode?.isActive?.("cr")) {
+            window.hexChartMode?.selectSensor?.(stationId, { mapKey: "cr", mode: "single" });
+            updateDetailsPanel();
+            return;
+          }
           window.hexChartMode?.enter?.({
             mapKey: "cr",
-            initialStationId: button.dataset.stationId || null,
+            initialStationId: stationId,
           });
         });
       }
@@ -12021,10 +12649,16 @@
           : storedSelection.defaultAll;
         baseLatestRows = cached.latestRows;
         latestPollutant = cached.latestPollutant || activePollutant;
+        const networkRowsForWindow = getNetworkRowsForWindow();
+        const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+        const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
         renderNetworkFiltersIfNeeded(
-          buildNetworkDefs(getNetworkRowsForWindow()),
+          windowNetworkDefs,
           previousSelection,
-          hadAllSelected
+          hadAllSelected,
+          coverageByCode,
+          pconCodes.size || 0,
+          AREA_LABEL_PLURAL,
         );
         applyNetworkFilters();
         requestAnimationFrame(() => {
@@ -12355,17 +12989,79 @@
         return defs.map((def) => `${def.code}:${def.label}:${def.count}`).join("|");
       }
 
-      function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll) {
-        const key = getNetworkDefsKey(defs);
+      function resolveNetworkLogoMeta(def) {
+        const code = String(def?.code || "").toLowerCase();
+        if (NETWORK_LOGO_META[code]) {
+          return NETWORK_LOGO_META[code];
+        }
+        const label = String(def?.label || "").toLowerCase();
+        if (LAQN_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.laqn;
+        }
+        if (GOVUK_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.aurn;
+        }
+        if (OPENAQ_NETWORK_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.openaq;
+        }
+        if (BREATHE_LONDON_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.breathe_london;
+        }
+        if (SENSOR_COMMUNITY_MATCHERS.some((token) => label.includes(token))) {
+          return NETWORK_LOGO_META.sensorcommunity;
+        }
+        return null;
+      }
+
+      function buildNetworkCoverageByCode(rows) {
+        const coverageByCode = new Map();
+        rows.forEach((row) => {
+          const areaCode = resolveAreaCode(row);
+          if (!areaCode) {
+            return;
+          }
+          const seenCodes = new Set();
+          collectNetworkEntries(row).forEach((entry) => {
+            const code = String(entry?.code || "").toLowerCase();
+            if (!code || seenCodes.has(code)) {
+              return;
+            }
+            seenCodes.add(code);
+            if (!coverageByCode.has(code)) {
+              coverageByCode.set(code, new Set());
+            }
+            coverageByCode.get(code).add(areaCode);
+          });
+        });
+        return coverageByCode;
+      }
+
+      function getNetworkDefsRenderKey(defs, coverageByCode, coverageTotal) {
+        if (!defs.length) {
+          return "empty";
+        }
+        return defs.map((def) => {
+          const code = String(def.code || "").toLowerCase();
+          const covered = coverageByCode.get(code)?.size || 0;
+          const pct = coverageTotal > 0 ? Math.round((covered / coverageTotal) * 100) : 0;
+          return `${def.code}:${def.label}:${def.count}:${covered}:${pct}`;
+        }).join("|");
+      }
+
+      function renderNetworkFiltersIfNeeded(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel) {
+        const key = `${getNetworkDefsKey(defs)}|${getNetworkDefsRenderKey(defs, coverageByCode, coverageTotal)}`;
         if (key === networkDefsKey) {
           return false;
         }
         networkDefsKey = key;
-        renderNetworkFilters(defs, selectedCodes, defaultAll);
+        renderNetworkFilters(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel);
         return true;
       }
 
       function getCurrentNetworkSelection() {
+        networkInputs = networkList
+          ? Array.from(networkList.querySelectorAll("input[data-network]"))
+          : [];
         if (!networkInputs.length) {
           return null;
         }
@@ -12440,7 +13136,7 @@
         syncNetworkRowMutedState();
       }
 
-      function renderNetworkFilters(defs, selectedCodes, defaultAll) {
+      function renderNetworkFilters(defs, selectedCodes, defaultAll, coverageByCode, coverageTotal, coverageAreaLabel) {
         if (!networkList) {
           return;
         }
@@ -12468,10 +13164,19 @@
           mainRow.className = "network-option-main";
           const leftGroup = document.createElement("span");
           leftGroup.className = "network-option-left";
+          const nameWrap = document.createElement("span");
+          nameWrap.className = "network-name-wrap";
           const text = document.createElement("span");
           text.className = "network-name";
           text.textContent = def.label;
-          leftGroup.append(input, text);
+          nameWrap.appendChild(text);
+          if (String(def.code || "").toLowerCase() === "openaq") {
+            const openaqTag = document.createElement("span");
+            openaqTag.className = "network-option-tag";
+            openaqTag.textContent = "AGGREGATOR";
+            nameWrap.appendChild(openaqTag);
+          }
+          leftGroup.append(input, nameWrap);
           const count = document.createElement("span");
           count.className = "network-count";
           if (def.count > 0) count.textContent = def.count.toLocaleString();
@@ -12481,11 +13186,54 @@
           label.title = `${def.label}\n${tooltipCount.toLocaleString()} active sensors\n${tooltipPct}% of sensors across all available networks`;
           const shareBar = document.createElement("span");
           shareBar.className = "network-share-bar";
+          shareBar.setAttribute("role", "progressbar");
+          shareBar.setAttribute("aria-label", `${def.label} share of active sensors`);
+          shareBar.setAttribute("aria-valuemin", "0");
+          shareBar.setAttribute("aria-valuemax", "100");
+          shareBar.setAttribute("aria-valuenow", String(tooltipPct));
+          shareBar.setAttribute("aria-valuetext", `${tooltipPct}% of active sensors`);
           const shareFill = document.createElement("span");
           shareFill.className = "network-share-fill";
           shareFill.style.width = `${sharePercent.toFixed(1)}%`;
           shareBar.appendChild(shareFill);
-          label.append(mainRow, shareBar);
+          const code = String(def.code || "").toLowerCase();
+          const coverageCount = coverageByCode?.get(code)?.size || 0;
+          const coveragePercent = coverageTotal > 0 ? Math.round((coverageCount / coverageTotal) * 100) : 0;
+          const coverageText = document.createElement("span");
+          coverageText.className = "network-option-coverage";
+          coverageText.textContent = `${coveragePercent}% coverage`;
+          coverageText.setAttribute(
+            "aria-label",
+            `${def.label} coverage ${coveragePercent}% (${coverageCount} of ${coverageTotal} ${coverageAreaLabel})`,
+          );
+          label.append(mainRow, shareBar, coverageText);
+          const logoMeta = resolveNetworkLogoMeta(def);
+          if (logoMeta?.href) {
+            const logoLink = document.createElement("a");
+            logoLink.className = `network-option-logo-link network-card-logo-link network-card-logo-box ${logoMeta.boxClass || ""}`.trim();
+            logoLink.href = logoMeta.href;
+            logoLink.target = "_blank";
+            logoLink.rel = "noopener noreferrer";
+            logoLink.setAttribute("aria-label", logoMeta.ariaLabel || `Open ${def.label} website (external link)`);
+            logoLink.addEventListener("mousedown", (event) => event.stopPropagation());
+            logoLink.addEventListener("click", (event) => event.stopPropagation());
+            if (logoMeta.text) {
+              logoLink.appendChild(document.createTextNode(logoMeta.text));
+            } else if (logoMeta.imgSrc) {
+              const logoImg = document.createElement("img");
+              logoImg.className = logoMeta.imgClass || "network-card-logo";
+              logoImg.src = logoMeta.imgSrc;
+              logoImg.alt = logoMeta.imgAlt || `${def.label} logo`;
+              logoLink.appendChild(logoImg);
+            }
+            const linkIcon = document.createElement("img");
+            linkIcon.className = "network-card-link-icon";
+            linkIcon.src = "images/Link Icon.svg";
+            linkIcon.alt = "";
+            linkIcon.setAttribute("aria-hidden", "true");
+            logoLink.appendChild(linkIcon);
+            label.appendChild(logoLink);
+          }
           fragment.appendChild(label);
         });
         networkList.appendChild(fragment);
@@ -13398,14 +14146,14 @@
       }
 
       function updateDetailsPanel() {
-        if (!detailsTitle || !detailsMeta || !detailsEmpty || !detailsTableWrap || !detailsTableBody || !networkSummary) {
+        if (!detailsTitle || !detailsMeta || !detailsEmpty || !detailsTableWrap || !detailsTableBody) {
           return;
         }
         const pollutantUnits = getPollutantUnits(activePollutant);
         if (!selectedAreaCode) {
-          if (sensorDetailsSection) sensorDetailsSection.hidden = false;
-          detailsTitle.textContent = "Selected Networks";
-          detailsMeta.textContent = "Network summary for the current window.";
+          if (sensorDetailsSection) sensorDetailsSection.hidden = true;
+          detailsTitle.textContent = "Local authority sensors";
+          detailsMeta.textContent = "Click a hex to view sensors.";
           if (inlinePanelWindowLabel) inlinePanelWindowLabel.textContent = "Select a hex";
           if (inlinePanelTitle) inlinePanelTitle.textContent = "";
           if (inlinePanelReading) inlinePanelReading.textContent = "";
@@ -13414,15 +14162,15 @@
           detailsEmpty.hidden = true;
           detailsTableWrap.hidden = true;
           detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          detailsTableWrap.classList.remove("is-chart-select-mode");
           syncSortHeaders();
           updateInlinePanelHeight(0);
-          networkSummary.hidden = false;
-          updateNetworkSummary();
+          if (networkSummary) networkSummary.hidden = true;
           detailsTableBody.innerHTML = "";
           return;
         }
-        if (sensorDetailsSection) sensorDetailsSection.hidden = true;
-        networkSummary.hidden = true;
+        if (sensorDetailsSection) sensorDetailsSection.hidden = false;
+        if (networkSummary) networkSummary.hidden = true;
         const row = pconLookup.get(selectedAreaCode);
         const areaName = resolveCellAreaName(selectedCell) || resolveAreaName(row) || selectedAreaCode;
         detailsTitle.textContent = areaName;
@@ -13455,6 +14203,7 @@
           detailsEmpty.hidden = false;
           detailsTableWrap.hidden = true;
           detailsTableWrap.classList.add("sensor-list-sort-hidden");
+          detailsTableWrap.classList.remove("is-chart-select-mode");
           syncSortHeaders();
           networkSummary.hidden = true;
           detailsTableBody.innerHTML = "";
@@ -13478,9 +14227,11 @@
         if (inlinePanelHexIcon) {
           inlinePanelHexIcon.classList.remove("sensor-panel-hex-icon--outlined");
         }
+        const chartModeActive = window.hexChartMode?.isActive?.("cr") === true;
         detailsEmpty.hidden = true;
         detailsTableWrap.hidden = false;
         detailsTableWrap.classList.toggle("sensor-list-sort-hidden", entries.length <= 1);
+        detailsTableWrap.classList.toggle("is-chart-select-mode", chartModeActive);
         syncSortHeaders();
         networkSummary.hidden = true;
         detailsTableBody.innerHTML = entries.map((entry) => {
@@ -13489,18 +14240,32 @@
           const networkLabel = resolvePrimaryNetworkLabel(entry.row) || resolveConnectorLabel(entry.row);
           const updatedText = formatSummaryTimestamp(entry.timestamp);
           const windowLabel = entry.inWindow ? "Included" : "Outside window";
-          const rowClass = entry.inWindow ? "" : "sensor-row--excluded";
+          const chartSelected = window.hexChartMode?.isSensorSelected?.("cr", stationId) === true;
+          const symbolIndex = window.hexChartMode?.getSelectedSensorIndex?.("cr", stationId) ?? -1;
+          const glyph = symbolIndex >= 0 ? (window.ChartCore?.SYMBOL_GLYPHS?.[symbolIndex] || "") : "";
+          const rowClass = [
+            entry.inWindow ? "" : "sensor-row--excluded",
+            chartSelected ? "sensor-row--chart-selected" : "",
+          ].filter(Boolean).join(" ");
           const statusClass = entry.inWindow
             ? "sensor-status"
             : "sensor-status sensor-status--excluded";
           const readingColor = colorScale && Number.isFinite(entry.value) ? colorScale(entry.value) : "var(--no-data)";
           return `
             <tr class="${rowClass}">
-              <td><button type="button" class="sensor-name-button" data-station-id="${escapeHtmlLocal(stationId)}">${escapeHtmlLocal(stationName)}</button></td>
-              <td>${escapeHtmlLocal(networkLabel)}</td>
-              <td><span class="sensor-reading-cell"><span class="sensor-reading-dot" style="--sensor-reading-color:${readingColor}"></span><span class="sensor-reading-text">${formatValue(entry.value)} ${pollutantUnits}</span></span></td>
-              <td>${updatedText}</td>
-              <td class="${statusClass}">${windowLabel}</td>
+              <td class="sensor-chart-select-col">${
+                chartModeActive
+                  ? `<button type="button" class="hex-chart-selector" data-station-id="${escapeHtmlLocal(stationId)}" aria-label="${chartSelected ? "Remove" : "Add"} ${escapeHtmlLocal(stationName)} from chart" aria-pressed="${chartSelected ? "true" : "false"}"></button>`
+                  : ""
+              }</td>
+              <td class="sensor-chart-symbol-col">${
+                glyph ? `<span class="hex-chart-symbol-glyph" aria-hidden="true">${escapeHtmlLocal(glyph)}</span>` : ""
+              }</td>
+              <td class="sensor-col-sensor"><button type="button" class="sensor-name-button" data-station-id="${escapeHtmlLocal(stationId)}">${escapeHtmlLocal(stationName)}</button></td>
+              <td class="sensor-col-network">${escapeHtmlLocal(networkLabel)}</td>
+              <td class="sensor-col-value"><span class="sensor-reading-cell"><span class="sensor-reading-dot" style="--sensor-reading-color:${readingColor}"></span><span class="sensor-reading-text">${formatValue(entry.value)} ${pollutantUnits}</span></span></td>
+              <td class="sensor-col-updated">${updatedText}</td>
+              <td class="sensor-window-col ${statusClass}">${windowLabel}</td>
             </tr>
           `;
         }).join("");
@@ -14454,13 +15219,26 @@
       }
 
       function applyNetworkFilters() {
+        networkInputs = networkList
+          ? Array.from(networkList.querySelectorAll("input[data-network]"))
+          : [];
         const storedSelection = getStoredNetworkSelection();
         const previousSelection = getCurrentNetworkSelection() || storedSelection.selectedCodes;
         const hadAllSelected = networkInputs.length > 0
           ? networkInputs.every((input) => input.checked)
           : storedSelection.defaultAll;
-        const windowNetworkDefs = buildNetworkDefs(getNetworkRowsForWindow());
-        renderNetworkFiltersIfNeeded(windowNetworkDefs, previousSelection, hadAllSelected);
+        const networkRowsForWindow = getNetworkRowsForWindow();
+        const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+        const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
+        const coverageTotal = pconCodes.size || 0;
+        renderNetworkFiltersIfNeeded(
+          windowNetworkDefs,
+          previousSelection,
+          hadAllSelected,
+          coverageByCode,
+          coverageTotal,
+          AREA_LABEL_PLURAL,
+        );
         updateNetworkSummaryCardVisibility();
         if (!basePconRows.length && !baseLatestRows.length) {
           scopedLatestRows = [];
@@ -14998,10 +15776,16 @@
             if (isStale()) {
               return;
             }
+            const networkRowsForWindow = getNetworkRowsForWindow();
+            const windowNetworkDefs = buildNetworkDefs(networkRowsForWindow);
+            const coverageByCode = buildNetworkCoverageByCode(networkRowsForWindow);
             renderNetworkFiltersIfNeeded(
-              buildNetworkDefs(getNetworkRowsForWindow()),
+              windowNetworkDefs,
               previousSelection,
-              hadAllSelected
+              hadAllSelected,
+              coverageByCode,
+              pconCodes.size || 0,
+              AREA_LABEL_PLURAL,
             );
             if (populationResponse && populationResponse.ok) {
               const populationPayload = await populationResponse.json();
@@ -15036,7 +15820,7 @@
             latestRows = [];
             latestPollutant = null;
             populationLookup = new Map();
-            renderNetworkFiltersIfNeeded([], previousSelection, false);
+            renderNetworkFiltersIfNeeded([], previousSelection, false, new Map(), 0, AREA_LABEL_PLURAL);
             if (lastUpdated) {
               lastUpdated.textContent = "Boundary only (no sensor data yet)";
             }
@@ -15235,6 +16019,14 @@
         if (detail.window) {
           setWindow(detail.window, { silent: true });
         }
+      });
+
+      window.addEventListener("hexchartselectionchange", (event) => {
+        const detail = event.detail || {};
+        if (detail.mapKey && detail.mapKey !== "cr") {
+          return;
+        }
+        updateDetailsPanel();
       });
 
       if (networkSelectAll) {
@@ -15497,6 +16289,9 @@
           applyStoredNetworkSelection();
           applyNetworkFilters();
         },
+        reapplyNetworkFilters: () => {
+          applyNetworkFilters();
+        },
 	        setRegion: (region, options) => {
 	          setActiveRegion(region, options);
 	        },
@@ -15571,6 +16366,7 @@
   const DAY_MS = 24 * 60 * 60 * 1000;
   const HOUR_MS = 60 * 60 * 1000;
   const AQI_HISTORY_ROW_LIMIT = 20000;
+  const AQI_BAND_TOP_OFFSET_PX = 1;
   const params = new URLSearchParams(window.location.search);
   const cacheBaseUrl = resolveCacheBaseUrl(params.get("cache_base"));
   const seriesUrl = cacheBaseUrl ? `${cacheBaseUrl}/timeseries` : "";
@@ -15684,6 +16480,13 @@
   function formatChartValue(value) {
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric.toFixed(1) : "-";
+  }
+
+  function buildYAxisLabel(units) {
+    const context = getCurrentContext() || {};
+    const pollutantLabel = String(context.pollutantLabel || "Pollutant").trim();
+    const unitText = String(units || context.units || "").trim();
+    return unitText ? `${pollutantLabel} ${unitText}` : pollutantLabel;
   }
 
   function normalizeAqiSupportedPollutant(label) {
@@ -15953,6 +16756,17 @@
     if (backButton) backButton.hidden = !state.isChartMode;
   }
 
+  function notifySelectionChange() {
+    window.dispatchEvent(new CustomEvent("hexchartselectionchange", {
+      detail: {
+        isChartMode: state.isChartMode,
+        mapKey: state.mapKey,
+        selectedPrimaryId: state.selectedPrimaryId,
+        selectedSensorIds: Array.from(state.chartModeSelectedSensors),
+      },
+    }));
+  }
+
   function setMessage(text, options = {}) {
     const dom = domByMap[state.mapKey];
     if (!dom?.message) return;
@@ -15981,6 +16795,7 @@
     syncPanels();
     syncWindowControl();
     renderSensorList(context);
+    notifySelectionChange();
     loadChartData("area-change");
   }
 
@@ -15992,6 +16807,7 @@
     state.visibleEntries = [];
     state.loadToken += 1;
     syncPanels();
+    notifySelectionChange();
   }
 
   function syncWindowControl() {
@@ -16017,6 +16833,7 @@
     if (!state.chartModeSelectedSensors.size && entries.length) state.chartModeSelectedSensors.add(entries[0].stationId);
     if (!state.chartModeSelectedSensors.has(state.selectedPrimaryId)) state.selectedPrimaryId = Array.from(state.chartModeSelectedSensors)[0] || null;
     renderSensorList(context);
+    notifySelectionChange();
     // updateChart: false lets the caller handle the chart refresh (e.g. delta-only refresh).
     if (options.updateChart !== false) {
       loadChartData("sensor-change");
@@ -16160,7 +16977,27 @@
       state.selectedPrimaryId = state.selectedPrimaryId || stationId;
     }
     renderSensorList(getCurrentContext() || {});
+    notifySelectionChange();
     loadChartData("sensor-change");
+  }
+
+  function selectSensor(stationId, options = {}) {
+    const normalizedId = String(stationId || "").trim();
+    if (!state.isChartMode || !normalizedId) return false;
+    const mapKey = options.mapKey || null;
+    if (mapKey && state.mapKey !== mapKey) return false;
+    const exists = state.visibleEntries.some((entry) => entry.stationId === normalizedId);
+    if (!exists) return false;
+    if (options.mode === "toggle") {
+      toggleSensor(normalizedId);
+      return true;
+    }
+    state.chartModeSelectedSensors = new Set([normalizedId]);
+    state.selectedPrimaryId = normalizedId;
+    renderSensorList(getCurrentContext() || {});
+    notifySelectionChange();
+    loadChartData("sensor-change");
+    return true;
   }
 
   function getCacheFetch() {
@@ -16364,6 +17201,7 @@
     const units       = usableEntries[0]?.units || getCurrentContext()?.units || "";
     const svgEl       = dom?.svg?.node();
     if (!svgEl) return;
+    setMessage("");
 
     // Check whether the existing frame can be reused.
     const svgWidth  = svgEl.clientWidth  || 960;
@@ -16380,6 +17218,26 @@
     const needsFetch      = [];
     let primaryGuideline  = null;
     const primaryId       = state.selectedPrimaryId || usableEntries[0]?.stationId;
+    const primary         = usableEntries.find((e) => e.stationId === primaryId) || usableEntries[0];
+    const pollutantKey    = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
+    const aqiCacheKey     = `${primary?.timeseriesId}|${pollutantKey}|${windowValue}`;
+    let aqiPoints         = aqiBandCache.get(aqiCacheKey);
+    let aqiFetchPromise   = null;
+    if (aqiPoints === undefined && primary && pollutantKey) {
+      aqiFetchPromise = fetchAqiBands(primary, pollutantKey, range)
+        .then((points) => {
+          const normalized = Array.isArray(points) ? points : [];
+          aqiBandCache.set(aqiCacheKey, normalized);
+          return normalized;
+        })
+        .catch((_err) => {
+          aqiBandCache.set(aqiCacheKey, []);
+          return [];
+        });
+      aqiPoints = [];
+    } else {
+      aqiPoints = Array.isArray(aqiPoints) ? aqiPoints : [];
+    }
 
     usableEntries.forEach((entry) => {
       const cacheKey = `${entry.timeseriesId}|${windowValue}`;
@@ -16402,6 +17260,10 @@
     }
 
     const hasCachedData = Array.from(seriesPointsMap.values()).some((pts) => pts.length > 0);
+    const hasObservationFetch = needsFetch.length > 0;
+    const hasAqiFetch = Boolean(aqiFetchPromise);
+    let aqiLoadingActive = hasAqiFetch;
+    const observsLoadingActive = hasObservationFetch;
 
     if (frameValid) {
       if (reason === "window-change") {
@@ -16409,32 +17271,59 @@
         animateChartDomains(dom.chartFrame, range, dom.chartFrame.yScale.domain(), token);
       } else if (hasCachedData) {
         // Show cached data immediately (snap, no animation).
-        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+          aqiLoading: aqiLoadingActive,
+          yAxisLoading: observsLoadingActive,
+        });
       }
     } else if (hasCachedData) {
       // New frame — render cached data before fetching anything.
-      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+        aqiLoading: aqiLoadingActive,
+        yAxisLoading: observsLoadingActive,
+      });
+    }
+    if (!hasCachedData) {
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+        aqiLoading: aqiLoadingActive,
+        yAxisLoading: observsLoadingActive,
+      });
     }
 
     // --- Fast path: everything is cached (no network needed). ---
     if (!needsFetch.length) {
-      const primary      = usableEntries.find((e) => e.stationId === primaryId) || usableEntries[0];
-      const pollutantKey = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
-      const aqiCacheKey  = `${primary?.timeseriesId}|${pollutantKey}|${windowValue}`;
-      let aqiPoints      = aqiBandCache.get(aqiCacheKey);
-      if (aqiPoints === undefined && primary && pollutantKey) {
-        try { aqiPoints = await fetchAqiBands(primary, pollutantKey, range); } catch (_err) { aqiPoints = []; }
-        if (token !== state.loadToken) return;
-        aqiBandCache.set(aqiCacheKey, aqiPoints);
+      if (hasAqiFetch) {
+        setLoading(true);
+        try {
+          aqiPoints = await aqiFetchPromise;
+        } catch (_err) {
+          aqiPoints = [];
+        }
+        aqiLoadingActive = false;
       }
       if (token !== state.loadToken) return;
-      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || []);
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || [], {
+        aqiLoading: aqiLoadingActive,
+        yAxisLoading: false,
+      });
+      setLoading(false);
       setMessage(Array.from(seriesPointsMap.values()).reduce((s, pts) => s + pts.length, 0) ? "" : "No history available for this sensor.");
       return;
     }
 
     // --- Fetch path: some entries need network data. ---
-    setMessage("Loading chart data…");
+    setLoading(true);
+    const aqiProgressPromise = hasAqiFetch
+      ? aqiFetchPromise.then((resolvedPoints) => {
+          if (token !== state.loadToken || signal.aborted) return;
+          aqiPoints = Array.isArray(resolvedPoints) ? resolvedPoints : [];
+          aqiLoadingActive = false;
+          updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+            aqiLoading: false,
+            yAxisLoading: true,
+          });
+        })
+      : Promise.resolve();
 
     // Create a fresh progress bar on the existing frame, or use the one from initChartFrame.
     if (frameValid) {
@@ -16476,9 +17365,11 @@
         seriesPointsMap.set(entry.stationId, mergeSeriesPoints(seriesPointsMap.get(entry.stationId) || [], result.points));
 
         completedChunks++;
-        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units);
+        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+          aqiLoading: aqiLoadingActive,
+          yAxisLoading: true,
+        });
         dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
-        if (dom.chartFrame?.svgEl) ChartCore.applyChunkFade(dom.chartFrame.svgEl);
       }
 
       if (token !== state.loadToken) return;
@@ -16492,19 +17383,13 @@
         });
       });
 
-      // Fetch AQI bands (cache-first).
-      const primary      = usableEntries.find((e) => e.stationId === primaryId) || usableEntries[0];
-      const pollutantKey = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
-      const aqiCacheKey  = `${primary?.timeseriesId}|${pollutantKey}|${windowValue}`;
-      let aqiPoints      = aqiBandCache.get(aqiCacheKey);
-      if (aqiPoints === undefined && primary && pollutantKey) {
-        try { aqiPoints = await fetchAqiBands(primary, pollutantKey, range); } catch (_err) { aqiPoints = []; }
-        if (token !== state.loadToken) return;
-        aqiBandCache.set(aqiCacheKey, aqiPoints);
-      }
+      await aqiProgressPromise;
       if (token !== state.loadToken) return;
 
-      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || []);
+      updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints || [], {
+        aqiLoading: false,
+        yAxisLoading: false,
+      });
       const totalPoints = Array.from(seriesPointsMap.values()).reduce((s, pts) => s + pts.length, 0);
       setMessage(totalPoints ? "" : "No history available for this sensor.");
 
@@ -16546,29 +17431,32 @@
       .text(message || "");
   }
 
-  function renderAqiBands(svg, aqiPoints, frame, xScale) {
-    if (!Array.isArray(aqiPoints) || !aqiPoints.length) return;
+  function renderAqiBands(svg, aqiPoints, frame, xScale, options = {}) {
     const daqiColors = { 1: "#1DB100", 2: "#61D836", 3: "#34FF00", 4: "#FFFB00", 5: "#FFCE04", 6: "#FF9300", 7: "#FF6464", 8: "#FF2600", 9: "#A50026", 10: "#672C7F" };
     const eaqiColors = { "Good": "#34FF00", "Fair": "#FFFB00", "Moderate": "#FF9300", "Poor": "#FF2600", "Very poor": "#A50026", "Extremely poor": "#672C7F", 1: "#34FF00", 2: "#FFFB00", 3: "#FF9300", 4: "#FF2600", 5: "#A50026", 6: "#672C7F" };
+    const hasAqiPoints = Array.isArray(aqiPoints) && aqiPoints.length > 0;
     const pointByHour = new Map();
-    aqiPoints.forEach((point) => {
-      const hourMs = new Date(point.date).setMinutes(0, 0, 0);
-      if (Number.isFinite(hourMs)) pointByHour.set(hourMs, point);
-    });
+    if (hasAqiPoints) {
+      aqiPoints.forEach((point) => {
+        const hourMs = new Date(point.date).setMinutes(0, 0, 0);
+        if (Number.isFinite(hourMs)) pointByHour.set(hourMs, point);
+      });
+    }
     const bandHeight = 22;
     const gap = 4;
     const slotWidth = Math.max(1, (frame.width - frame.margin.left - frame.margin.right) / Math.max(1, (frame.endMs - frame.startMs) / HOUR_MS));
     const drawBand = (label, y, key, colors) => {
       const group = svg.append("g").attr("transform", `translate(0, ${y})`);
       group.append("text")
+        .attr("class", "aqi-band-label")
         .attr("x", frame.margin.left - 8)
         .attr("y", bandHeight / 2)
         .attr("dy", "0.32em")
         .attr("text-anchor", "end")
-        .style("font-size", "0.75rem")
-        .style("font-weight", "600")
-        .style("fill", "var(--ink-soft)")
         .text(label);
+      if (!hasAqiPoints) {
+        return;
+      }
       for (let t = new Date(frame.startMs).setMinutes(0, 0, 0); t < frame.endMs; t += HOUR_MS) {
         const point = pointByHour.get(t);
         const color = point ? colors[point[key]] : null;
@@ -16578,16 +17466,18 @@
         if (width > 0) group.append("rect").attr("x", x).attr("y", 0).attr("width", width).attr("height", bandHeight).attr("fill", color);
       }
     };
-    drawBand("DAQI", 16, "daqi", daqiColors);
-    drawBand("EAQI", 16 + bandHeight + gap, "eaqi", eaqiColors);
+    const bandTop = AQI_BAND_TOP_OFFSET_PX;
+    drawBand("DAQI", bandTop, "daqi", daqiColors);
+    drawBand("EAQI", bandTop + bandHeight + gap, "eaqi", eaqiColors);
   }
 
   function initChartFrame(dom, range, numSeries) {
     if (!dom?.svg?.node()) return;
     const svgEl = dom.svg.node();
     const width  = svgEl.clientWidth  || 960;
-    const height = svgEl.clientHeight || 390;
-    const margin = { top: 78, right: 24, bottom: 44, left: 58 };
+    const height = Math.max(svgEl.clientHeight || 0, 300);
+    const marginTop = Math.max(52, Math.round(height * 0.12));
+    const margin = { top: marginTop, right: 24, bottom: 44, left: 58 };
 
     dom.svg.selectAll("*").remove();
     dom.svg.attr("viewBox", `0 0 ${width} ${height}`);
@@ -16618,6 +17508,13 @@
     const yAxisGroup = dom.svg.append("g")
       .attr("class", "chart-axis")
       .attr("transform", `translate(${margin.left}, 0)`);
+    const yAxisLabelEl = dom.svg.append("text")
+      .attr("class", "chart-y-axis-label")
+      .attr("text-anchor", "middle")
+      .attr("x", Math.max(12, margin.left - 44))
+      .attr("y", (margin.top + (height - margin.bottom)) / 2)
+      .attr("transform", `rotate(-90, ${Math.max(12, margin.left - 44)}, ${(margin.top + (height - margin.bottom)) / 2})`)
+      .text("");
 
     const guidelineEl = dom.svg.append("line").attr("class", "chart-guideline").style("opacity", 0);
     const guidelineLabelEl = dom.svg.append("text")
@@ -16688,6 +17585,7 @@
     dom.chartFrame = {
       svgEl, xScale, yScale,
       xAxisGroup, yAxisGroup,
+      yAxisLabelEl,
       aqiBandsContainer,
       guidelineEl, guidelineLabelEl,
       seriesPaths, seriesSymbolGroups,
@@ -16702,7 +17600,7 @@
     };
   }
 
-  function updateChart(dom, seriesPointsMap, usableEntries, range, guideline, units, aqiPoints) {
+  function updateChart(dom, seriesPointsMap, usableEntries, range, guideline, units, aqiPoints, renderOptions = {}) {
     const cf = dom.chartFrame;
     if (!cf) return;
 
@@ -16729,9 +17627,13 @@
     // Update AQI bands synchronously (positioned by x-scale / frame height, not y-scale).
     if (aqiPoints !== undefined) {
       cf.aqiBandsContainer.selectAll("*").remove();
-      if (Array.isArray(aqiPoints) && aqiPoints.length) {
-        renderAqiBands(cf.aqiBandsContainer, aqiPoints, cf.frame, cf.xScale);
-      }
+      renderAqiBands(cf.aqiBandsContainer, aqiPoints, cf.frame, cf.xScale, {
+        loading: Boolean(renderOptions.aqiLoading),
+      });
+    }
+    if (cf.yAxisLabelEl) {
+      const axisLabel = buildYAxisLabel(units);
+      cf.yAxisLabelEl.text(axisLabel);
     }
 
     // Build line generator and segments (used every animation frame and at finalize).
@@ -16880,6 +17782,23 @@
     refresh,
     syncFromMap,
     isActive: (mapKey = null) => Boolean(state.isChartMode && (!mapKey || state.mapKey === mapKey)),
+    selectSensor,
+    isSensorSelected: (mapKey = null, stationId = "") => {
+      if (!state.isChartMode) return false;
+      if (mapKey && state.mapKey !== mapKey) return false;
+      return state.chartModeSelectedSensors.has(String(stationId || ""));
+    },
+    getSelectedSensorIds: (mapKey = null) => {
+      if (!state.isChartMode) return [];
+      if (mapKey && state.mapKey !== mapKey) return [];
+      return Array.from(state.chartModeSelectedSensors);
+    },
+    getSelectedSensorIndex: (mapKey = null, stationId = "") => {
+      if (!state.isChartMode) return -1;
+      if (mapKey && state.mapKey !== mapKey) return -1;
+      const selectedIds = Array.from(state.chartModeSelectedSensors);
+      return selectedIds.indexOf(String(stationId || ""));
+    },
   };
 })();
     </script>
@@ -17066,11 +17985,18 @@
   const networkSelectAll = document.getElementById("network-select-all");
   const networkDeselectAll = document.getElementById("network-deselect-all");
   const networkPanelPin = document.getElementById("networks-panel-pin");
+  const networkPanelPinIcon = document.getElementById("networks-panel-pin-icon");
+  const networkPanelExpand = document.getElementById("networks-panel-expand");
+  const networkPanelExpandPath = networkPanelExpand?.querySelector("path");
   const networkPills = Array.from(document.querySelectorAll("[data-networks-pill]"));
   const tabUk = document.getElementById("tab-uk");
   const tabCr = document.getElementById("tab-cr");
   let networkPanelPinned = false;
+  let networkPanelMaxi = false;
   let networkPanelAnchorPill = null;
+  let networkPanelPinnedWidthPx = null;
+  let networkPanelPinnedTopPx = null;
+  let networkPanelPinnedLeftPx = null;
   const WINDOW_ORDER = ["3h", "6h", "1d", "7d", "all"];
   const WINDOW_LABELS_FALLBACK = {
     "3h": "3 Hours",
@@ -17086,7 +18012,48 @@
   let windowStepperKey = null;
   let windowStepperTimer = null;
   let cachedNetworkPanelWidth = 0;
+  const NETWORK_PANEL_MARGIN_PX = 8;
   const LONDON_NETWORK_MAP_GAP_PX = -72;
+  const NETWORK_PIN_ICON_OFF_SRC = "images/UK-AQ_pin100_off.svg";
+  const NETWORK_PIN_ICON_ON_SRC = "images/UK-AQ_pin100_on.svg";
+  const NETWORK_EXPAND_ICON_D = "M5 1.5H1.5V5M11 1.5h3.5V5M1.5 11V14.5H5M11 14.5h3.5V11";
+  const NETWORK_COLLAPSE_ICON_D = "M6 2.5H2.5V6M10 2.5h3.5V6M2.5 10V13.5H6M10 13.5h3.5V10M4 4l2 2M12 4l-2 2M4 12l2-2M12 12l-2-2";
+
+  function syncNetworkPanelPinIcon() {
+    if (!networkPanelPinIcon) return;
+    networkPanelPinIcon.src = networkPanelPinned ? NETWORK_PIN_ICON_ON_SRC : NETWORK_PIN_ICON_OFF_SRC;
+  }
+
+  function syncNetworkPanelExpandState() {
+    if (networkDropdownMenu) {
+      networkDropdownMenu.classList.toggle("is-maxi", networkPanelMaxi);
+    }
+    if (!networkPanelExpand) return;
+    networkPanelExpand.setAttribute("aria-expanded", String(networkPanelMaxi));
+    networkPanelExpand.setAttribute(
+      "aria-label",
+      networkPanelMaxi ? "Collapse networks panel" : "Expand networks panel",
+    );
+    networkPanelExpand.setAttribute(
+      "title",
+      networkPanelMaxi ? "Collapse networks panel" : "Expand networks panel",
+    );
+    if (networkPanelExpandPath) {
+      networkPanelExpandPath.setAttribute("d", networkPanelMaxi ? NETWORK_COLLAPSE_ICON_D : NETWORK_EXPAND_ICON_D);
+    }
+  }
+
+  function setNetworkPanelMaxi(isMaxi) {
+    networkPanelMaxi = !!isMaxi;
+    cachedNetworkPanelWidth = 0;
+    networkPanelPinnedWidthPx = null;
+    syncNetworkPanelExpandState();
+    if (networkDropdownMenu && !networkDropdownMenu.hidden) {
+      window.requestAnimationFrame(() => {
+        positionNetworkPanel(networkPanelAnchorPill || getActivePill());
+      });
+    }
+  }
 
   function getNetworkInputs() {
     if (!networkList) {
@@ -17110,13 +18077,6 @@
     return visible || networkPills[0] || null;
   }
 
-  function getMapKeyForWrap(wrap) {
-    const panel = wrap?.closest(".tab-panel");
-    if (panel?.id === "tab-panel-uk") return "uk";
-    if (panel?.id === "tab-panel-cr") return "cr";
-    return null;
-  }
-
   function isLondonRegionActive() {
     return String(window.crMap?.getRegion?.() || "").toLowerCase() === "london";
   }
@@ -17125,8 +18085,17 @@
     return window.mapTabController?.getActiveTab?.() === "cr";
   }
 
+  function getMapCanvasWrapForPill(pill) {
+    if (!pill) return null;
+    const mapWrap = getMapWrapForPill(pill);
+    return mapWrap?.querySelector(".map-canvas-wrap") || null;
+  }
+
   function getNetworkPanelWidth() {
     if (!networkDropdownMenu) return 0;
+    if (Number.isFinite(networkPanelPinnedWidthPx) && networkPanelPinnedWidthPx > 0) {
+      return networkPanelPinnedWidthPx;
+    }
     if (cachedNetworkPanelWidth > 0) return cachedNetworkPanelWidth;
     const previousHidden = networkDropdownMenu.hidden;
     const previousDisplay = networkDropdownMenu.style.display;
@@ -17148,63 +18117,124 @@
     return cachedNetworkPanelWidth;
   }
 
-  function renderMapForKey(mapKey) {
-    if (mapKey === "uk") {
-      if (typeof window.ukMap?.renderLayout === "function") {
-        window.ukMap.renderLayout();
-      } else {
-        window.ukMap?.render?.();
-      }
-      return;
-    }
-    if (mapKey === "cr") {
-      if (typeof window.crMap?.renderLayout === "function") {
-        window.crMap.renderLayout();
-      } else {
-        window.crMap?.render?.();
-      }
-    }
+  function refreshNetworkPanelWidthCache() {
+    if (!networkDropdownMenu) return;
+    cachedNetworkPanelWidth = 0;
+    getNetworkPanelWidth();
   }
 
-  function renderActiveMap() {
-    const activeMap = window.mapTabController?.getActiveTab?.();
-    if (activeMap === "uk" || activeMap === "cr") {
-      renderMapForKey(activeMap);
-      return;
-    }
-    window.ukMap?.render?.();
-    window.crMap?.render?.();
+  function getMapWrapForPill(pill) {
+    return pill?.closest(".map-wrap") || null;
   }
 
-  function rerenderChangedMapSafeAreas(changedMapKeys) {
-    if (!(changedMapKeys instanceof Set) || changedMapKeys.size === 0) {
-      return;
-    }
-    const rendered = new Set();
-    changedMapKeys.forEach((mapKey) => {
-      if (mapKey === "uk" || mapKey === "cr") {
-        renderMapForKey(mapKey);
-        rendered.add(mapKey);
-      }
+  function getFloatingHostForPill(pill) {
+    return getMapWrapForPill(pill || getActivePill()) || document.body;
+  }
+
+  function getDockSlotForPill(pill) {
+    const mapWrap = getMapWrapForPill(pill || getActivePill());
+    if (!mapWrap) return null;
+    const dockSlot = mapWrap.querySelector("[data-networks-dock]");
+    return dockSlot || null;
+  }
+
+  function clearDockedNetworkPanelHosts() {
+    document.querySelectorAll(".map-wrap.has-docked-networks").forEach((wrap) => {
+      wrap.classList.remove("has-docked-networks");
     });
-    if (rendered.size !== changedMapKeys.size) {
-      renderActiveMap();
+    document.querySelectorAll("[data-networks-dock]").forEach((slot) => {
+      slot.hidden = true;
+      slot.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function setNetworkPanelFloatingHost(pill = null) {
+    if (!networkDropdownMenu) return;
+    clearDockedNetworkPanelHosts();
+    const floatingHost = getFloatingHostForPill(pill);
+    if (networkDropdownMenu.parentElement !== floatingHost) {
+      floatingHost.appendChild(networkDropdownMenu);
     }
+    networkDropdownMenu.classList.remove("is-docked");
+    networkDropdownMenu.classList.add("is-floating");
+    if (!networkPanelPinned) {
+      networkDropdownMenu.style.width = "";
+      networkDropdownMenu.style.top = "";
+      networkDropdownMenu.style.left = "";
+      networkDropdownMenu.style.right = "";
+    }
+  }
+
+  function applyPinnedFloatingPlacement() {
+    if (!networkDropdownMenu) return;
+    const anchorPill = networkPanelAnchorPill || getActivePill();
+    setNetworkPanelFloatingHost(anchorPill);
+    if (Number.isFinite(networkPanelPinnedWidthPx) && networkPanelPinnedWidthPx >= 0) {
+      networkDropdownMenu.style.width = `${networkPanelPinnedWidthPx}px`;
+    }
+    if (Number.isFinite(networkPanelPinnedTopPx)) {
+      networkDropdownMenu.style.top = `${networkPanelPinnedTopPx}px`;
+    }
+    if (Number.isFinite(networkPanelPinnedLeftPx)) {
+      networkDropdownMenu.style.left = `${networkPanelPinnedLeftPx}px`;
+    }
+    networkDropdownMenu.style.right = "auto";
+  }
+
+  function setNetworkPanelDockedHost(pill) {
+    if (!networkDropdownMenu) return null;
+    const dockSlot = getDockSlotForPill(pill);
+    if (!dockSlot) return null;
+    const mapWrap = dockSlot.closest(".map-wrap");
+    const alreadyDocked = (
+      networkDropdownMenu.parentElement === dockSlot
+      && networkDropdownMenu.classList.contains("is-docked")
+      && !dockSlot.hidden
+      && Boolean(mapWrap?.classList.contains("has-docked-networks"))
+    );
+    if (alreadyDocked) {
+      return dockSlot;
+    }
+    clearDockedNetworkPanelHosts();
+    if (mapWrap) {
+      mapWrap.classList.add("has-docked-networks");
+    }
+    dockSlot.hidden = false;
+    dockSlot.setAttribute("aria-hidden", "false");
+    if (networkDropdownMenu.parentElement !== dockSlot) {
+      dockSlot.appendChild(networkDropdownMenu);
+    }
+    networkDropdownMenu.classList.remove("is-floating");
+    networkDropdownMenu.classList.add("is-docked");
+    if (Number.isFinite(networkPanelPinnedWidthPx) && networkPanelPinnedWidthPx > 0) {
+      networkDropdownMenu.style.width = `${networkPanelPinnedWidthPx}px`;
+    } else {
+      networkDropdownMenu.style.width = "";
+    }
+    networkDropdownMenu.style.top = "";
+    networkDropdownMenu.style.left = "";
+    networkDropdownMenu.style.right = "";
+    return dockSlot;
   }
 
   function updateNetworkPanelSafeArea() {
-    const safeAreaEnabled = window.innerWidth > 900;
+    if (!networkPanelPinned || !networkDropdownMenu || networkDropdownMenu.hidden) {
+      clearDockedNetworkPanelHosts();
+    } else {
+      applyPinnedFloatingPlacement();
+    }
+
     let targetWrap = null;
     let targetSafeRight = null;
-
-    if (safeAreaEnabled && isCrTabActive() && isLondonRegionActive()) {
-      const pill = getActivePill();
-      const wrap = pill?.closest(".map-canvas-wrap");
-      const pillRect = pill?.getBoundingClientRect?.();
+    const safeAreaEnabled = window.innerWidth > 900;
+    if (safeAreaEnabled && networkDropdownMenu && isCrTabActive() && isLondonRegionActive()) {
+      const anchorPill = networkPanelAnchorPill || getActivePill();
+      const wrap = getMapCanvasWrapForPill(anchorPill);
+      const pillRect = anchorPill?.getBoundingClientRect?.();
       const panelWidth = getNetworkPanelWidth();
       if (wrap && pillRect && panelWidth > 0) {
         const wrapRect = wrap.getBoundingClientRect();
-        const margin = 8;
+        const margin = NETWORK_PANEL_MARGIN_PX;
         let left = pillRect.right - panelWidth;
         if (left < margin) left = margin;
         if (left + panelWidth > window.innerWidth - margin) {
@@ -17216,26 +18246,15 @@
       }
     }
 
-    const changedMapKeys = new Set();
     document.querySelectorAll(".map-canvas-wrap").forEach((wrap) => {
-      const shouldApply = Boolean(targetWrap && wrap === targetWrap && targetSafeRight);
-      const hadClass = wrap.classList.contains("has-networks-panel-safe-area");
-      const previousSafeRight = wrap.style.getPropertyValue("--networks-panel-safe-right");
-      if (shouldApply) {
+      if (wrap === targetWrap && targetSafeRight) {
         wrap.classList.add("has-networks-panel-safe-area");
         wrap.style.setProperty("--networks-panel-safe-right", targetSafeRight);
       } else {
         wrap.classList.remove("has-networks-panel-safe-area");
         wrap.style.removeProperty("--networks-panel-safe-right");
       }
-      const hasClass = wrap.classList.contains("has-networks-panel-safe-area");
-      const nextSafeRight = wrap.style.getPropertyValue("--networks-panel-safe-right");
-      if (hadClass !== hasClass || previousSafeRight !== nextSafeRight) {
-        changedMapKeys.add(getMapKeyForWrap(wrap));
-      }
     });
-
-    rerenderChangedMapSafeAreas(changedMapKeys);
   }
 
   function positionNetworkPanel(pill) {
@@ -17244,25 +18263,32 @@
       updateNetworkPanelSafeArea();
       return;
     }
+    if (networkPanelPinned) {
+      applyPinnedFloatingPlacement();
+      return;
+    }
+    setNetworkPanelFloatingHost(pill);
+    const floatingHost = getFloatingHostForPill(pill);
     const rect = pill.getBoundingClientRect();
     const panelRect = networkDropdownMenu.getBoundingClientRect();
-    const margin = 8;
     // Anchor below the pill, right-aligned. Keep on-screen.
-    let top = rect.bottom + margin;
-    let left = rect.right - panelRect.width;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    if (left < margin) left = margin;
-    if (left + panelRect.width > viewportWidth - margin) {
-      left = Math.max(margin, viewportWidth - panelRect.width - margin);
+    const hostRect = floatingHost.getBoundingClientRect();
+    let top = (rect.bottom - hostRect.top) + NETWORK_PANEL_MARGIN_PX;
+    let left = (rect.right - hostRect.left) - panelRect.width;
+    const hostWidth = floatingHost === document.body ? window.innerWidth : hostRect.width;
+    const hostHeight = floatingHost === document.body ? window.innerHeight : hostRect.height;
+    if (left < NETWORK_PANEL_MARGIN_PX) left = NETWORK_PANEL_MARGIN_PX;
+    if (left + panelRect.width > hostWidth - NETWORK_PANEL_MARGIN_PX) {
+      left = Math.max(NETWORK_PANEL_MARGIN_PX, hostWidth - panelRect.width - NETWORK_PANEL_MARGIN_PX);
     }
-    if (top + panelRect.height > viewportHeight - margin) {
+    if (top + panelRect.height > hostHeight - NETWORK_PANEL_MARGIN_PX) {
       // Flip above the pill if it would overflow vertically.
-      const flippedTop = rect.top - panelRect.height - margin;
-      if (flippedTop >= margin) top = flippedTop;
+      const flippedTop = (rect.top - hostRect.top) - panelRect.height - NETWORK_PANEL_MARGIN_PX;
+      if (flippedTop >= NETWORK_PANEL_MARGIN_PX) top = flippedTop;
     }
-    networkDropdownMenu.style.top = `${Math.max(margin, top)}px`;
+    networkDropdownMenu.style.top = `${Math.max(NETWORK_PANEL_MARGIN_PX, top)}px`;
     networkDropdownMenu.style.left = `${left}px`;
+    networkDropdownMenu.style.right = "auto";
     updateNetworkPanelSafeArea();
   }
 
@@ -17275,8 +18301,12 @@
       networkPanelAnchorPill = anchorPill || getActivePill();
       // Position after layout so getBoundingClientRect on the panel is accurate.
       window.requestAnimationFrame(() => positionNetworkPanel(networkPanelAnchorPill));
-    } else if (!networkPanelPinned) {
-      networkPanelAnchorPill = null;
+    } else {
+      if (!networkPanelPinned) {
+        networkPanelAnchorPill = null;
+      }
+      setNetworkPanelFloatingHost();
+      updateNetworkPanelSafeArea();
     }
     networkPills.forEach((pill) => {
       pill.setAttribute("aria-expanded", String(isOpen && pill === networkPanelAnchorPill));
@@ -17285,6 +18315,30 @@
 
   function setNetworkPanelPinned(isPinned) {
     networkPanelPinned = !!isPinned;
+    if (!networkPanelPinned) {
+      networkPanelPinnedWidthPx = null;
+      networkPanelPinnedTopPx = null;
+      networkPanelPinnedLeftPx = null;
+    } else if (networkDropdownMenu && !networkDropdownMenu.hidden) {
+      const needSnapshot =
+        !Number.isFinite(networkPanelPinnedWidthPx)
+        || !Number.isFinite(networkPanelPinnedTopPx)
+        || !Number.isFinite(networkPanelPinnedLeftPx);
+      if (needSnapshot) {
+        const rect = networkDropdownMenu.getBoundingClientRect();
+        const anchorPill = networkPanelAnchorPill || getActivePill();
+        const host = getFloatingHostForPill(anchorPill);
+        const hostRect = host.getBoundingClientRect();
+        const measuredWidth = rect.width;
+        if (Number.isFinite(measuredWidth) && measuredWidth > 0) networkPanelPinnedWidthPx = measuredWidth;
+        if (Number.isFinite(rect.top) && Number.isFinite(hostRect.top)) {
+          networkPanelPinnedTopPx = rect.top - hostRect.top;
+        }
+        if (Number.isFinite(rect.left) && Number.isFinite(hostRect.left)) {
+          networkPanelPinnedLeftPx = rect.left - hostRect.left;
+        }
+      }
+    }
     if (networkPanelPin) {
       networkPanelPin.setAttribute("aria-pressed", String(networkPanelPinned));
       networkPanelPin.setAttribute(
@@ -17296,12 +18350,19 @@
         networkPanelPinned ? "Unpin networks panel" : "Pin networks panel",
       );
     }
+    syncNetworkPanelPinIcon();
     if (networkDropdownMenu && !networkDropdownMenu.hidden) {
       window.requestAnimationFrame(() => {
         positionNetworkPanel(networkPanelAnchorPill || getActivePill());
       });
+    } else if (!networkPanelPinned) {
+      setNetworkPanelFloatingHost();
     }
+    updateNetworkPanelSafeArea();
   }
+
+  syncNetworkPanelPinIcon();
+  syncNetworkPanelExpandState();
 
   function updateTotalSensorsSubtext(selected, total) {
     const ids = ["top-total-sensors-subtext", "cr-top-total-sensors-subtext"];
@@ -17338,10 +18399,35 @@
       if (textEl) textEl.textContent = pillText;
     });
     updateTotalSensorsSubtext(selected, total);
-    // Re-position panel if it's currently open (count text width can shift layout).
-    if (networkDropdownMenu && !networkDropdownMenu.hidden) {
-      window.requestAnimationFrame(() => positionNetworkPanel(networkPanelAnchorPill));
+    if (networkDropdownMenu && networkDropdownMenu.hidden) {
+      // Keep London safe-area width in sync before first open so map does not jump on first click.
+      refreshNetworkPanelWidthCache();
     }
+    // Re-position only in floating mode (count text width can shift anchor alignment).
+    if (networkDropdownMenu && !networkDropdownMenu.hidden) {
+      if (networkPanelPinned) {
+        updateNetworkPanelSafeArea();
+      } else {
+        window.requestAnimationFrame(() => positionNetworkPanel(networkPanelAnchorPill));
+      }
+    }
+  }
+
+  function getActiveMapForNetworkFilters() {
+    const activeTab = window.mapTabController?.getActiveTab?.();
+    return activeTab === "cr" ? window.crMap : window.ukMap;
+  }
+
+  let activeNetworkFilterRaf = null;
+  function scheduleActiveNetworkFilterApply() {
+    if (activeNetworkFilterRaf !== null) {
+      return;
+    }
+    activeNetworkFilterRaf = window.requestAnimationFrame(() => {
+      activeNetworkFilterRaf = null;
+      const activeMap = getActiveMapForNetworkFilters();
+      activeMap?.reapplyNetworkFilters?.();
+    });
   }
 
   function normalizeWindowKey(value) {
@@ -17504,7 +18590,27 @@
   });
 
   networkPanelPin?.addEventListener("click", () => {
+    if (!networkPanelPinned && networkDropdownMenu && !networkDropdownMenu.hidden) {
+      const rect = networkDropdownMenu.getBoundingClientRect();
+      const anchorPill = networkPanelAnchorPill || getActivePill();
+      const host = getFloatingHostForPill(anchorPill);
+      const hostRect = host.getBoundingClientRect();
+      const measuredWidth = rect.width;
+      if (Number.isFinite(measuredWidth) && measuredWidth > 0) networkPanelPinnedWidthPx = measuredWidth;
+      const inlineTop = Number.parseFloat(networkDropdownMenu.style.top || "");
+      const inlineLeft = Number.parseFloat(networkDropdownMenu.style.left || "");
+      networkPanelPinnedTopPx = Number.isFinite(inlineTop) && inlineTop >= 0
+        ? inlineTop
+        : (Number.isFinite(rect.top) && Number.isFinite(hostRect.top) ? rect.top - hostRect.top : null);
+      networkPanelPinnedLeftPx = Number.isFinite(inlineLeft) && inlineLeft >= 0
+        ? inlineLeft
+        : (Number.isFinite(rect.left) && Number.isFinite(hostRect.left) ? rect.left - hostRect.left : null);
+    }
     setNetworkPanelPinned(!networkPanelPinned);
+  });
+
+  networkPanelExpand?.addEventListener("click", () => {
+    setNetworkPanelMaxi(!networkPanelMaxi);
   });
 
   // Close on outside click (pin-aware for networks panel)
@@ -17537,6 +18643,7 @@
   // Re-position the floating panel on viewport resize/scroll while open
   function repositionIfOpen() {
     if (!networkDropdownMenu || networkDropdownMenu.hidden) return;
+    if (networkPanelPinned) return;
     positionNetworkPanel(networkPanelAnchorPill || getActivePill());
   }
   window.addEventListener("resize", () => {
@@ -17566,14 +18673,17 @@
 
   networkList?.addEventListener("change", () => {
     updateNetworkDropdownState();
+    scheduleActiveNetworkFilterApply();
   });
 
   networkSelectAll?.addEventListener("click", () => {
     window.requestAnimationFrame(updateNetworkDropdownState);
+    scheduleActiveNetworkFilterApply();
   });
 
   networkDeselectAll?.addEventListener("click", () => {
     window.requestAnimationFrame(updateNetworkDropdownState);
+    scheduleActiveNetworkFilterApply();
   });
 
   if (networkList && typeof MutationObserver !== "undefined") {
