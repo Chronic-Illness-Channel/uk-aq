@@ -1,6 +1,6 @@
 ---
 title: Sensor chart mode
-status: Test
+status: Completed
 area: Map UI
 updated: 2026-05-24
 ---
