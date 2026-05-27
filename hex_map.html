@@ -930,28 +930,30 @@
 
       .sensor-table th.sensor-chart-select-col,
       .sensor-table td.sensor-chart-select-col {
-        width: 22px;
+        width: 21px;
         text-align: center;
         padding-top: 10px;
         padding-bottom: 10px;
         padding-left: 0;
         padding-right: 0;
+        overflow: visible;
       }
 
       .sensor-table th.sensor-chart-symbol-col,
       .sensor-table td.sensor-chart-symbol-col {
-        width: 22px;
-        text-align: center;
+        width: 13px;
+        text-align: left;
         padding-top: 0;
         padding-bottom: 0;
         padding-left: 0;
         padding-right: 0;
+        overflow: visible;
       }
 
       .sensor-table th.sensor-col-sensor,
       .sensor-table td.sensor-col-sensor {
         width: 36%;
-        padding-left: 4px;
+        padding-left: 0;
       }
 
       .sensor-table th.sensor-col-network,
@@ -4065,6 +4067,83 @@
         z-index: 55;
       }
 
+
+      .beta-data-disclaimer {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        width: fit-content;
+        max-width: min(860px, calc(100% - 24px));
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(180, 48, 48, 0.72);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.25;
+        box-shadow: 0 1px 6px rgba(16, 24, 34, 0.12);
+        z-index: 65;
+      }
+
+      .beta-data-disclaimer a {
+        color: #fff;
+        font-weight: 800;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+      }
+
+      .beta-data-disclaimer a:hover,
+      .beta-data-disclaimer a:focus-visible {
+        color: #fff;
+        text-decoration-thickness: 2px;
+      }
+
+      .beta-data-disclaimer--map {
+        position: absolute;
+        left: auto;
+        right: 12px;
+        bottom: 56px;
+        width: min(440px, calc(100% - 24px));
+        max-width: min(440px, calc(100% - 24px));
+        transition: bottom 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 20;
+      }
+
+      .map-canvas-wrap.hex-selected .beta-data-disclaimer--map {
+        bottom: calc(var(--sensor-panel-height, 240px) + 56px);
+      }
+
+      .beta-data-disclaimer--chart {
+        display: none;
+      }
+
+      .map-canvas-wrap.chart-mode .beta-data-disclaimer--map {
+        display: none;
+      }
+
+      .map-canvas-wrap.chart-mode .beta-data-disclaimer--chart {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: calc(var(--sensor-panel-height, 240px) + 6px);
+        display: flex;
+        justify-content: center;
+        max-width: none;
+        width: auto;
+        z-index: 20;
+      }
+
+      @media (max-width: 720px) {
+        .beta-data-disclaimer--map {
+          left: 12px;
+          right: 12px;
+          bottom: 56px;
+          width: auto;
+          max-width: none;
+        }
+      }
       .map-floating-search {
         position: absolute;
         top: 12px;
@@ -4506,13 +4585,45 @@
         padding-bottom: 0;
       }
 
+      .chart-range-toolbar {
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+
+      body.hex-chart-mode .chart-range-toolbar {
+        display: inline-flex;
+      }
+
+      .chart-range-toolbar select {
+        height: 30px;
+        border: 1px solid var(--ukaq-control-selected-border);
+        border-radius: 6px;
+        background: var(--ukaq-control-selected-bg);
+        color: var(--ukaq-control-selected-text);
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.2;
+        padding: 0 30px 0 10px;
+        cursor: pointer;
+      }
+
+      .chart-range-toolbar select:focus,
+      .chart-range-toolbar select:focus-visible,
+      .chart-range-toolbar select:active {
+        border-color: var(--ukaq-control-selected-border);
+        outline: none;
+        box-shadow: none;
+      }
+
       .hex-chart-mode-panel {
         position: absolute;
         inset: 0 0 var(--sensor-panel-height, 240px) 0;
         z-index: 12;
         display: none;
         min-height: 0;
-        padding: 56px 18px 14px;
+        padding: 0 18px 14px;
         background: var(--map-wrap);
         color: var(--ink);
         overflow: hidden;
@@ -4525,7 +4636,7 @@
       .map-canvas-wrap.chart-mode .hex-chart-mode-panel {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
       }
 
       .map-canvas-wrap.chart-mode .map-svg-viewport,
@@ -4536,9 +4647,7 @@
         display: none !important;
       }
 
-      .map-canvas-wrap.chart-mode .map-floating-search,
-      .map-canvas-wrap.chart-mode .networks-pill-anchor,
-      body.hex-chart-mode .networks-panel-floating {
+      .map-canvas-wrap.chart-mode .map-floating-search {
         display: none !important;
       }
 
@@ -4556,57 +4665,105 @@
         transition: none;
       }
 
-      .hex-chart-mode-header {
-        display: flex;
-        flex-wrap: wrap;
+      .hex-chart-selected-sensors {
+        display: grid;
+        width: 100%;
+        max-width: calc(100% - var(--networks-dock-width, 340px) - 18px);
+        align-self: flex-start;
+        justify-content: start;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 8px;
+      }
+
+      .hex-chart-selected-sensor-chip {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .hex-chart-mode-title {
-        margin: 0;
-        font-family: "Inter", system-ui, -apple-system, sans-serif;
-        font-size: 1.22rem;
-        font-weight: 800;
-        line-height: 1.2;
-      }
-
-      .hex-chart-mode-title-line {
+        gap: 6px;
         min-width: 0;
+        background: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 7px 10px;
+        min-height: 34px;
+        box-shadow: none;
       }
 
-      .hex-chart-mode-title-block {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        min-width: 0;
-        flex: 1 1 auto;
+      .hex-chart-selected-sensor-chip[role="button"] {
+        cursor: pointer;
+        transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
       }
 
-      .hex-chart-mode-hex-icon {
-        display: none;
+      .hex-chart-selected-sensor-chip[role="button"]:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--ukaq-control-hover-shadow);
       }
 
-      .hex-chart-mode-reading {
-        font-size: 0.92rem;
-        color: var(--ink-1);
-        line-height: 1.35;
-        white-space: normal;
+      .hex-chart-selected-sensor-chip[role="button"]:focus-visible {
+        outline: 2px solid rgba(60, 120, 172, 0.45);
+        outline-offset: 2px;
+        transform: translateY(-1px);
+        box-shadow: var(--ukaq-control-hover-shadow);
       }
 
-      .hex-chart-mode-reading-main {
-        display: inline;
+      .hex-chart-selected-sensor-chip.is-aqi-source {
+        background: var(--ukaq-control-selected-bg);
       }
 
-      .hex-chart-mode-reading-current {
+      .hex-chart-chip-label {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        min-width: 0;
       }
 
-      .hex-chart-mode-reading-current .sensor-reading-dot {
+      .hex-chart-chip-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--ink);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .hex-chart-chip-network {
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .hex-chart-chip-value,
+      .hex-chart-chip-time {
+        font-size: 0.82rem;
+        font-weight: 400;
+        color: var(--ink-1);
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1200px) {
+        .hex-chart-selected-sensors {
+          max-width: calc(100% - 300px);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .hex-chart-selected-sensors {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+
+      .hex-chart-chip-value {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .hex-chart-chip-value .sensor-reading-dot {
         width: 10px;
         height: 10px;
         min-width: 10px;
@@ -4614,30 +4771,10 @@
         flex: 0 0 10px;
       }
 
-      .hex-chart-mode-compare {
-        margin-top: 2px;
-        font-size: 0.86rem;
-        color: var(--ink-soft);
-        font-weight: 600;
-      }
-
-      .hex-chart-mode-controls {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--ink-soft);
-        font-size: 0.88rem;
-        font-weight: 700;
-      }
-
-      .hex-chart-mode-controls select {
-        border: 1px solid rgba(20, 34, 37, 0.16);
-        border-radius: 10px;
-        background: #fff;
-        color: var(--ink);
-        font: inherit;
-        font-weight: 400;
-        padding: 7px 10px;
+      @media (max-width: 720px) {
+        .hex-chart-selected-sensors {
+          grid-template-columns: 1fr;
+        }
       }
 
       .hex-chart-symbol-svg {
@@ -4646,8 +4783,8 @@
       }
 
       .hex-chart-mode .sensor-table .chart-mode-sensor-symbol-svg {
-        width: 22px;
-        height: 22px;
+        width: var(--sensor-chart-icon-glyph-size);
+        height: var(--sensor-chart-icon-glyph-size);
         display: inline-block;
         vertical-align: middle;
         margin: 0;
@@ -5014,6 +5151,17 @@
                         <button type="button" class="window-stepper-arrow window-stepper-arrow--right" data-window-step="next" aria-label="Use longer window">›</button>
                       </div>
                     </div>
+                    <div class="toolbar-divider chart-range-toolbar" aria-hidden="true"></div>
+                    <label class="chart-range-toolbar" for="hex-chart-window-toolbar">
+                      <span class="field-label">Chart range</span>
+                      <select id="hex-chart-window-toolbar" aria-label="Chart range">
+                        <option value="12h">Last 12 hours</option>
+                        <option value="24h" selected>Last 24 hours</option>
+                        <option value="7d">Last 7 days</option>
+                        <option value="31d">Last 31 days</option>
+                        <option value="90d">Last 90 days</option>
+                      </select>
+                    </label>
                     <div class="toolbar-right">
                       <div class="toolbar-status-slot" id="toolbar-status-slot" aria-live="polite"></div>
                       <div class="toolbar-refresh-slot" id="toolbar-refresh-slot"></div>
@@ -5085,6 +5233,14 @@
                     <button type="button" class="map-search-clear" aria-label="Clear search" hidden>&times;</button>
                     <div class="map-search-results" id="uk-map-search-results" role="listbox" hidden></div>
                   </div>
+                  
+                  <div class="beta-data-disclaimer beta-data-disclaimer--map" aria-label="Beta data notice">
+                    Beta notice: Sensor data shown here is provisional and may change. Do not cite it as official data. For authoritative readings, refer to the source networks:
+                    <a href="https://www.breathelondon.org" target="_blank" rel="noopener noreferrer">Breathe London</a>,
+                    <a href="https://explore.openaq.org" target="_blank" rel="noopener noreferrer">OpenAQ</a>,
+                    <a href="https://sensor.community/en/" target="_blank" rel="noopener noreferrer">Sensor.Community</a>, and
+                    <a href="https://uk-air.defra.gov.uk/interactive-map?network=aurn" target="_blank" rel="noopener noreferrer">Gov.UK AURN</a>.
+                  </div>
                   <div class="map-topbar">
                     <!-- Live + Refresh live in the toolbar via JS; this container holds them when UK tab is inactive -->
                     <span
@@ -5114,25 +5270,16 @@
                       </button>
                     </div>
                   </div>
-                <section class="hex-chart-mode-panel" id="uk-hex-chart-mode" aria-label="Selected constituency sensors chart" hidden>
-                  <div class="hex-chart-mode-header">
-                    <div class="hex-chart-mode-title-block">
-                      <div class="sensor-panel-title-line hex-chart-mode-title-line">
-                        <h3 class="sensor-panel-title hex-chart-mode-title" id="uk-hex-chart-title"></h3>
-                      </div>
-                      <div class="sensor-panel-reading hex-chart-mode-reading" id="uk-hex-chart-reading"></div>
-                    </div>
-                    <label class="hex-chart-mode-controls" for="uk-hex-chart-window">
-                      <span>Chart range</span>
-                      <select id="uk-hex-chart-window">
-                        <option value="12h">Last 12 hours</option>
-                        <option value="24h" selected>Last 24 hours</option>
-                        <option value="7d">Last 7 days</option>
-                        <option value="31d">Last 31 days</option>
-                        <option value="90d">Last 90 days</option>
-                      </select>
-                    </label>
+                
+                  <div class="beta-data-disclaimer beta-data-disclaimer--chart" aria-label="Beta data notice">
+                    Beta notice: Sensor data shown here is provisional and may change. Do not cite it as official data. For authoritative readings, refer to the source networks:
+                    <a href="https://www.breathelondon.org" target="_blank" rel="noopener noreferrer">Breathe London</a>,
+                    <a href="https://explore.openaq.org" target="_blank" rel="noopener noreferrer">OpenAQ</a>,
+                    <a href="https://sensor.community/en/" target="_blank" rel="noopener noreferrer">Sensor.Community</a>, and
+                    <a href="https://uk-air.defra.gov.uk/interactive-map?network=aurn" target="_blank" rel="noopener noreferrer">Gov.UK AURN</a>.
                   </div>
+                  <section class="hex-chart-mode-panel" id="uk-hex-chart-mode" aria-label="Selected constituency sensors chart" hidden>
+                  <div class="hex-chart-selected-sensors" id="uk-hex-chart-reading" aria-label="Selected chart sensors"></div>
                   <div class="hex-chart-message" id="uk-hex-chart-message" aria-live="polite"></div>
                   <div class="hex-chart-wrap" id="uk-hex-chart-wrap">
                     <svg class="hex-chart-svg" id="uk-hex-chart-svg" role="img" aria-label="Selected sensor chart"></svg>
@@ -5690,6 +5837,13 @@
                     <button type="button" class="map-search-clear" aria-label="Clear search" hidden>&times;</button>
                     <div class="map-search-results" id="cr-map-search-results" role="listbox" hidden></div>
                   </div>
+                  <div class="beta-data-disclaimer beta-data-disclaimer--map" aria-label="Beta data notice">
+                    Beta notice: Sensor data shown here is provisional and may change. Do not cite it as official data. For authoritative readings, refer to the source networks:
+                    <a href="https://www.breathelondon.org" target="_blank" rel="noopener noreferrer">Breathe London</a>,
+                    <a href="https://explore.openaq.org" target="_blank" rel="noopener noreferrer">OpenAQ</a>,
+                    <a href="https://sensor.community/en/" target="_blank" rel="noopener noreferrer">Sensor.Community</a>, and
+                    <a href="https://uk-air.defra.gov.uk/interactive-map?network=aurn" target="_blank" rel="noopener noreferrer">Gov.UK AURN</a>.
+                  </div>
                   <div class="map-topbar">
                     <!-- Live + Refresh live in the toolbar via JS; this container holds them when CR tab is inactive -->
                     <span
@@ -5719,25 +5873,16 @@
                       </button>
                     </div>
                   </div>
+                  
+                  <div class="beta-data-disclaimer beta-data-disclaimer--chart" aria-label="Beta data notice">
+                    Beta notice: Sensor data shown here is provisional and may change. Do not cite it as official data. For authoritative readings, refer to the source networks:
+                    <a href="https://www.breathelondon.org" target="_blank" rel="noopener noreferrer">Breathe London</a>,
+                    <a href="https://explore.openaq.org" target="_blank" rel="noopener noreferrer">OpenAQ</a>,
+                    <a href="https://sensor.community/en/" target="_blank" rel="noopener noreferrer">Sensor.Community</a>, and
+                    <a href="https://uk-air.defra.gov.uk/interactive-map?network=aurn" target="_blank" rel="noopener noreferrer">Gov.UK AURN</a>.
+                  </div>
                   <section class="hex-chart-mode-panel" id="cr-hex-chart-mode" aria-label="Selected local authority sensors chart" hidden>
-                    <div class="hex-chart-mode-header">
-                      <div class="hex-chart-mode-title-block">
-                        <div class="sensor-panel-title-line hex-chart-mode-title-line">
-                          <h3 class="sensor-panel-title hex-chart-mode-title" id="cr-hex-chart-title"></h3>
-                        </div>
-                        <div class="sensor-panel-reading hex-chart-mode-reading" id="cr-hex-chart-reading"></div>
-                      </div>
-                      <label class="hex-chart-mode-controls" for="cr-hex-chart-window">
-                        <span>Chart range</span>
-                        <select id="cr-hex-chart-window">
-                          <option value="12h">Last 12 hours</option>
-                          <option value="24h" selected>Last 24 hours</option>
-                          <option value="7d">Last 7 days</option>
-                          <option value="31d">Last 31 days</option>
-                          <option value="90d">Last 90 days</option>
-                        </select>
-                      </label>
-                    </div>
+                    <div class="hex-chart-selected-sensors" id="cr-hex-chart-reading" aria-label="Selected chart sensors"></div>
                     <div class="hex-chart-message" id="cr-hex-chart-message" aria-live="polite"></div>
                     <div class="hex-chart-wrap" id="cr-hex-chart-wrap">
                       <svg class="hex-chart-svg" id="cr-hex-chart-svg" role="img" aria-label="Selected sensor chart"></svg>
@@ -9843,12 +9988,11 @@
           const symbolMarkup = symbolIndex >= 0
               ? (window.ChartCore?.getSymbolSvgMarkup?.(symbolIndex, {
                 className: "hex-chart-symbol-svg chart-mode-sensor-symbol-svg",
-                sizePx: 22,
-                area: 72,
+                sizePx: 28,
+                area: 160,
                 fill: "#3C78AC",
                 stroke: "#fff",
                 strokeWidth: 1.2,
-                viewBox: "-8 -8 16 16",
               }) || "")
             : "";
           const rowClass = [
@@ -11238,7 +11382,7 @@
         if (targetElement && typeof targetElement.closest === "function" && targetElement.closest("polygon.hex")) {
           return;
         }
-        if (targetElement && typeof targetElement.closest === "function" && targetElement.closest(".map-inline-sensor-panel, .map-settings-panel, .map-settings, .map-zoom-controls")) {
+        if (targetElement && typeof targetElement.closest === "function" && targetElement.closest(".map-inline-sensor-panel, .map-settings-panel, .map-settings, .map-zoom-controls, .map-topbar, .networks-pill-anchor, .networks-pill, .hex-chart-mode-panel")) {
           return;
         }
         setSelectedCell(null);
@@ -14538,12 +14682,11 @@
           const symbolMarkup = symbolIndex >= 0
               ? (window.ChartCore?.getSymbolSvgMarkup?.(symbolIndex, {
                 className: "hex-chart-symbol-svg chart-mode-sensor-symbol-svg",
-                sizePx: 22,
-                area: 72,
+                sizePx: 28,
+                area: 160,
                 fill: "#3C78AC",
                 stroke: "#fff",
                 strokeWidth: 1.2,
-                viewBox: "-8 -8 16 16",
               }) || "")
             : "";
           const rowClass = [
@@ -16366,7 +16509,7 @@
         if (targetElement && typeof targetElement.closest === "function" && targetElement.closest(".hex")) {
           return;
         }
-        if (targetElement && typeof targetElement.closest === "function" && targetElement.closest(".map-inline-sensor-panel, .map-settings-panel, .map-settings, .map-zoom-controls")) {
+        if (targetElement && typeof targetElement.closest === "function" && targetElement.closest(".map-inline-sensor-panel, .map-settings-panel, .map-settings, .map-zoom-controls, .map-topbar, .networks-pill-anchor, .networks-pill, .hex-chart-mode-panel")) {
           return;
         }
         setSelectedCell(null);
@@ -16770,6 +16913,7 @@
   ]);
 
   const backButton = document.getElementById("chart-back-to-map");
+  const chartRangeToolbarSelect = document.getElementById("hex-chart-window-toolbar");
   const domByMap = {
     uk: collectChartDom("uk"),
     cr: collectChartDom("cr"),
@@ -16783,6 +16927,7 @@
     visibleEntries: [],
     loadToken: 0,
     selectedPrimaryId: null,
+    selectedAqiSensorId: null,
     loadAbortController: null,
     loadInFlight: false,
     pendingLoadReason: null,
@@ -16801,10 +16946,10 @@
     return {
       panel,
       canvasWrap: panel?.closest(".map-canvas-wrap") || null,
-      title: document.getElementById(`${prefix}-hex-chart-title`),
+      title: null,
       hexIcon: document.getElementById(`${prefix}-hex-chart-hex-icon`),
       reading: document.getElementById(`${prefix}-hex-chart-reading`),
-      windowSelect: document.getElementById(`${prefix}-hex-chart-window`),
+      windowSelect: chartRangeToolbarSelect,
       valueLabel: document.getElementById(prefix === "cr" ? "cr-sensor-value-label" : "sensor-value-label"),
       message: document.getElementById(`${prefix}-hex-chart-message`),
       chartWrap: document.getElementById(`${prefix}-hex-chart-wrap`),
@@ -16870,22 +17015,18 @@
     return dateValue.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
   }
 
-  function formatChartHeaderUpdated(timestampValue) {
+  function formatChartChipTimestamp(timestampValue) {
     const stamp = timestampValue ? new Date(timestampValue) : null;
-    if (!(stamp instanceof Date) || Number.isNaN(stamp.getTime())) {
-      return "Updated --:--";
-    }
+    if (!(stamp instanceof Date) || Number.isNaN(stamp.getTime())) return "--:--";
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterdayStart = new Date(todayStart.getTime() - DAY_MS);
-    if (stamp >= todayStart) {
-      return `Updated ${formatChartHeaderTime(stamp)}`;
-    }
-    if (stamp >= yesterdayStart) {
-      return `Updated yesterday ${formatChartHeaderTime(stamp)}`;
-    }
-    const olderDayLabel = stamp.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-    return `Updated ${olderDayLabel}, ${formatChartHeaderTime(stamp)}`;
+    const stampDayStart = new Date(stamp.getFullYear(), stamp.getMonth(), stamp.getDate());
+    const timeText = formatChartHeaderTime(stamp);
+    if (stampDayStart.getTime() === todayStart.getTime()) return timeText;
+    const day = String(stamp.getDate()).padStart(2, "0");
+    const month = String(stamp.getMonth() + 1).padStart(2, "0");
+    const year = String(stamp.getFullYear());
+    return `${day}/${month}/${year} ${timeText}`;
   }
 
   function formatChartTooltipTimestamp(dateValue) {
@@ -16898,6 +17039,30 @@
     const hours = String(dateValue.getHours()).padStart(2, "0");
     const minutes = String(dateValue.getMinutes()).padStart(2, "0");
     return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
+  function formatChartAxisTickLabel(dateValue, rangeMs) {
+    if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+      return "";
+    }
+    const day = String(dateValue.getDate()).padStart(2, "0");
+    const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+    const hours = String(dateValue.getHours()).padStart(2, "0");
+    const minutes = String(dateValue.getMinutes()).padStart(2, "0");
+    if (rangeMs <= DAY_MS) {
+      if (hours === "00" && minutes === "00") {
+        return `${day}/${month}`;
+      }
+      return `${hours}:${minutes}`;
+    }
+    return `${day}/${month}`;
+  }
+
+  function buildChartXAxis(scale, rangeMs) {
+    return d3.axisBottom(scale)
+      .ticks(rangeMs <= DAY_MS ? 8 : 7)
+      .tickSizeOuter(0)
+      .tickFormat((value) => formatChartAxisTickLabel(value, rangeMs));
   }
 
   function getChartTooltipPointColor(pointValue) {
@@ -16922,56 +17087,96 @@
       fill: options.fill || "#3C78AC",
       stroke: options.stroke || "#fff",
       strokeWidth: Number.isFinite(options.strokeWidth) ? options.strokeWidth : 1.2,
-      viewBox: options.viewBox || "-8 -8 16 16",
+      viewBox: options.viewBox,
     }) || "";
   }
 
-  function getLeadSelectedEntry() {
-    const selectedIds = Array.from(state.chartModeSelectedSensors);
-    for (const selectedId of selectedIds) {
-      const match = state.visibleEntries.find((entry) => entry.stationId === selectedId);
-      if (match) return match;
+  function getChartSymbolPathAttributes(symbolIndex, options = {}) {
+    if (!Number.isInteger(symbolIndex) || symbolIndex < 0) return null;
+    const symbolMarkup = getChartSymbolMarkup(symbolIndex, {
+      className: "aqi-source-symbol-probe",
+      sizePx: Number.isFinite(options.sizePx) ? options.sizePx : 14,
+      area: Number.isFinite(options.area) ? options.area : 72,
+      fill: options.fill || "#3C78AC",
+      stroke: options.stroke || "#fff",
+      strokeWidth: Number.isFinite(options.strokeWidth) ? options.strokeWidth : 1.2,
+    });
+    if (!symbolMarkup) return null;
+    const dMatch = symbolMarkup.match(/<path[^>]*\sd="([^"]+)"/i);
+    if (!dMatch) return null;
+    const fillMatch = symbolMarkup.match(/<path[^>]*\sfill="([^"]+)"/i);
+    const strokeMatch = symbolMarkup.match(/<path[^>]*\sstroke="([^"]+)"/i);
+    const strokeWidthMatch = symbolMarkup.match(/<path[^>]*\sstroke-width="([^"]+)"/i);
+    return {
+      d: dMatch[1],
+      fill: fillMatch ? fillMatch[1] : "#3C78AC",
+      stroke: strokeMatch ? strokeMatch[1] : "#fff",
+      strokeWidth: strokeWidthMatch ? Number(strokeWidthMatch[1]) : 1.2,
+    };
+  }
+
+  function getSelectedSensorIdsOrdered() {
+    return Array.from(state.chartModeSelectedSensors);
+  }
+
+  function syncAqiSourceWithSelectedSensors() {
+    const selectedIds = getSelectedSensorIdsOrdered();
+    if (!selectedIds.length) {
+      state.selectedAqiSensorId = null;
+      return null;
     }
-    return state.visibleEntries[0] || null;
+    if (!state.selectedAqiSensorId || !selectedIds.includes(state.selectedAqiSensorId)) {
+      state.selectedAqiSensorId = selectedIds[0];
+    }
+    return state.selectedAqiSensorId;
+  }
+
+  function setAqiSourceSensor(stationId, options = {}) {
+    const normalizedId = String(stationId || "").trim();
+    if (!state.isChartMode || !normalizedId) return false;
+    const mapKey = options.mapKey || null;
+    if (mapKey && state.mapKey !== mapKey) return false;
+    const selectedIds = getSelectedSensorIdsOrdered();
+    if (!selectedIds.includes(normalizedId)) return false;
+    if (state.selectedAqiSensorId === normalizedId) return true;
+    state.selectedAqiSensorId = normalizedId;
+    renderSensorList(getCurrentContext() || {});
+    notifySelectionChange();
+    if (options.reload !== false) {
+      loadChartData("aqi-source-change");
+    }
+    return true;
   }
 
   function buildChartHeaderHtml(context) {
-    const leadEntry = getLeadSelectedEntry();
-    if (!leadEntry) {
-      return {
-        title: context?.areaName || "Selected area",
-        readingHtml: "",
-      };
-    }
-    const selectedCount = Math.max(1, state.chartModeSelectedSensors.size || 0);
-    const pollutantLabel = String(context?.pollutantLabel || leadEntry.pollutantLabel || "PM2.5").trim();
-    const units = String(leadEntry.units || context?.units || "").trim();
-    const networkLabel = String(leadEntry.networkLabel || "Unknown network");
-    const valueNumber = Number(leadEntry.value);
-    const valueLabel = Number.isFinite(valueNumber)
-      ? `${formatChartValue(valueNumber)} ${units}`.trim()
-      : "No data";
+    const selectedIds = getSelectedSensorIdsOrdered();
+    const selectedAqiSensorId = syncAqiSourceWithSelectedSensors();
     const adapter = getAdapter(state.mapKey);
-    const dotColor = adapter?.getSensorCurrentColor?.(leadEntry.stationId) || "var(--no-data)";
-    const updatedText = formatChartHeaderUpdated(leadEntry.timestamp);
-    const compareHtml = selectedCount > 1
-      ? `<div class="hex-chart-mode-compare">Comparing with ${selectedCount - 1} sensor${selectedCount - 1 === 1 ? "" : "s"}</div>`
-      : "";
-    const readingHtml = `
-      <div class="hex-chart-mode-reading-main">
-        ${escapeHtml(networkLabel)} ·
-        <span class="hex-chart-mode-reading-current">
-          <span class="sensor-reading-dot" style="--sensor-reading-color:${escapeHtml(dotColor)}"></span>
-          <span>Current ${escapeHtml(pollutantLabel)}: ${escapeHtml(valueLabel)}</span>
-        </span>
-        · ${escapeHtml(updatedText)}
-      </div>
-      ${compareHtml}
-    `;
-    return {
-      title: String(leadEntry.stationName || context?.areaName || "Selected sensor"),
-      readingHtml,
-    };
+    const chipsHtml = selectedIds.map((stationId, index) => {
+      const entry = state.visibleEntries.find((candidate) => candidate.stationId === stationId);
+      if (!entry) return "";
+      const symbolMarkup = getChartSymbolMarkup(index, {
+        className: "hex-chart-symbol-svg chart-mode-sensor-symbol-svg",
+        sizePx: 22,
+        area: 120,
+      });
+      const networkLabel = String(entry.networkLabel || "Unknown network");
+      const units = String(entry.units || context?.units || "").trim();
+      const valueNumber = Number(entry.value);
+      const valueLabel = Number.isFinite(valueNumber) ? `${formatChartValue(valueNumber)} ${units}`.trim() : "No data";
+      const dotColor = adapter?.getSensorCurrentColor?.(entry.stationId) || "var(--no-data)";
+      const updatedText = formatChartChipTimestamp(entry.timestamp);
+      const stationName = String(entry.stationName || "Unknown sensor");
+      const isAqiSource = stationId === selectedAqiSensorId;
+      const sourceAriaLabel = `Use ${stationName} for DAQI and EAQI bands`;
+      return `<div class="hex-chart-selected-sensor-chip${isAqiSource ? " is-aqi-source" : ""}" role="button" tabindex="0" data-aqi-source-station-id="${escapeHtml(stationId)}" aria-pressed="${isAqiSource ? "true" : "false"}" aria-label="${escapeHtml(sourceAriaLabel)}" title="${escapeHtml(sourceAriaLabel)}">
+        <span class="hex-chart-chip-symbol">${symbolMarkup}</span>
+        <span class="hex-chart-chip-label"><span class="hex-chart-chip-name">${escapeHtml(stationName)}</span><span class="hex-chart-chip-network">· ${escapeHtml(networkLabel)}</span></span>
+        <span class="hex-chart-chip-value"><span class="sensor-reading-dot" style="--sensor-reading-color:${escapeHtml(dotColor)}"></span>${escapeHtml(valueLabel)}</span>
+        <span class="hex-chart-chip-time">${escapeHtml(updatedText)}</span>
+      </div>`;
+    }).filter(Boolean).join("");
+    return { title: "", readingHtml: chipsHtml };
   }
 
   function buildYAxisLabel(units) {
@@ -17294,7 +17499,8 @@
       const symbolIndex = selected ? selectedIds.indexOf(stationId) : -1;
       const symbolMarkup = getChartSymbolMarkup(symbolIndex, {
         className: "hex-chart-symbol-svg chart-mode-sensor-symbol-svg",
-        sizePx: 22,
+        sizePx: 28,
+        area: 160,
       });
       selectCell.innerHTML = stationId
         ? `<button type="button" class="hex-chart-selector" data-station-id="${escapeHtml(stationId)}" aria-label="${selected ? "Remove" : "Add"} ${escapeHtml(stationName)} from chart" aria-pressed="${selected ? "true" : "false"}"></button>`
@@ -17336,6 +17542,7 @@
         isChartMode: state.isChartMode,
         mapKey: state.mapKey,
         selectedPrimaryId: state.selectedPrimaryId,
+        selectedAqiSensorId: state.selectedAqiSensorId,
         selectedSensorIds: Array.from(state.chartModeSelectedSensors),
       },
     }));
@@ -17369,6 +17576,7 @@
       : entries[0]?.stationId || null;
     state.chartModeSelectedSensors = new Set(initialSensorId ? [initialSensorId] : []);
     state.selectedPrimaryId = initialSensorId;
+    state.selectedAqiSensorId = initialSensorId;
     syncPanels();
     syncWindowControl();
     renderSensorList(context);
@@ -17382,6 +17590,7 @@
     state.mapKey = null;
     state.chartModeAreaCode = null;
     state.chartModeSelectedSensors.clear();
+    state.selectedAqiSensorId = null;
     state.visibleEntries = [];
     state.loadToken += 1;
     syncPanels();
@@ -17413,6 +17622,7 @@
     state.chartModeSelectedSensors = new Set(Array.from(state.chartModeSelectedSensors).filter((id) => visibleIds.has(id)));
     if (!state.chartModeSelectedSensors.size && entries.length) state.chartModeSelectedSensors.add(entries[0].stationId);
     if (!state.chartModeSelectedSensors.has(state.selectedPrimaryId)) state.selectedPrimaryId = Array.from(state.chartModeSelectedSensors)[0] || null;
+    syncAqiSourceWithSelectedSensors();
     renderSensorList(context);
     notifySelectionChange();
     // updateChart: false lets the caller handle the chart refresh (e.g. delta-only refresh).
@@ -17436,6 +17646,7 @@
 
     const usableEntries = cf.currentSeriesData.entries;
     const units         = cf.currentSeriesData.units || "";
+    syncAqiSourceWithSelectedSensors();
 
     // Only fetch the delta since the chart's current right-edge timestamp.
     const prevEnd  = cf.xScale.domain()[1];
@@ -17445,7 +17656,7 @@
     const deltaChunk = { startIso: prevEnd.toISOString(), endIso: newRange.endIso };
     let anyNewData     = false;
     let primaryGuideline = cf.currentGuideline;
-    const primaryId      = state.selectedPrimaryId || usableEntries[0]?.stationId;
+    const primaryId      = state.selectedAqiSensorId || state.selectedPrimaryId || usableEntries[0]?.stationId;
 
     for (const entry of usableEntries) {
       if (state.loadToken !== token) return; // superseded by a user action
@@ -17487,11 +17698,15 @@
     });
 
     const newYDomain = computeYDomainNiced(seriesPointsMap, usableEntries, primaryGuideline);
+    const selectedIds = getSelectedSensorIdsOrdered();
+    const aqiSourceSymbolIndex = Math.max(0, selectedIds.indexOf(primaryId));
 
     // Animate to the new time range, then redraw fully once animation completes.
     animateChartDomains(cf, newRange, newYDomain, token, () => {
       if (state.loadToken !== token) return;
-      updateChart(dom, seriesPointsMap, usableEntries, newRange, primaryGuideline, units);
+      updateChart(dom, seriesPointsMap, usableEntries, newRange, primaryGuideline, units, undefined, {
+        aqiSourceSymbolIndex,
+      });
     });
   }
 
@@ -17534,6 +17749,7 @@
       state.chartModeSelectedSensors.add(stationId);
       state.selectedPrimaryId = state.selectedPrimaryId || stationId;
     }
+    syncAqiSourceWithSelectedSensors();
     renderSensorList(getCurrentContext() || {});
     notifySelectionChange();
     loadChartData("sensor-change");
@@ -17552,6 +17768,7 @@
     }
     state.chartModeSelectedSensors = new Set([normalizedId]);
     state.selectedPrimaryId = normalizedId;
+    state.selectedAqiSensorId = normalizedId;
     renderSensorList(getCurrentContext() || {});
     notifySelectionChange();
     loadChartData("sensor-change");
@@ -17715,6 +17932,48 @@
     return [];
   }
 
+  async function prefetchAqiBandsForEntries(entries, range, options = {}) {
+    const list = Array.isArray(entries) ? entries : [];
+    if (!list.length || !range) return;
+    const activeSourceStationId = String(options.activeSourceStationId || "").trim();
+    const loadToken = Number.isFinite(options.loadToken) ? Number(options.loadToken) : null;
+    const contextPollutant = normalizeAqiSupportedPollutant(getCurrentContext()?.pollutant || "");
+    const shouldContinue = () => loadToken === null || state.loadToken === loadToken;
+    for (const entry of list) {
+      if (!shouldContinue()) return;
+      const stationId = String(entry?.stationId || "").trim();
+      if (!stationId || stationId === activeSourceStationId) continue;
+      const pollutantKey = normalizeAqiSupportedPollutant(entry?.pollutant || "") || contextPollutant;
+      const aqiCacheKey = buildAqiCacheKey(entry, pollutantKey);
+      if (!aqiCacheKey || !pollutantKey) continue;
+      let cacheRecord = aqiBandCache.get(aqiCacheKey) || { points: [], coveredRanges: [] };
+      if (!Array.isArray(cacheRecord.points)) cacheRecord.points = [];
+      cacheRecord.coveredRanges = normalizeCoveredRanges(cacheRecord.coveredRanges);
+      const missingRanges = getMissingRangesForRequest(range, cacheRecord.coveredRanges);
+      if (!missingRanges.length) {
+        aqiBandCache.set(aqiCacheKey, cacheRecord);
+        continue;
+      }
+      const newlyFetched = [];
+      for (const missing of missingRanges) {
+        if (!shouldContinue()) return;
+        const missingRange = {
+          startMs: missing.startMs,
+          endMs: missing.endMs,
+          startDate: new Date(missing.startMs),
+          endDate: new Date(missing.endMs),
+          startIso: new Date(missing.startMs).toISOString(),
+          endIso: new Date(missing.endMs).toISOString(),
+        };
+        const points = await fetchAqiBands(entry, pollutantKey, missingRange);
+        newlyFetched.push(...(Array.isArray(points) ? points : []));
+        cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, missing.startMs, missing.endMs);
+      }
+      cacheRecord.points = mergeSeriesPoints(cacheRecord.points, newlyFetched);
+      aqiBandCache.set(aqiCacheKey, cacheRecord);
+    }
+  }
+
   function clearCacheForCurrentSensors() {
     const tidSet = new Set();
     Array.from(state.chartModeSelectedSensors).forEach((id) => {
@@ -17758,7 +18017,7 @@
       cf.xScale.domain([new Date(startX[0] + (endX[0] - startX[0]) * ease), new Date(startX[1] + (endX[1] - startX[1]) * ease)]);
       cf.yScale.domain([startY[0] + (endY[0] - startY[0]) * ease, startY[1] + (endY[1] - startY[1]) * ease]);
 
-      cf.xAxisGroup.call(d3.axisBottom(cf.xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+      cf.xAxisGroup.call(buildChartXAxis(cf.xScale, rangeMs));
       cf.yAxisGroup.call(d3.axisLeft(cf.yScale).ticks(5).tickSizeOuter(0));
 
       const csd = cf.currentSeriesData;
@@ -17803,9 +18062,10 @@
 
     try {
       setLoading(false);
+      const isAqiSourceChangeOnly = reason === "aqi-source-change";
 
       // Build ordered usableEntries by Set insertion order (consistent symbol indices).
-      const selectedIds = Array.from(state.chartModeSelectedSensors);
+      const selectedIds = getSelectedSensorIdsOrdered();
       const entryById = new Map(state.visibleEntries.map((entry) => [entry.stationId, entry]));
       const selectedEntries = selectedIds.map((id) => entryById.get(id)).filter(Boolean);
 
@@ -17814,12 +18074,22 @@
         setMessage(NO_SELECTED_SENSOR_CHART_MESSAGE);
         return;
       }
+      if (!state.selectedAqiSensorId || !selectedEntries.some((entry) => entry.stationId === state.selectedAqiSensorId)) {
+        state.selectedAqiSensorId = selectedEntries[0]?.stationId || null;
+      }
       const usableEntries = selectedEntries.filter((entry) => entry.timeseriesId);
       if (!usableEntries.length) {
         renderEmptyChart("This pollutant is not available for the selected sensor.");
         setMessage("This pollutant is not available for the selected sensor.", { error: true });
         return;
       }
+      const aqiSourceEntry = usableEntries.find((entry) => entry.stationId === state.selectedAqiSensorId) || usableEntries[0];
+      const aqiSourceId = aqiSourceEntry?.stationId || null;
+      if (aqiSourceId && state.selectedAqiSensorId !== aqiSourceId) {
+        state.selectedAqiSensorId = aqiSourceId;
+        renderSensorList(getCurrentContext() || {});
+      }
+      const aqiSourceSymbolIndex = Math.max(0, selectedIds.indexOf(aqiSourceId));
 
       const windowValue = state.chartModeTimeRange || "24h";
       const range = resolveRange(windowValue);
@@ -17842,8 +18112,8 @@
       const seriesPointsMap = new Map();
       const fetchPlans = [];
       let primaryGuideline = null;
-      const primaryId = state.selectedPrimaryId || usableEntries[0]?.stationId;
-      const primary = usableEntries.find((entry) => entry.stationId === primaryId) || usableEntries[0];
+      const primaryId = aqiSourceId || state.selectedPrimaryId || usableEntries[0]?.stationId;
+      const primary = aqiSourceEntry || usableEntries.find((entry) => entry.stationId === primaryId) || usableEntries[0];
       const pollutantKey = normalizeAqiSupportedPollutant(primary?.pollutant || getCurrentContext()?.pollutant || "");
 
       usableEntries.forEach((entry) => {
@@ -17896,7 +18166,7 @@
       }
 
       const hasCachedData = Array.from(seriesPointsMap.values()).some((points) => points.length > 0);
-      const hasObservationFetch = fetchPlans.length > 0;
+      const hasObservationFetch = !isAqiSourceChangeOnly && fetchPlans.length > 0;
       const observsLoadingActive = hasObservationFetch;
 
       if (frameValid) {
@@ -17907,18 +18177,21 @@
           updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
             aqiLoading: aqiLoadingActive,
             yAxisLoading: observsLoadingActive,
+            aqiSourceSymbolIndex,
           });
         }
       } else if (hasCachedData) {
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
           aqiLoading: aqiLoadingActive,
           yAxisLoading: observsLoadingActive,
+          aqiSourceSymbolIndex,
         });
       }
       if (!hasCachedData) {
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
           aqiLoading: aqiLoadingActive,
           yAxisLoading: observsLoadingActive,
+          aqiSourceSymbolIndex,
         });
       }
 
@@ -17948,6 +18221,7 @@
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
           aqiLoading: false,
           yAxisLoading: hasObservationFetch,
+          aqiSourceSymbolIndex,
         });
       })().catch((_err) => {
         aqiLoadingActive = false;
@@ -17955,7 +18229,7 @@
 
       // --- Fast path: everything already cached for this requested range. ---
       if (!hasObservationFetch) {
-        if (aqiLoadingActive) {
+        if (aqiLoadingActive && !isAqiSourceChangeOnly) {
           setLoading(true);
           await aqiProgressPromise;
         }
@@ -17963,24 +18237,28 @@
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
           aqiLoading: aqiLoadingActive,
           yAxisLoading: false,
+          aqiSourceSymbolIndex,
         });
         setMessage(Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0)
           ? ""
           : "No history available for this sensor.");
+        void prefetchAqiBandsForEntries(usableEntries, range, {
+          activeSourceStationId: aqiSourceId,
+          loadToken: token,
+        });
         return;
       }
 
       // --- Fetch path: some entries have missing intervals. ---
       setLoading(true);
 
-      if (frameValid) {
-        const progressFrame = {
-          margin: dom.chartFrame.margin,
-          width: dom.chartFrame.width,
-          height: dom.chartFrame.height,
-        };
-        dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, progressFrame);
-      }
+      const progressFrame = {
+        margin: dom.chartFrame.margin,
+        width: dom.chartFrame.width,
+        height: dom.chartFrame.height,
+      };
+      if (dom.chartFrame?.progressBar?.remove) dom.chartFrame.progressBar.remove();
+      dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, progressFrame);
 
       const workQueue = buildChunkWorkQueue(fetchPlans, windowValue);
       const totalChunks = Math.max(1, workQueue.length);
@@ -18020,6 +18298,7 @@
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
           aqiLoading: aqiLoadingActive,
           yAxisLoading: true,
+          aqiSourceSymbolIndex,
         });
         dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
       }
@@ -18030,9 +18309,14 @@
       updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
         aqiLoading: false,
         yAxisLoading: false,
+        aqiSourceSymbolIndex,
       });
       const totalPoints = Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0);
       setMessage(totalPoints ? "" : "No history available for this sensor.");
+      void prefetchAqiBandsForEntries(usableEntries, range, {
+        activeSourceStationId: aqiSourceId,
+        loadToken: token,
+      });
 
     } catch (error) {
       if (signal.aborted || token !== state.loadToken) return;
@@ -18117,6 +18401,26 @@
       }
     };
     const bandTop = AQI_BAND_TOP_OFFSET_PX;
+    const symbolIndex = Number.isInteger(options?.aqiSourceSymbolIndex) ? options.aqiSourceSymbolIndex : -1;
+    const symbolAttrs = getChartSymbolPathAttributes(symbolIndex, {
+      area: 130,
+      sizePx: 20,
+      fill: "#3C78AC",
+      stroke: "#fff",
+      strokeWidth: 1.35,
+    });
+    if (symbolAttrs?.d) {
+      const symbolCenterX = frame.margin.left - 62;
+      const symbolCenterY = bandTop + bandHeight + (gap / 2);
+      svg.append("path")
+        .attr("class", "aqi-band-source-symbol")
+        .attr("d", symbolAttrs.d)
+        .attr("transform", `translate(${symbolCenterX},${symbolCenterY})`)
+        .attr("fill", symbolAttrs.fill || "#3C78AC")
+        .attr("stroke", symbolAttrs.stroke || "#fff")
+        .attr("stroke-width", Number.isFinite(symbolAttrs.strokeWidth) ? symbolAttrs.strokeWidth : 1.2)
+        .attr("stroke-linejoin", "round");
+    }
     drawBand("DAQI", bandTop, "daqi", daqiColors);
     drawBand("EAQI", bandTop + bandHeight + gap, "eaqi", eaqiColors);
   }
@@ -18127,7 +18431,7 @@
     const width  = svgEl.clientWidth  || 960;
     const height = Math.max(svgEl.clientHeight || 0, 300);
     const marginTop = Math.max(52, Math.round(height * 0.12));
-    const margin = { top: marginTop, right: 24, bottom: 44, left: 58 };
+    const margin = { top: marginTop, right: 24, bottom: 44, left: 72 };
 
     dom.svg.selectAll("*").remove();
     dom.svg.attr("viewBox", `0 0 ${width} ${height}`);
@@ -18154,7 +18458,7 @@
     const xAxisGroup = dom.svg.append("g")
       .attr("class", "chart-axis")
       .attr("transform", `translate(0, ${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+      .call(buildChartXAxis(xScale, rangeMs));
     const yAxisGroup = dom.svg.append("g")
       .attr("class", "chart-axis")
       .attr("transform", `translate(${margin.left}, 0)`);
@@ -18291,8 +18595,6 @@
       dom.tooltip?.classList.remove("visible");
     });
 
-    const progressBar = ChartCore.renderProgressBar(svgEl, { margin, width, height });
-
     dom.chartFrame = {
       svgEl, xScale, yScale,
       xAxisGroup, yAxisGroup,
@@ -18300,7 +18602,7 @@
       aqiBandsContainer,
       guidelineEl, guidelineLabelEl,
       seriesPaths, seriesSymbolGroups,
-      dot, overlay, progressBar,
+      dot, overlay, progressBar: null,
       margin, width, height,
       frame: { width, height, margin, startMs: range.startMs, endMs: range.endMs },
       areaCode: state.chartModeAreaCode,
@@ -18326,7 +18628,7 @@
     // Update x-axis domain to match the current range.
     cf.xScale.domain([range.startDate, range.endDate]);
     const rangeMs = range.endMs - range.startMs;
-    cf.xAxisGroup.call(d3.axisBottom(cf.xScale).ticks(rangeMs <= DAY_MS ? 8 : 7).tickSizeOuter(0));
+    cf.xAxisGroup.call(buildChartXAxis(cf.xScale, rangeMs));
 
     // Snapshot current y-domain before computing the new one.
     const currentYDomain = cf.yScale.domain().slice();
@@ -18342,6 +18644,9 @@
       cf.aqiBandsContainer.selectAll("*").remove();
       renderAqiBands(cf.aqiBandsContainer, aqiPoints, cf.frame, cf.xScale, {
         loading: Boolean(renderOptions.aqiLoading),
+        aqiSourceSymbolIndex: Number.isInteger(renderOptions.aqiSourceSymbolIndex)
+          ? renderOptions.aqiSourceSymbolIndex
+          : -1,
       });
       cf.currentAqiPoints = Array.isArray(aqiPoints) ? aqiPoints : [];
     }
@@ -18457,15 +18762,32 @@
   }
 
   Object.values(domByMap).forEach((dom) => {
+    dom.reading?.addEventListener("click", (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const chip = target?.closest?.(".hex-chart-selected-sensor-chip[data-aqi-source-station-id]");
+      if (!chip) return;
+      const stationId = String(chip.getAttribute("data-aqi-source-station-id") || "").trim();
+      if (!stationId) return;
+      setAqiSourceSensor(stationId, { reload: true });
+    });
+    dom.reading?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const chip = target?.closest?.(".hex-chart-selected-sensor-chip[data-aqi-source-station-id]");
+      if (!chip) return;
+      const stationId = String(chip.getAttribute("data-aqi-source-station-id") || "").trim();
+      if (!stationId) return;
+      event.preventDefault();
+      setAqiSourceSensor(stationId, { reload: true });
+    });
     // Prevent clicks inside the chart panel from bubbling to the map's background-click
     // handler, which would otherwise clear the selected hex (selectedPconCode) and cause
     // the next syncFromMap call to exit chart mode unexpectedly.
     dom.panel?.addEventListener("click", (event) => { event.stopPropagation(); });
-
-    dom.windowSelect?.addEventListener("change", () => {
-      state.chartModeTimeRange = dom.windowSelect.value || "24h";
-      loadChartData("window-change");
-    });
+  });
+  chartRangeToolbarSelect?.addEventListener("change", () => {
+    state.chartModeTimeRange = chartRangeToolbarSelect.value || "24h";
+    loadChartData("window-change");
   });
   backButton?.addEventListener("click", exit);
   window.addEventListener("pollutantchange", () => {

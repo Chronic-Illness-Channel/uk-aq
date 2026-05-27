@@ -73,6 +73,15 @@ This document captures key UI state and data-flow conventions for `uk_aq_hex_map
   - Local authority code-to-region lookup is built from `data/LAD/uk_aq_la_hex_2025.geojson`.
   - If an LA code is outside the current C&R region view, the map switches region and applies pending selection after the next load.
 
+## Sensor-list table layout
+- The UK and C&R sensor lists share the same table column classes and keep the first two control columns aligned in both modes.
+- Selector column: fixed 21px, centered button with visible overflow so it can stay visually centered while the column is slightly narrower.
+- Symbol column: fixed 13px, left-aligned, with visible overflow so the chart-launch icon can keep its visual size while the column stays narrow.
+- Sensor-name column: no extra left padding.
+- Chart-mode sensor symbols are generated through `chart-core.js` with a tight computed SVG viewBox, and the table rows render them at a slightly larger symbol area so the glyph fills more of the fixed 28px box without changing the chart-series symbols.
+- The chart-range control in the chart header mirrors the toolbar window pill styling so its value uses the same font weight, size, and blue selected-state colours.
+- Clicks inside the chart header panel no longer clear the selected hex on the map, so changing chart range preserves the existing hex selection and sensor list.
+
 ## Cache session auth
 - Cache API calls now try the request first with `credentials: include`.
 - A Turnstile-backed `POST /api/aq/session/start` is attempted only after a `401` response.
