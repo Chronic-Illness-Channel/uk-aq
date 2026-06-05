@@ -5083,6 +5083,14 @@
         fill: var(--ink-soft);
       }
 
+      .aqi-band-segment {
+        shape-rendering: crispEdges;
+      }
+
+      .aqi-bands.is-loading .aqi-band-segment {
+        opacity: 0.92;
+      }
+
       .chart-line {
         fill: none;
         stroke: #3C78AC;
@@ -17177,6 +17185,7 @@
     isChartMode: false,
     mapKey: null,
     chartModeAreaCode: null,
+    lastChartModeAreaCode: null,
     chartModeSelectedSensors: new Set(),
     chartModeTimeRange: "24h",
     visibleEntries: [],
@@ -17193,7 +17202,7 @@
   // value: { points: Point[], guideline: object|null, coveredRanges: [{startMs,endMs}] }
   const seriesDataCache = new Map();
   // key: `${timeseriesId}|${pollutantKey}`
-  // value: { points: AqiPoint[], coveredRanges: [{startMs,endMs}] }
+  // value: { points: AqiPoint[], coveredRanges: [{startMs,endMs}], lastResponseMeta: object|null }
   const aqiBandCache    = new Map();
 
   function collectChartDom(prefix) {
@@ -17571,6 +17580,115 @@
     return Number.isFinite(numeric) && numeric > 0 ? Math.trunc(numeric) : null;
   }
 
+  function isAqiHistoryDebugEnabled() {
+    return params.get("debug_aqi") === "1";
+  }
+
+  function getAqiPayloadRows(payload) {
+    if (Array.isArray(payload?.points)) return payload.points;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.rows)) return payload.rows;
+    if (Array.isArray(payload?.result?.points)) return payload.result.points;
+    return [];
+  }
+
+  function parseAqiDelimitedText(text) {
+    const rawText = String(text || "").replace(/^\uFEFF/, "").trim();
+    if (!rawText) return { rows: [], columns: [], dataFormat: "text" };
+    const lines = rawText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) return { rows: [], columns: [], dataFormat: "text" };
+    const header = lines[0];
+    const delimiter = header.includes("\t")
+      ? "\t"
+      : header.includes(",")
+        ? ","
+        : null;
+    if (!delimiter) {
+      return { rows: [], columns: [], dataFormat: "text" };
+    }
+    const columns = header.split(delimiter).map((column) => column.trim());
+    const rows = lines.slice(1).map((line) => {
+      const cells = line.split(delimiter);
+      const row = {};
+      columns.forEach((column, index) => {
+        row[column] = index < cells.length ? cells[index].trim() : "";
+      });
+      return row;
+    });
+    return { rows, columns, dataFormat: "text" };
+  }
+
+  function parseAqiHistoryResponseBody(body) {
+    if (body && typeof body === "object" && !Array.isArray(body)) {
+      return body;
+    }
+    const text = String(body || "").trim();
+    if (!text) return { points: [] };
+    if (text.startsWith("{") || text.startsWith("[")) {
+      try {
+        return JSON.parse(text);
+      } catch (_err) {
+        // Fall through to delimited text parsing.
+      }
+    }
+    const textPayload = parseAqiDelimitedText(text);
+    if (textPayload.rows.length) {
+      return textPayload;
+    }
+    return { points: [] };
+  }
+
+  function normalizeAqiHistoryResponseMeta(payload, requestMeta = {}) {
+    const meta = payload?.meta || {};
+    const pointCount = Array.isArray(requestMeta?.points) ? requestMeta.points.length : getAqiPayloadRows(payload).length;
+    const responseComplete = Object.prototype.hasOwnProperty.call(payload || {}, "response_complete")
+      ? payload.response_complete
+      : Object.prototype.hasOwnProperty.call(meta, "response_complete")
+        ? meta.response_complete
+        : null;
+    const rowCountValue = payload?.row_count ?? meta?.row_count ?? null;
+    return {
+      source: payload?.source || meta?.source || null,
+      response_complete: responseComplete,
+      row_count: Number.isFinite(Number(rowCountValue)) ? Number(rowCountValue) : null,
+      point_count: Number.isFinite(Number(pointCount)) ? Number(pointCount) : null,
+      data_format: payload?.data_format || meta?.data_format || null,
+      wire_format: payload?.wire_format || meta?.wire_format || requestMeta?.wireFormat || null,
+      cache_status: payload?.cache_status || meta?.cache_status || null,
+      http_status: Number.isFinite(Number(requestMeta?.httpStatus)) ? Number(requestMeta.httpStatus) : null,
+      query_from_utc: payload?.query_from_utc || meta?.query_from_utc || requestMeta?.fromIso || null,
+      query_to_utc: payload?.query_to_utc || meta?.query_to_utc || requestMeta?.toIso || null,
+      timeseries_id: payload?.timeseries_id || meta?.timeseries_id || requestMeta?.timeseriesId || null,
+      entity_id: payload?.entity_id || meta?.entity_id || requestMeta?.timeseriesId || null,
+      pollutant: payload?.pollutant || meta?.pollutant || requestMeta?.pollutantKey || null,
+    };
+  }
+
+  function logAqiHistoryDebugMeta(stage, url, payload, requestMeta, points) {
+    if (!isAqiHistoryDebugEnabled()) return;
+    const normalizedMeta = normalizeAqiHistoryResponseMeta(payload, { ...requestMeta, points });
+    console.debug("[uk-aq aqi-history]", stage, {
+      url,
+      timeseries_id: normalizedMeta.timeseries_id,
+      pollutant: normalizedMeta.pollutant,
+      query_from_utc: normalizedMeta.query_from_utc,
+      query_to_utc: normalizedMeta.query_to_utc,
+      source: normalizedMeta.source,
+      response_complete: normalizedMeta.response_complete,
+      row_count: normalizedMeta.row_count,
+      point_count: normalizedMeta.point_count,
+      data_format: normalizedMeta.data_format,
+      wire_format: normalizedMeta.wire_format,
+      cache_status: normalizedMeta.cache_status,
+      http_status: normalizedMeta.http_status,
+    });
+  }
+
+  function shouldMarkAqiHistoryRangeCovered(payload, points) {
+    if (Array.isArray(points) && points.length > 0) return true;
+    return normalizeAqiHistoryResponseMeta(payload, { points }).response_complete === true;
+  }
+
   function parseObservationNumericValue(rawValue) {
     if (rawValue === null || rawValue === undefined) return Number.NaN;
     if (typeof rawValue === "string") {
@@ -17668,9 +17786,13 @@
     const periodStartIndex = columns.indexOf("period_start_utc");
     const timestampHourIndex = columns.indexOf("timestamp_hour_utc");
     const observedAtIndex = columns.indexOf("observed_at");
-    const daqiIndex = columns.indexOf(mapping.daqiField);
-    const eaqiIndex = columns.indexOf(mapping.eaqiField);
-    const rawPoints = Array.isArray(payload?.points) ? payload.points : Array.isArray(payload?.data) ? payload.data : [];
+    const daqiIndex = [mapping.daqiField, "daqi_index_level", "daqi"]
+      .map((field) => columns.indexOf(field))
+      .find((index) => index >= 0);
+    const eaqiIndex = [mapping.eaqiField, "eaqi_index_level", "eaqi"]
+      .map((field) => columns.indexOf(field))
+      .find((index) => index >= 0);
+    const rawPoints = getAqiPayloadRows(payload);
     return rawPoints.map((row) => {
       if (dataFormat === "compact" && Array.isArray(row)) {
         const observedAt = periodStartIndex >= 0 ? row[periodStartIndex] : timestampHourIndex >= 0 ? row[timestampHourIndex] : observedAtIndex >= 0 ? row[observedAtIndex] : row[0];
@@ -17682,8 +17804,14 @@
       }
       return {
         date: new Date(row?.period_start_utc || row?.timestamp_hour_utc || row?.observed_at),
-        daqi: normalizeAqiBandLevel(row?.[mapping.daqiField], false),
-        eaqi: normalizeAqiBandLevel(row?.[mapping.eaqiField], true),
+        daqi: normalizeAqiBandLevel(
+          row?.[mapping.daqiField] ?? row?.daqi_index_level ?? row?.daqi,
+          false,
+        ),
+        eaqi: normalizeAqiBandLevel(
+          row?.[mapping.eaqiField] ?? row?.eaqi_index_level ?? row?.eaqi,
+          true,
+        ),
       };
     }).filter((row) => Number.isFinite(row.date?.getTime()) && (row.daqi !== null || row.eaqi !== null))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -17908,9 +18036,16 @@
     const context = getCurrentContext(mapKey);
     if (!context?.areaCode) return;
     const entries = (context.entries || []).map(normalizeEntry).filter(Boolean);
+    const nextAreaCode = String(context.areaCode || "").trim();
+    if (nextAreaCode && state.lastChartModeAreaCode !== nextAreaCode) {
+      state.chartModeTimeRange = "24h";
+    }
     state.isChartMode = true;
     state.mapKey = mapKey;
-    state.chartModeAreaCode = context.areaCode;
+    state.chartModeAreaCode = nextAreaCode;
+    if (nextAreaCode) {
+      state.lastChartModeAreaCode = nextAreaCode;
+    }
     state.visibleEntries = entries;
     const requestedSensorIdRaw = options.initialSensorId ?? options.initialStationId;
     const requestedSensorId = requestedSensorIdRaw ? String(requestedSensorIdRaw).trim() : "";
@@ -18050,6 +18185,7 @@
       if (state.loadToken !== token) return;
       updateChart(dom, seriesPointsMap, usableEntries, newRange, primaryGuideline, units, undefined, {
         aqiSourceSymbolIndex,
+        aqiCacheKey: cf.currentAqiKey || null,
       });
     });
   }
@@ -18127,12 +18263,17 @@
     return typeof window.ukAqFetchCacheApi === "function" ? window.ukAqFetchCacheApi : null;
   }
 
-  async function fetchChartJson(url) {
+  async function fetchAqiHistoryPayload(url) {
     const init = { credentials: "include", headers: { Accept: "application/json" } };
     const cacheFetch = getCacheFetch();
     const response = cacheFetch ? await cacheFetch(url, init) : await fetch(url, init);
     if (!response.ok) throw new Error(`Chart request failed: ${response.status}`);
-    return response.json();
+    const contentType = response.headers.get("content-type") || "";
+    return {
+      status: response.status,
+      contentType,
+      body: await response.text(),
+    };
   }
 
   async function fetchObservationSeriesChunk(entry, chunk, signal) {
@@ -18214,11 +18355,7 @@
   }
 
   function buildChunkWorkQueue(entryPlans, windowValue) {
-    const chunkSpanMs = windowValue === "24h" ? 6 * HOUR_MS
-      : windowValue === "7d"  ? DAY_MS
-      : windowValue === "31d" ? 3 * DAY_MS
-      : windowValue === "90d" ? 7 * DAY_MS
-      : DAY_MS;
+    const chunkSpanMs = getChunkSpanMs(windowValue);
     const allEntryChunks = entryPlans.map(({ entry, missingRanges, cacheKey }) => {
       const chunks = [];
       (missingRanges || []).forEach((segment) => {
@@ -18249,6 +18386,52 @@
     return workQueue;
   }
 
+  function getChunkSpanMs(windowValue) {
+    return windowValue === "24h" ? 6 * HOUR_MS
+      : windowValue === "7d"  ? DAY_MS
+      : windowValue === "31d" ? 3 * DAY_MS
+      : windowValue === "90d" ? 7 * DAY_MS
+      : DAY_MS;
+  }
+
+  async function runChunkQueueWithConcurrency(queue, concurrency, iterator) {
+    const items = Array.isArray(queue) ? queue : [];
+    const limit = Math.max(1, Math.min(Number(concurrency) || 1, items.length || 1));
+    let cursor = 0;
+    const workers = Array.from({ length: limit }, () => (async () => {
+      while (true) {
+        const index = cursor++;
+        if (index >= items.length) return;
+        await iterator(items[index], index);
+      }
+    })());
+    await Promise.all(workers);
+  }
+
+  function buildAqiChunkWorkQueue(missingRanges, windowValue) {
+    const chunkSpanMs = getChunkSpanMs(windowValue);
+    const firstChunkSpanMs = Math.max(HOUR_MS, Math.min(chunkSpanMs, 2 * HOUR_MS));
+    const queue = [];
+    const ranges = Array.isArray(missingRanges) ? [...missingRanges] : [];
+    ranges.reverse().forEach((segment) => {
+      let end = segment.endMs;
+      let isFirstChunk = true;
+      while (end > segment.startMs) {
+        const span = isFirstChunk ? firstChunkSpanMs : chunkSpanMs;
+        const start = Math.max(segment.startMs, end - span);
+        queue.push({
+          startMs: start,
+          endMs: end,
+          startIso: new Date(start).toISOString(),
+          endIso: new Date(end).toISOString(),
+        });
+        end = start;
+        isFirstChunk = false;
+      }
+    });
+    return queue;
+  }
+
   function buildAqiHistoryRequestCandidates(entry, pollutantKey, range) {
     if (!entry?.timeseriesId || !getAqiFieldMappingForPollutant(pollutantKey)) return [];
     return dedupeStrings(aqiHistoryBaseCandidates.map((base) => {
@@ -18273,11 +18456,46 @@
     const candidates = buildAqiHistoryRequestCandidates(entry, pollutantKey, range);
     for (const url of candidates) {
       try {
-        return parseAqiBandPayload(await fetchChartJson(url), pollutantKey);
-      } catch (_err) {
+        const { status, contentType, body } = await fetchAqiHistoryPayload(url);
+        const payload = parseAqiHistoryResponseBody(body);
+        const wireFormat = payload?.data_format || body?.data_format || (String(contentType).includes("json") ? "json" : "text");
+        const points = parseAqiBandPayload(payload, pollutantKey);
+        if (isAqiHistoryDebugEnabled()) {
+          logAqiHistoryDebugMeta("fetch-success", url, payload, {
+            timeseriesId: entry?.timeseriesId || null,
+            pollutantKey,
+            fromIso: range?.startIso || null,
+            toIso: range?.endIso || null,
+            httpStatus: status,
+            wireFormat,
+          }, points);
+        }
+        return {
+          points,
+          meta: normalizeAqiHistoryResponseMeta(payload, {
+            timeseriesId: entry?.timeseriesId || null,
+            pollutantKey,
+            fromIso: range?.startIso || null,
+            toIso: range?.endIso || null,
+            httpStatus: status,
+            wireFormat,
+            points,
+          }),
+        };
+      } catch (error) {
+        if (isAqiHistoryDebugEnabled()) {
+          console.debug("[uk-aq aqi-history]", "fetch-failed", {
+            url,
+            timeseries_id: entry?.timeseriesId || null,
+            pollutant: pollutantKey,
+            query_from_utc: range?.startIso || null,
+            query_to_utc: range?.endIso || null,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
     }
-    return [];
+    return { points: [], meta: null };
   }
 
   async function prefetchAqiBandsForEntries(entries, range, options = {}) {
@@ -18303,6 +18521,7 @@
         continue;
       }
       const newlyFetched = [];
+      let lastResponseMeta = cacheRecord.lastResponseMeta || null;
       for (const missing of missingRanges) {
         if (!shouldContinue()) return;
         const missingRange = {
@@ -18313,11 +18532,16 @@
           startIso: new Date(missing.startMs).toISOString(),
           endIso: new Date(missing.endMs).toISOString(),
         };
-        const points = await fetchAqiBands(entry, pollutantKey, missingRange);
-        newlyFetched.push(...(Array.isArray(points) ? points : []));
-        cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, missing.startMs, missing.endMs);
+        const result = await fetchAqiBands(entry, pollutantKey, missingRange);
+        const points = Array.isArray(result?.points) ? result.points : [];
+        newlyFetched.push(...points);
+        lastResponseMeta = result?.meta || lastResponseMeta;
+        if (shouldMarkAqiHistoryRangeCovered(result?.meta || null, points)) {
+          cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, missing.startMs, missing.endMs);
+        }
       }
       cacheRecord.points = mergeSeriesPoints(cacheRecord.points, newlyFetched);
+      cacheRecord.lastResponseMeta = lastResponseMeta;
       aqiBandCache.set(aqiCacheKey, cacheRecord);
     }
   }
@@ -18367,6 +18591,14 @@
 
       cf.xAxisGroup.call(buildChartXAxis(cf.xScale, rangeMs));
       cf.yAxisGroup.call(d3.axisLeft(cf.yScale).ticks(5).tickSizeOuter(0));
+      const currentDomain = cf.xScale.domain();
+      cf.frame.startMs = currentDomain[0].getTime();
+      cf.frame.endMs = currentDomain[1].getTime();
+      syncAqiBands(cf, {
+        aqiCacheKey: cf.currentAqiKey,
+        aqiLoading: cf.currentAqiLoading,
+        aqiSourceSymbolIndex: cf.currentAqiSourceSymbolIndex,
+      });
 
       const csd = cf.currentSeriesData;
       if (csd?.seriesSegments) {
@@ -18387,6 +18619,8 @@
         cf.animFrameId = null;
         cf.xScale.domain([newRange.startDate, newRange.endDate]);
         cf.yScale.domain(newYDomain);
+        cf.frame.startMs = newRange.startMs;
+        cf.frame.endMs = newRange.endMs;
         if (typeof onComplete === "function") onComplete();
       }
     }
@@ -18396,9 +18630,11 @@
   async function loadChartData(reason = "sensor-change") {
     if (!state.isChartMode) return;
 
-    // Do not abort long-running loads; queue a single follow-up refresh instead.
+    // If a new load arrives while one is running, abort the current work and
+    // replay the latest reason as soon as the worker loop unwinds.
     if (state.loadInFlight) {
       state.pendingLoadReason = reason;
+      state.loadAbortController?.abort();
       return;
     }
     state.loadInFlight = true;
@@ -18494,18 +18730,57 @@
         if (!Array.isArray(aqiCacheRecord.points)) aqiCacheRecord.points = [];
         aqiCacheRecord.coveredRanges = normalizeCoveredRanges(aqiCacheRecord.coveredRanges);
       }
-      const existingAqiOnFrame = Array.isArray(dom.chartFrame?.currentAqiPoints)
-        ? dom.chartFrame.currentAqiPoints
-        : [];
       let aqiPoints = aqiCacheRecord ? getPointsInRange(aqiCacheRecord.points, range) : [];
-      if (!aqiPoints.length && existingAqiOnFrame.length) {
-        aqiPoints = existingAqiOnFrame;
-      }
 
       const aqiMissingRanges = (aqiCacheRecord && primary && pollutantKey)
         ? getMissingRangesForRequest(range, aqiCacheRecord.coveredRanges)
         : [];
       let aqiLoadingActive = aqiMissingRanges.length > 0;
+      const aqiProgressPromise = (async () => {
+        if (!aqiCacheRecord || !aqiMissingRanges.length) return;
+        let lastResponseMeta = aqiCacheRecord.lastResponseMeta || null;
+        const aqiWorkQueue = buildAqiChunkWorkQueue(aqiMissingRanges, windowValue);
+        await runChunkQueueWithConcurrency(aqiWorkQueue, 3, async (missing) => {
+          if (token !== state.loadToken || signal.aborted) return;
+          const missingRange = {
+            startMs: missing.startMs,
+            endMs: missing.endMs,
+            startDate: new Date(missing.startMs),
+            endDate: new Date(missing.endMs),
+            startIso: missing.startIso,
+            endIso: missing.endIso,
+          };
+          const result = await fetchAqiBands(primary, pollutantKey, missingRange);
+          const points = Array.isArray(result?.points) ? result.points : [];
+          lastResponseMeta = result?.meta || lastResponseMeta;
+          if (points.length) {
+            aqiCacheRecord.points = mergeSeriesPoints(aqiCacheRecord.points, points);
+          }
+          if (shouldMarkAqiHistoryRangeCovered(result?.meta || null, points)) {
+            aqiCacheRecord.coveredRanges = addCoveredRange(aqiCacheRecord.coveredRanges, missing.startMs, missing.endMs);
+          }
+          aqiCacheRecord.lastResponseMeta = lastResponseMeta;
+          aqiBandCache.set(aqiCacheKey, aqiCacheRecord);
+          aqiPoints = getPointsInRange(aqiCacheRecord.points, range);
+          if (token !== state.loadToken || signal.aborted) return;
+          syncAqiBands(dom?.chartFrame, {
+            aqiPoints,
+            aqiCacheKey,
+            aqiLoading: true,
+            aqiSourceSymbolIndex,
+          });
+        });
+        aqiLoadingActive = false;
+        if (token !== state.loadToken || signal.aborted) return;
+        syncAqiBands(dom?.chartFrame, {
+          aqiPoints,
+          aqiCacheKey,
+          aqiLoading: false,
+          aqiSourceSymbolIndex,
+        });
+      })().catch((_err) => {
+        aqiLoadingActive = false;
+      });
 
       // Build or reuse the SVG frame.
       if (!frameValid) {
@@ -18526,6 +18801,7 @@
             aqiLoading: aqiLoadingActive,
             yAxisLoading: observsLoadingActive,
             aqiSourceSymbolIndex,
+            aqiCacheKey,
           });
         }
       } else if (hasCachedData) {
@@ -18533,6 +18809,7 @@
           aqiLoading: aqiLoadingActive,
           yAxisLoading: observsLoadingActive,
           aqiSourceSymbolIndex,
+          aqiCacheKey,
         });
       }
       if (!hasCachedData) {
@@ -18540,56 +18817,31 @@
           aqiLoading: aqiLoadingActive,
           yAxisLoading: observsLoadingActive,
           aqiSourceSymbolIndex,
+          aqiCacheKey,
         });
       }
 
-      // AQI fetch (only missing intervals).
-      const aqiProgressPromise = (async () => {
-        if (!aqiCacheRecord || !aqiMissingRanges.length) return;
-        const newlyFetched = [];
-        for (const missing of aqiMissingRanges) {
-          if (token !== state.loadToken || signal.aborted) return;
-          const missingRange = {
-            startMs: missing.startMs,
-            endMs: missing.endMs,
-            startDate: new Date(missing.startMs),
-            endDate: new Date(missing.endMs),
-            startIso: new Date(missing.startMs).toISOString(),
-            endIso: new Date(missing.endMs).toISOString(),
-          };
-          const points = await fetchAqiBands(primary, pollutantKey, missingRange);
-          newlyFetched.push(...(Array.isArray(points) ? points : []));
-          aqiCacheRecord.coveredRanges = addCoveredRange(aqiCacheRecord.coveredRanges, missing.startMs, missing.endMs);
-        }
-        aqiCacheRecord.points = mergeSeriesPoints(aqiCacheRecord.points, newlyFetched);
-        aqiBandCache.set(aqiCacheKey, aqiCacheRecord);
-        aqiPoints = getPointsInRange(aqiCacheRecord.points, range);
-        aqiLoadingActive = false;
-        if (token !== state.loadToken || signal.aborted) return;
-        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
-          aqiLoading: false,
-          yAxisLoading: hasObservationFetch,
-          aqiSourceSymbolIndex,
-        });
-      })().catch((_err) => {
-        aqiLoadingActive = false;
-      });
+      if (aqiLoadingActive || hasObservationFetch) {
+        setLoading(true);
+      }
+      await aqiProgressPromise;
+      if (token !== state.loadToken || signal.aborted) return;
 
       // --- Fast path: everything already cached for this requested range. ---
       if (!hasObservationFetch) {
-        if (aqiLoadingActive && !isAqiSourceChangeOnly) {
-          setLoading(true);
-          await aqiProgressPromise;
-        }
-        if (token !== state.loadToken) return;
         updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
-          aqiLoading: aqiLoadingActive,
+          aqiLoading: false,
           yAxisLoading: false,
           aqiSourceSymbolIndex,
+          aqiCacheKey,
         });
-        setMessage(Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0)
-          ? ""
-          : "No history available for this sensor.");
+        const totalPoints = Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0);
+        if (!totalPoints) {
+          setMessage("");
+          renderNoHistoryChartMessage(dom, getNoHistoryChartMessage(usableEntries.length));
+        } else {
+          setMessage("");
+        }
         void prefetchAqiBandsForEntries(usableEntries, range, {
           activeSourceStationId: aqiSourceId,
           loadToken: token,
@@ -18598,69 +18850,107 @@
       }
 
       // --- Fetch path: some entries have missing intervals. ---
-      setLoading(true);
-
-      const progressFrame = {
-        margin: dom.chartFrame.margin,
-        width: dom.chartFrame.width,
-        height: dom.chartFrame.height,
-      };
-      if (dom.chartFrame?.progressBar?.remove) dom.chartFrame.progressBar.remove();
-      dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, progressFrame);
-
-      const workQueue = buildChunkWorkQueue(fetchPlans, windowValue);
-      const totalChunks = Math.max(1, workQueue.length);
+      const lineWorkQueue = buildChunkWorkQueue(fetchPlans, windowValue);
+      const totalChunks = Math.max(1, lineWorkQueue.length);
       let completedChunks = 0;
+      let lineNextCommitIndex = 0;
+      let lineCanCommit = true;
+      let lineFlushChain = Promise.resolve();
+      const linePendingResults = new Map();
+      const scheduleLineFlush = () => {
+        lineFlushChain = lineFlushChain.then(async () => {
+          while (linePendingResults.has(lineNextCommitIndex)) {
+            const payload = linePendingResults.get(lineNextCommitIndex);
+            linePendingResults.delete(lineNextCommitIndex);
+            lineNextCommitIndex += 1;
+            if (payload?.failed) {
+              completedChunks += 1;
+              dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
+              continue;
+            }
 
-      for (const { entry, cacheKey, chunk } of workQueue) {
-        if (token !== state.loadToken || signal.aborted) return;
-        let result;
-        try {
-          result = await fetchObservationSeriesChunk(entry, chunk, signal);
-        } catch (_chunkErr) {
-          if (signal.aborted || token !== state.loadToken) return;
-          completedChunks++;
-          dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
-          continue;
-        }
-        if (token !== state.loadToken || signal.aborted) return;
+            const { entry, cacheKey, chunk, result } = payload;
+            let cacheRecord = seriesDataCache.get(cacheKey);
+            if (!cacheRecord) {
+              cacheRecord = { points: [], guideline: null, coveredRanges: [] };
+            }
+            cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], result.points || []);
+            cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, chunk.startMs, chunk.endMs);
+            if (result.guideline && !cacheRecord.guideline) {
+              cacheRecord.guideline = result.guideline;
+            }
+            seriesDataCache.set(cacheKey, cacheRecord);
 
-        let cacheRecord = seriesDataCache.get(cacheKey);
-        if (!cacheRecord) {
-          cacheRecord = { points: [], guideline: null, coveredRanges: [] };
-        }
-        cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], result.points || []);
-        cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, chunk.startMs, chunk.endMs);
-        if (result.guideline && !cacheRecord.guideline) {
-          cacheRecord.guideline = result.guideline;
-        }
-        seriesDataCache.set(cacheKey, cacheRecord);
+            const inRangePoints = getPointsInRange(cacheRecord.points, range);
+            seriesPointsMap.set(entry.stationId, inRangePoints);
+            if (!primaryGuideline && entry.stationId === primaryId && cacheRecord.guideline) {
+              primaryGuideline = cacheRecord.guideline;
+            }
 
-        const inRangePoints = getPointsInRange(cacheRecord.points, range);
-        seriesPointsMap.set(entry.stationId, inRangePoints);
-        if (!primaryGuideline && entry.stationId === primaryId && cacheRecord.guideline) {
-          primaryGuideline = cacheRecord.guideline;
-        }
-
-        completedChunks++;
-        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
-          aqiLoading: aqiLoadingActive,
-          yAxisLoading: true,
-          aqiSourceSymbolIndex,
+            completedChunks += 1;
+            updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+              aqiLoading: false,
+              yAxisLoading: true,
+              aqiSourceSymbolIndex,
+              aqiCacheKey,
+              skipAqiRepaint: true,
+            });
+            dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
+          }
         });
-        dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
-      }
+        return lineFlushChain;
+      };
+      const lineProgressPromise = (async () => {
+        const progressFrame = {
+          margin: dom.chartFrame.margin,
+          width: dom.chartFrame.width,
+          height: dom.chartFrame.height,
+        };
+        if (dom.chartFrame?.progressBar?.remove) dom.chartFrame.progressBar.remove();
+        dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, progressFrame);
 
-      await aqiProgressPromise;
+        await runChunkQueueWithConcurrency(lineWorkQueue, 4, async (workItem, index) => {
+          if (token !== state.loadToken || signal.aborted) return;
+          try {
+            const result = await fetchObservationSeriesChunk(workItem.entry, workItem.chunk, signal);
+            if (token !== state.loadToken || signal.aborted) return;
+            linePendingResults.set(index, {
+              entry: workItem.entry,
+              cacheKey: workItem.cacheKey,
+              chunk: workItem.chunk,
+              result,
+            });
+          } catch (_chunkErr) {
+            if (signal.aborted || token !== state.loadToken) return;
+            linePendingResults.set(index, {
+              entry: workItem.entry,
+              cacheKey: workItem.cacheKey,
+              chunk: workItem.chunk,
+              failed: true,
+            });
+          }
+          void scheduleLineFlush();
+        });
+      })().catch((_err) => {});
+
+      setLoading(true);
+      await lineProgressPromise;
+      await scheduleLineFlush();
       if (token !== state.loadToken || signal.aborted) return;
 
       updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
         aqiLoading: false,
         yAxisLoading: false,
         aqiSourceSymbolIndex,
+        aqiCacheKey,
       });
       const totalPoints = Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0);
-      setMessage(totalPoints ? "" : "No history available for this sensor.");
+      if (!totalPoints) {
+        setMessage("");
+        renderNoHistoryChartMessage(dom, getNoHistoryChartMessage(usableEntries.length));
+      } else {
+        setMessage("");
+      }
       void prefetchAqiBandsForEntries(usableEntries, range, {
         activeSourceStationId: aqiSourceId,
         loadToken: token,
@@ -18713,6 +19003,65 @@
       .text(message || "");
   }
 
+  function getNoHistoryChartMessage(sensorCount = 1) {
+    return sensorCount > 1
+      ? "No chart data is available for these sensors in the selected range"
+      : "No chart data is available for this sensor in the selected range";
+  }
+
+  function renderNoHistoryChartMessage(dom, message) {
+    const cf = dom?.chartFrame;
+    if (!cf?.svgEl || !message) return;
+    const svg = d3.select(cf.svgEl);
+    if (cf.emptyStateGroup?.remove) {
+      cf.emptyStateGroup.remove();
+    }
+    const group = svg.append("g")
+      .attr("class", "chart-empty-state")
+      .style("pointer-events", "none");
+    const plotLeft = cf.margin.left;
+    const plotRight = cf.width - cf.margin.right;
+    const plotTop = cf.margin.top;
+    const plotBottom = cf.height - cf.margin.bottom;
+    const centerX = (plotLeft + plotRight) / 2;
+    const centerY = (plotTop + plotBottom) / 2;
+    const text = group.append("text")
+      .attr("x", centerX)
+      .attr("y", centerY)
+      .attr("text-anchor", "middle")
+      .attr("fill", "rgba(20, 34, 37, 0.72)")
+      .style("font-size", "1.2rem")
+      .style("font-weight", "700")
+      .style("letter-spacing", "0.01em");
+    const maxWidth = Math.max(180, Math.min(plotRight - plotLeft - 24, cf.width * 0.72));
+    const words = String(message).trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return;
+    const lines = [];
+    let current = [];
+    const measureCurrent = () => {
+      text.text(current.join(" "));
+      return text.node()?.getComputedTextLength?.() || 0;
+    };
+    words.forEach((word) => {
+      current.push(word);
+      if (measureCurrent() > maxWidth && current.length > 1) {
+        current.pop();
+        lines.push(current.join(" "));
+        current = [word];
+      }
+    });
+    if (current.length) lines.push(current.join(" "));
+    text.text(null);
+    const lineHeight = 1.25;
+    lines.forEach((line, index) => {
+      text.append("tspan")
+        .attr("x", centerX)
+        .attr("dy", index === 0 ? `${-(lines.length - 1) * lineHeight / 2}em` : `${lineHeight}em`)
+        .text(line);
+    });
+    cf.emptyStateGroup = group;
+  }
+
   function renderAqiBands(svg, aqiPoints, frame, xScale, options = {}) {
     const daqiColors = { 1: "#1DB100", 2: "#61D836", 3: "#34FF00", 4: "#FFFB00", 5: "#FFCE04", 6: "#FF9300", 7: "#FF6464", 8: "#FF2600", 9: "#A50026", 10: "#672C7F" };
     const eaqiColors = { "Good": "#34FF00", "Fair": "#FFFB00", "Moderate": "#FF9300", "Poor": "#FF2600", "Very poor": "#A50026", "Extremely poor": "#672C7F", 1: "#34FF00", 2: "#FFFB00", 3: "#FF9300", 4: "#FF2600", 5: "#A50026", 6: "#672C7F" };
@@ -18728,7 +19077,9 @@
     const gap = 4;
     const slotWidth = Math.max(1, (frame.width - frame.margin.left - frame.margin.right) / Math.max(1, (frame.endMs - frame.startMs) / HOUR_MS));
     const drawBand = (label, y, key, colors) => {
-      const group = svg.append("g").attr("transform", `translate(0, ${y})`);
+      const group = svg.append("g")
+        .attr("transform", `translate(0, ${y})`)
+        .classed("is-loading", Boolean(options?.loading));
       group.append("text")
         .attr("class", "aqi-band-label")
         .attr("x", frame.margin.left - 8)
@@ -18744,8 +19095,18 @@
         const color = point ? colors[point[key]] : null;
         if (!color) continue;
         const x = Math.max(frame.margin.left, xScale(new Date(t)));
-        const width = Math.min(slotWidth, frame.width - frame.margin.right - x);
-        if (width > 0) group.append("rect").attr("x", x).attr("y", 0).attr("width", width).attr("height", bandHeight).attr("fill", color);
+        const nextX = xScale(new Date(t + HOUR_MS));
+        const rawWidth = Number.isFinite(nextX) ? Math.max(0, nextX - x) : slotWidth;
+        const width = Math.max(2, Math.min(rawWidth || slotWidth, frame.width - frame.margin.right - x));
+        if (width > 0) {
+          group.append("rect")
+            .attr("class", "aqi-band-segment")
+            .attr("x", x)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", bandHeight)
+            .attr("fill", color);
+        }
       }
     };
     const bandTop = AQI_BAND_TOP_OFFSET_PX;
@@ -18771,6 +19132,30 @@
     }
     drawBand("DAQI", bandTop, "daqi", daqiColors);
     drawBand("EAQI", bandTop + bandHeight + gap, "eaqi", eaqiColors);
+  }
+
+  function syncAqiBands(cf, renderOptions = {}) {
+    if (!cf?.aqiBandsContainer) return;
+    const nextAqiKey = renderOptions.aqiCacheKey || cf.currentAqiKey || null;
+    if (Array.isArray(renderOptions.aqiPoints) && renderOptions.aqiPoints.length > 0) {
+      cf.currentAqiPoints = renderOptions.aqiPoints;
+    }
+    if (renderOptions.forceClear === true) {
+      cf.currentAqiPoints = [];
+    }
+    if (nextAqiKey) {
+      cf.currentAqiKey = nextAqiKey;
+    }
+    cf.currentAqiLoading = Boolean(renderOptions.aqiLoading);
+    cf.currentAqiSourceSymbolIndex = Number.isInteger(renderOptions.aqiSourceSymbolIndex)
+      ? renderOptions.aqiSourceSymbolIndex
+      : (Number.isInteger(cf.currentAqiSourceSymbolIndex) ? cf.currentAqiSourceSymbolIndex : -1);
+    cf.aqiBandsContainer.selectAll("*").remove();
+    cf.aqiBandsContainer.classed("is-loading", cf.currentAqiLoading);
+    renderAqiBands(cf.aqiBandsContainer, cf.currentAqiPoints || [], cf.frame, cf.xScale, {
+      loading: cf.currentAqiLoading,
+      aqiSourceSymbolIndex: cf.currentAqiSourceSymbolIndex,
+    });
   }
 
   function initChartFrame(dom, range, numSeries) {
@@ -18959,13 +19344,22 @@
       currentGuideline: null,
       currentSeriesData: null,
       currentAqiPoints: [],
+      currentAqiKey: null,
+      currentAqiLoading: false,
+      currentAqiSourceSymbolIndex: -1,
       hoveredSeriesIndex: null,
+      emptyStateGroup: null,
     };
   }
 
   function updateChart(dom, seriesPointsMap, usableEntries, range, guideline, units, aqiPoints, renderOptions = {}) {
     const cf = dom.chartFrame;
     if (!cf) return;
+
+    if (cf.emptyStateGroup?.remove) {
+      cf.emptyStateGroup.remove();
+      cf.emptyStateGroup = null;
+    }
 
     // Cancel any running domain animation — we now have real data.
     if (cf.animFrameId != null) {
@@ -18975,6 +19369,8 @@
 
     // Update x-axis domain to match the current range.
     cf.xScale.domain([range.startDate, range.endDate]);
+    cf.frame.startMs = range.startMs;
+    cf.frame.endMs = range.endMs;
     const rangeMs = range.endMs - range.startMs;
     cf.xAxisGroup.call(buildChartXAxis(cf.xScale, rangeMs));
 
@@ -18988,15 +19384,41 @@
     cf.currentGuideline = guideline || null;
 
     // Update AQI bands synchronously (positioned by x-scale / frame height, not y-scale).
-    if (aqiPoints !== undefined) {
-      cf.aqiBandsContainer.selectAll("*").remove();
-      renderAqiBands(cf.aqiBandsContainer, aqiPoints, cf.frame, cf.xScale, {
-        loading: Boolean(renderOptions.aqiLoading),
-        aqiSourceSymbolIndex: Number.isInteger(renderOptions.aqiSourceSymbolIndex)
+    if (!renderOptions.skipAqiRepaint) {
+      if (aqiPoints !== undefined) {
+        const nextAqiKey = renderOptions.aqiCacheKey || null;
+        if (Array.isArray(aqiPoints)) {
+          if (aqiPoints.length > 0) {
+            cf.currentAqiPoints = aqiPoints;
+          } else if (nextAqiKey && cf.currentAqiKey && nextAqiKey !== cf.currentAqiKey) {
+            cf.currentAqiPoints = [];
+          } else if (!renderOptions.aqiLoading) {
+            cf.currentAqiPoints = [];
+          }
+        } else if (!renderOptions.aqiLoading) {
+          cf.currentAqiPoints = [];
+        }
+        if (nextAqiKey) {
+          cf.currentAqiKey = nextAqiKey;
+        }
+        cf.currentAqiLoading = Boolean(renderOptions.aqiLoading);
+        cf.currentAqiSourceSymbolIndex = Number.isInteger(renderOptions.aqiSourceSymbolIndex)
           ? renderOptions.aqiSourceSymbolIndex
-          : -1,
-      });
-      cf.currentAqiPoints = Array.isArray(aqiPoints) ? aqiPoints : [];
+          : -1;
+        syncAqiBands(cf, {
+          aqiCacheKey: cf.currentAqiKey,
+          aqiLoading: cf.currentAqiLoading,
+          aqiSourceSymbolIndex: cf.currentAqiSourceSymbolIndex,
+        });
+      } else {
+        syncAqiBands(cf, {
+          aqiCacheKey: cf.currentAqiKey,
+          aqiLoading: Boolean(renderOptions.aqiLoading),
+          aqiSourceSymbolIndex: Number.isInteger(renderOptions.aqiSourceSymbolIndex)
+            ? renderOptions.aqiSourceSymbolIndex
+            : cf.currentAqiSourceSymbolIndex,
+        });
+      }
     }
     if (cf.yAxisLabelEl) {
       const axisLabel = buildYAxisLabel(units);
