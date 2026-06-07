@@ -3,14 +3,22 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-SCRIPT="${ROOT_DIR}/dev-blog/scripts/generate-posts-json.mjs"
+BLOG_SCRIPT="${ROOT_DIR}/dev-blog/scripts/generate-posts-json.mjs"
+AQI_SCRIPT="${ROOT_DIR}/scripts/uk_aq_inject_project_ref.mjs"
 
-if [[ ! -f "${SCRIPT}" ]]; then
-  echo "ERROR: dev-blog generator script not found: ${SCRIPT}" >&2
+if [[ ! -f "${BLOG_SCRIPT}" ]]; then
+  echo "ERROR: dev-blog generator script not found: ${BLOG_SCRIPT}" >&2
   exit 1
 fi
 
-node "${SCRIPT}"
+node "${BLOG_SCRIPT}"
 
 # Stage the regenerated file so it is included in the commit
 git -C "${ROOT_DIR}" add dev-blog/posts/posts.json
+
+if [[ -f "${AQI_SCRIPT}" ]]; then
+  node "${AQI_SCRIPT}"
+  git -C "${ROOT_DIR}" add hex_map.html index.html sensors_chart.html sensors_map.html
+else
+  echo "Skipping AQI injector: ${AQI_SCRIPT} not found" >&2
+fi
