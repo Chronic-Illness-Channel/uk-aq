@@ -7058,9 +7058,19 @@
           if (!container) {
             container = document.createElement("div");
             container.id = "uk-aq-turnstile-widget-shared";
-            container.style.display = "none";
             document.body.appendChild(container);
           }
+          container.style.position = "fixed";
+          container.style.right = "12px";
+          container.style.bottom = "12px";
+          container.style.zIndex = "2147483647";
+          container.style.minWidth = "320px";
+          container.style.minHeight = "80px";
+          container.style.background = "white";
+          container.style.padding = "8px";
+          container.style.border = "1px solid #ccc";
+          container.style.borderRadius = "8px";
+          container.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.2)";
           return container;
         }
 
@@ -7202,7 +7212,12 @@
         async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true, mapHooks = {}) {
           if (mapHooks && mapHooks.onStart) mapHooks.onStart();
           if (retryOnAuthFailure && !hasFreshCacheAuthToken()) {
-            try { await getCacheAuthToken(false); } catch (_err) {}
+            try {
+              await getCacheAuthToken(false);
+            } catch (err) {
+              console.warn("UK AQ cache auth failed before API fetch", err);
+              throw err;
+            }
           }
           try {
             const response = await fetch(input, { ...init, credentials: "include" });
