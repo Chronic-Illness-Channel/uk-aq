@@ -1,0 +1,36 @@
+URL tested:
+https://uk-aq-beta.chronicillnesschannel.co.uk/hex_map.html?map=UK
+
+Important findings from Chrome DevTools:
+
+document.documentElement.innerHTML.includes("ukAqSharedAuth")
+=> true
+
+document.querySelector("#uk-aq-turnstile-widget-shared")
+=> <div id="uk-aq-turnstile-widget-shared" style="display: none;">...</div>
+
+Main blocking error:
+Turnstile widget execution timed out. Could not obtain token.
+
+Session request:
+POST /api/aq/session/start does not appear in Network.
+
+Core API failures after Turnstile timeout:
+GET /api/aq/latest-snapshot?... 401 Unauthorized
+GET /api/aq/pcon-hex?pcon_version=2024 401 Unauthorized
+GET /api/aq/la-hex?la_version=2025&region=London 401 Unauthorized
+
+Known non-blocking postcode API failures:
+GET /api/aq/postcode_prefix_hints 401 Unauthorized
+GET /api/aq/postcode_suggest?q=bs&limit=6 401 Unauthorized
+
+Other console messages:
+Request for the Private Access Token challenge.
+The resource https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/cmg/1 was preloaded but not used.
+CSP messages are report-only and should not be treated as the immediate blocker.
+
+Interpretation:
+The shared auth manager is deployed, but Turnstile never returns a token.
+Because no token is produced, /api/aq/session/start is never called.
+Because no session is created, protected API calls return 401.
+The shared Turnstile widget is still hidden with display:none, which may be preventing the challenge/token flow from completing.

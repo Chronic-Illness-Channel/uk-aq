@@ -1,0 +1,546 @@
+Extracted auth-related sections from LIVE beta hex_map.html
+Focus: ukAqSharedAuth, Turnstile, session/start, fetchCacheApi
+
+
+--- lines 6948-7282 ---
+6948:         mutationObserver?.observe(scrollEl, { childList: true, subtree: true, attributes: true });
+6949: 
+6950:         scheduleUpdate();
+6951: 
+6952:         return {
+6953:           update: scheduleUpdate,
+6954:           destroy() {
+6955:             if (rafId) window.cancelAnimationFrame(rafId);
+6956:             scrollEl.removeEventListener("scroll", scheduleUpdate);
+6957:             window.removeEventListener("resize", scheduleUpdate);
+6958:             resizeObserver?.disconnect();
+6959:             mutationObserver?.disconnect();
+6960:             topIndicator.remove();
+6961:             bottomIndicator.remove();
+6962:           },
+6963:         };
+6964:       };
+6965:     </script>
+6966: 
+6967:     <script>
+6968:       window.ukAqSharedAuth = (function() {
+6969:         const params = new URLSearchParams(window.location.search);
+6970:         const TURNSTILE_SITE_KEY_PLACEHOLDER = "0x4AAAAAADBX_LWQibZKSL8W";
+6971:         const turnstileSiteKeyParam = params.get("turnstile_site_key");
+6972:         const turnstileSiteKey = TURNSTILE_SITE_KEY_PLACEHOLDER.includes("__UK_AQ_TURNSTILE_SITE_KEY__")
+6973:           ? (turnstileSiteKeyParam || "")
+6974:           : (turnstileSiteKeyParam || TURNSTILE_SITE_KEY_PLACEHOLDER);
+6975: 
+6976:         const cacheBaseUrlParam = params.get("cache_base");
+6977:         function resolveCacheBaseUrl(rawValue) {
+6978:           const explicit = typeof rawValue === "string" ? rawValue.trim() : "";
+6979:           if (explicit) {
+6980:             return explicit.replace(/\/+$/, "");
+6981:           }
+6982:           if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+6983:             return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
+6984:           }
+6985:           return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
+6986:         }
+6987:         const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseUrlParam);
+6988:         const cacheOrigin = cacheBaseUrl ? new URL(cacheBaseUrl).origin : "";
+6989:         const defaultCacheSessionUrl = cacheOrigin ? `${cacheOrigin}/api/aq/session/start` : "";
+6990:         const cacheSessionParam = params.get("cache_session_url");
+6991:         const cacheSessionUrl = (cacheSessionParam || defaultCacheSessionUrl || "").trim();
+6992: 
+6993:         const CACHE_SESSION_SKEW_MS = 10000;
+6994:         const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:shared`;
+6995:         
+6996:         let cacheAuthToken = null;
+6997:         let cacheAuthTokenExpiresAt = 0;
+6998:         let cacheAuthInflight = null;
+6999:         let turnstileScriptInflight = null;
+7000:         let turnstileTokenInflight = null;
+7001:         let turnstileWidgetId = null;
+7002:         let turnstileTokenResolver = null;
+7003:         let turnstileTokenRejecter = null;
+7004:         let turnstileTokenTimeoutId = null;
+7005: 
+7006:         function readCacheSessionHintUntil() {
+7007:           try {
+7008:             const raw = window.localStorage.getItem(CACHE_SESSION_HINT_STORAGE_KEY);
+7009:             if (!raw) return 0;
+7010:             const parsed = Number(raw);
+7011:             return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+7012:           } catch (_err) {
+7013:             return 0;
+7014:           }
+7015:         }
+7016: 
+7017:         function writeCacheSessionHintUntil(untilMs) {
+7018:           try {
+7019:             if (untilMs > 0) {
+7020:               window.localStorage.setItem(CACHE_SESSION_HINT_STORAGE_KEY, String(Math.floor(untilMs)));
+7021:             } else {
+7022:               window.localStorage.removeItem(CACHE_SESSION_HINT_STORAGE_KEY);
+7023:             }
+7024:           } catch (_err) {}
+7025:         }
+7026: 
+7027:         function syncCacheSessionHint() {
+7028:           const hintedUntil = readCacheSessionHintUntil();
+7029:           if (hintedUntil > cacheAuthTokenExpiresAt) {
+7030:             cacheAuthToken = "session";
+7031:             cacheAuthTokenExpiresAt = hintedUntil;
+7032:           }
+7033:         }
+7034: 
+7035:         function clearCacheAuthToken(clearSharedHint = true) {
+7036:           cacheAuthToken = null;
+7037:           cacheAuthTokenExpiresAt = 0;
+7038:           if (clearSharedHint) writeCacheSessionHintUntil(0);
+7039:         }
+7040: 
+7041:         function hasFreshCacheAuthToken() {
+7042:           syncCacheSessionHint();
+7043:           return Boolean(
+7044:             cacheAuthToken &&
+7045:             Date.now() < (cacheAuthTokenExpiresAt - CACHE_SESSION_SKEW_MS)
+7046:           );
+7047:         }
+7048: 
+7049:         syncCacheSessionHint();
+7050:         window.addEventListener("storage", (event) => {
+7051:           if (event.key === CACHE_SESSION_HINT_STORAGE_KEY) {
+7052:             syncCacheSessionHint();
+7053:           }
+7054:         });
+7055: 
+7056:         function ensureTurnstileContainer() {
+7057:           let container = document.getElementById("uk-aq-turnstile-widget-shared");
+7058:           if (!container) {
+7059:             container = document.createElement("div");
+7060:             container.id = "uk-aq-turnstile-widget-shared";
+7061:             container.style.display = "none";
+7062:             document.body.appendChild(container);
+7063:           }
+7064:           return container;
+7065:         }
+7066: 
+7067:         function clearTurnstilePendingState() {
+7068:           if (turnstileTokenTimeoutId) {
+7069:             clearTimeout(turnstileTokenTimeoutId);
+7070:             turnstileTokenTimeoutId = null;
+7071:           }
+7072:           turnstileTokenResolver = null;
+7073:           turnstileTokenRejecter = null;
+7074:         }
+7075: 
+7076:         async function ensureTurnstileScript() {
+7077:           if (window.turnstile && typeof window.turnstile.render === "function") return;
+7078:           if (!turnstileScriptInflight) {
+7079:             turnstileScriptInflight = new Promise((resolve, reject) => {
+7080:               const existing = document.getElementById("uk-aq-turnstile-script");
+7081:               if (existing) {
+7082:                 existing.addEventListener("load", () => resolve(), { once: true });
+7083:                 existing.addEventListener("error", () => reject(new Error("Failed to load Turnstile script.")), { once: true });
+7084:                 return;
+7085:               }
+7086:               const script = document.createElement("script");
+7087:               script.id = "uk-aq-turnstile-script";
+7088:               script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+7089:               script.async = true;
+7090:               script.defer = true;
+7091:               script.onload = () => resolve();
+7092:               script.onerror = () => reject(new Error("Failed to load Turnstile script."));
+7093:               document.head.appendChild(script);
+7094:             });
+7095:           }
+7096:           await turnstileScriptInflight;
+7097:         }
+7098: 
+7099:         async function ensureTurnstileWidget() {
+7100:           if (!turnstileSiteKey) throw new Error("Missing Turnstile site key. Add ?turnstile_site_key=... to the URL.");
+7101:           await ensureTurnstileScript();
+7102:           if (turnstileWidgetId !== null) return;
+7103:           const turnstileApi = window.turnstile;
+7104:           if (!turnstileApi || typeof turnstileApi.render !== "function") throw new Error("Turnstile SDK unavailable.");
+7105:           const container = ensureTurnstileContainer();
+7106:           turnstileWidgetId = turnstileApi.render(container, {
+7107:             sitekey: turnstileSiteKey,
+7108:             appearance: "execute",
+7109:             execution: "execute",
+7110:             callback: (token) => {
+7111:               if (turnstileTokenResolver) {
+7112:                 turnstileTokenResolver(token);
+7113:                 clearTurnstilePendingState();
+7114:               }
+7115:             },
+7116:             "error-callback": () => {
+7117:               const _api = window.turnstile;
+7118:               if (_api && typeof _api.remove === "function" && turnstileWidgetId !== null) {
+7119:                 _api.remove(turnstileWidgetId);
+7120:               }
+7121:               turnstileWidgetId = null;
+7122:               if (turnstileTokenRejecter) {
+7123:                 turnstileTokenRejecter(new Error("Turnstile verification failed."));
+7124:                 clearTurnstilePendingState();
+7125:               }
+7126:             },
+7127:             "expired-callback": () => {
+7128:               const _api = window.turnstile;
+7129:               if (_api && typeof _api.remove === "function" && turnstileWidgetId !== null) {
+7130:                 _api.remove(turnstileWidgetId);
+7131:               }
+7132:               turnstileWidgetId = null;
+7133:               if (turnstileTokenRejecter) {
+7134:                 turnstileTokenRejecter(new Error("Turnstile token expired."));
+7135:                 clearTurnstilePendingState();
+7136:               }
+7137:             },
+7138:           });
+7139:         }
+7140: 
+7141:         async function getTurnstileToken() {
+7142:           await ensureTurnstileWidget();
+7143:           if (!turnstileTokenInflight) {
+7144:             turnstileTokenInflight = (async () => {
+7145:               const turnstileApi = window.turnstile;
+7146:               if (!turnstileApi || typeof turnstileApi.execute !== "function") throw new Error("Turnstile execute unavailable.");
+7147:               const token = await new Promise((resolve, reject) => {
+7148:                 turnstileTokenResolver = resolve;
+7149:                 turnstileTokenRejecter = reject;
+7150:                 turnstileTokenTimeoutId = setTimeout(() => {
+7151:                   console.warn("Turnstile widget execution timed out. Could not obtain token.");
+7152:                   if (turnstileTokenRejecter) {
+7153:                     turnstileTokenRejecter(new Error("Turnstile token timed out."));
+7154:                   }
+7155:                   clearTurnstilePendingState();
+7156:                   if (turnstileWidgetId !== null && typeof turnstileApi.reset === "function") {
+7157:                     try { turnstileApi.reset(turnstileWidgetId); } catch(e) {}
+7158:                   }
+7159:                 }, 30000);
+7160:                 turnstileApi.execute(turnstileWidgetId);
+7161:               });
+7162:               return token;
+7163:             })().finally(() => {
+7164:               turnstileTokenInflight = null;
+7165:             });
+7166:           }
+7167:           return turnstileTokenInflight;
+7168:         }
+7169: 
+7170:         async function getCacheAuthToken(forceRefresh = false) {
+7171:           if (!forceRefresh && hasFreshCacheAuthToken()) return cacheAuthToken;
+7172:           if (!cacheSessionUrl) throw new Error("Missing cache session URL. Add ?cache_session_url=... to the URL.");
+7173:           if (!cacheAuthInflight) {
+7174:             cacheAuthInflight = (async () => {
+7175:               const turnstileToken = await getTurnstileToken();
+7176:               const response = await fetch(cacheSessionUrl, {
+7177:                 method: "POST",
+7178:                 headers: {
+7179:                   "Accept": "application/json",
+7180:                   "X-UK-AQ-Session-Init": "1",
+7181:                   "CF-Turnstile-Token": turnstileToken,
+7182:                 },
+7183:                 credentials: "include",
+7184:               });
+7185:               if (!response.ok) throw new Error(`Session start failed: ${response.status}`);
+7186:               const payload = await response.json().catch(() => ({}));
+7187:               const expiresIn = Number(payload?.session_expires_in);
+7188:               cacheAuthToken = "session";
+7189:               cacheAuthTokenExpiresAt = Date.now() + Math.max(
+7190:                 30000,
+7191:                 Math.floor((Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 300) * 1000)
+7192:               );
+7193:               writeCacheSessionHintUntil(cacheAuthTokenExpiresAt);
+7194:               return cacheAuthToken;
+7195:             })().finally(() => {
+7196:               cacheAuthInflight = null;
+7197:             });
+7198:           }
+7199:           return cacheAuthInflight;
+7200:         }
+7201: 
+7202:         async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true, mapHooks = {}) {
+7203:           if (mapHooks && mapHooks.onStart) mapHooks.onStart();
+7204:           if (retryOnAuthFailure && !hasFreshCacheAuthToken()) {
+7205:             try { await getCacheAuthToken(false); } catch (_err) {}
+7206:           }
+7207:           try {
+7208:             const response = await fetch(input, { ...init, credentials: "include" });
+7209:             if (response.status === 401 && retryOnAuthFailure) {
+7210:               clearCacheAuthToken(false);
+7211:               await getCacheAuthToken(false);
+7212:               let retried = await fetch(input, { ...init, credentials: "include" });
+7213:               if (retried.status !== 401) return retried;
+7214:               clearCacheAuthToken();
+7215:               await getCacheAuthToken(true);
+7216:               retried = await fetch(input, { ...init, credentials: "include" });
+7217:               return retried;
+7218:             }
+7219:             return response;
+7220:           } finally {
+7221:             if (mapHooks && mapHooks.onEnd) mapHooks.onEnd();
+7222:           }
+7223:         }
+7224: 
+7225:         return {
+7226:           fetchCacheApi,
+7227:           getTurnstileToken,
+7228:           getCacheAuthToken,
+7229:           resolveCacheBaseUrl
+7230:         };
+7231:       })();
+7232:     </script>
+7233: 
+7234:     <script>
+7235:       const PROJECT_REF_PLACEHOLDER = "grbfvlbhxwnrwikhyzoc";
+7236:       const ANON_KEY_PLACEHOLDER = "sb_publishable_VTRlIHmkcXOUO9lJLvF8bg_vTcJiVTl";
+7237:       const params = new URLSearchParams(window.location.search);
+7238:       const projectRefParam = params.get("project_ref");
+7239:       const anonKeyParam = params.get("anon_key");
+7240:       const cacheBaseParam = params.get("cache_base");
+7241:       const cacheBaseUrl = window.ukAqSharedAuth.resolveCacheBaseUrl(cacheBaseParam);
+7242:       const cacheSessionParam = params.get("cache_session_url");
+7243:       const turnstileSiteKeyParam = params.get("turnstile_site_key");
+7244:       const metricParam = params.get("metric");
+7245:       const colorScaleParam = params.get("color_scale");
+7246:       const pollutantParam = params.get("pollutant");
+7247:       const mapDateParam = params.get("map_date");
+7248:       const pconVersionParam = params.get("pcon_version");
+7249:       const sharedSettings = (window.mapSettingsState = window.mapSettingsState || {});
+7250:       const mapNetworkState = (window.mapNetworkState = window.mapNetworkState || {});
+7251:       const MAP_KEY = "shared";
+7252:       if (!mapNetworkState[MAP_KEY]) {
+7253:         mapNetworkState[MAP_KEY] = { selected: null, allSelected: true };
+7254:       }
+7255:       const initialMetric = (metricParam === "mean" || metricParam === "median")
+7256:         ? metricParam
+7257:         : (sharedSettings.metric || "mean");
+7258:       const initialColorScale = (colorScaleParam === "linear" || colorScaleParam === "power")
+7259:         ? colorScaleParam
+7260:         : (sharedSettings.colorScale || "power");
+7261:       const initialWindow = sharedSettings.window || "6h";
+7262:       sharedSettings.metric = initialMetric;
+7263:       sharedSettings.colorScale = initialColorScale;
+7264:       sharedSettings.window = initialWindow;
+7265:       window.updateMapSettings = (partial, source) => {
+7266:         if (!partial) {
+7267:           return;
+7268:         }
+7269:         const nextMetric = (partial.metric === "mean" || partial.metric === "median")
+7270:           ? partial.metric
+7271:           : sharedSettings.metric;
+7272:         const nextColorScale = (partial.colorScale === "linear" || partial.colorScale === "power")
+7273:           ? partial.colorScale
+7274:           : sharedSettings.colorScale;
+7275:         const nextWindow = (partial.window && partial.window in WINDOW_OPTIONS)
+7276:           ? partial.window
+7277:           : sharedSettings.window;
+7278:         const hasChanged = nextMetric !== sharedSettings.metric
+7279:           || nextColorScale !== sharedSettings.colorScale
+7280:           || nextWindow !== sharedSettings.window;
+7281:         sharedSettings.metric = nextMetric;
+7282:         sharedSettings.colorScale = nextColorScale;
+
+--- lines 7850-7950 ---
+7850:       let ukSearchPreloadPromise = null;
+7851:       let colorScale = null;
+7852:       let currentDomainMax = null;
+7853:       function setStatus(value) {
+7854:         if (!statusEl) {
+7855:           return;
+7856:         }
+7857:         statusEl.textContent = value;
+7858:         if (statusIndicator) {
+7859:           const isLive = value === "Live";
+7860:           statusIndicator.dataset.state = isLive ? "live" : "idle";
+7861:         }
+7862:       }
+7863: 
+7864:       if (endpointHint) {
+7865:         endpointHint.textContent = REST_URL
+7866:           ? `Endpoint: ${REST_URL} (${activeMap.label})`
+7867:           : "Missing cache endpoint base URL. Add ?cache_base=... to the URL.";
+7868:       }
+7869: 
+7870:       async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true) {
+7871:         const timingId = nextHexMapTimingId();
+7872:         const requestLabel = getHexMapRequestLabel(input);
+7873:         return window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure, {
+7874:           onStart: () => {
+7875:             markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
+7876:           },
+7877:           onEnd: () => {
+7878:             markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
+7879:             measureHexMapTiming(
+7880:               timingId,
+7881:               `fetch:${requestLabel}`,
+7882:               `fetch:${requestLabel}:start`,
+7883:               `fetch:${requestLabel}:end`
+7884:             );
+7885:           }
+7886:         });
+7887:       }
+7888:       window.ukAqFetchCacheApi = fetchCacheApi;
+7889: 
+7890:       const ACCESS_LOGIN_REDIRECT_KEY = "uk_aq_access_login_redirect_ts";
+7891:       const HEX_MAP_TIMING_PREFIX = "uk-aq-hex-map";
+7892:       const MAP_TIMING_KEY = "uk";
+7893:       let hexMapTimingSequence = 0;
+7894: 
+7895:       function nextHexMapTimingId() {
+7896:         hexMapTimingSequence += 1;
+7897:         return hexMapTimingSequence;
+7898:       }
+7899: 
+7900:       function getHexMapTimingMarkName(timingId, stage) {
+7901:         return `${HEX_MAP_TIMING_PREFIX}:${MAP_TIMING_KEY}:${timingId}:${stage}`;
+7902:       }
+7903: 
+7904:       function getHexMapRequestLabel(input) {
+7905:         try {
+7906:           const requestUrl = input instanceof Request
+7907:             ? new URL(input.url)
+7908:             : new URL(String(input), window.location.href);
+7909:           return requestUrl.pathname.replace(/^\/+/, "").replace(/\//g, ":") || "request";
+7910:         } catch (_err) {
+7911:           return "request";
+7912:         }
+7913:       }
+7914: 
+7915:       function markHexMapTiming(timingId, stage) {
+7916:         if (typeof performance === "undefined" || typeof performance.mark !== "function") {
+7917:           return;
+7918:         }
+7919:         performance.mark(getHexMapTimingMarkName(timingId, stage));
+7920:       }
+7921: 
+7922:       function measureHexMapTiming(timingId, measureName, startStage, endStage) {
+7923:         if (typeof performance === "undefined" || typeof performance.measure !== "function") {
+7924:           return;
+7925:         }
+7926:         try {
+7927:           performance.measure(
+7928:             `${HEX_MAP_TIMING_PREFIX}:${MAP_TIMING_KEY}:${timingId}:${measureName}`,
+7929:             getHexMapTimingMarkName(timingId, startStage),
+7930:             getHexMapTimingMarkName(timingId, endStage),
+7931:           );
+7932:         } catch (_err) {
+7933:           // Ignore missing-mark errors when a load aborts before completion.
+7934:         }
+7935:       }
+7936: 
+7937:       function isLikelyAccessFetchFailure(error) {
+7938:         if (!(error instanceof TypeError)) {
+7939:           return false;
+7940:         }
+7941:         const message = String(error.message || "").toLowerCase();
+7942:         return message.includes("failed to fetch") || message.includes("networkerror");
+7943:       }
+7944: 
+7945:       function buildAccessLoginUrl() {
+7946:         const host = window.location.hostname || "";
+7947:         if (!host) {
+7948:           return null;
+7949:         }
+7950:         const appSlug = host.split(".")[0];
+
+--- lines 12673-12773 ---
+12673:         statusEl.textContent = value;
+12674:         if (statusIndicator) {
+12675:           const isLive = value === "Live";
+12676:           statusIndicator.dataset.state = isLive ? "live" : "idle";
+12677:         }
+12678:       }
+12679: 
+12680:       function updateEndpointHint() {
+12681:         if (!endpointHint) {
+12682:           return;
+12683:         }
+12684:         if (!REST_URL) {
+12685:           endpointHint.textContent = "Missing cache endpoint base URL. Add ?cache_base=... to the URL.";
+12686:           return;
+12687:         }
+12688:         const regionSuffix = activeRegion ? ` · ${activeRegion}` : "";
+12689:         endpointHint.textContent = `Endpoint: ${REST_URL} (${LA_CONFIG.label}${regionSuffix})`;
+12690:       }
+12691:       updateEndpointHint();
+12692: 
+12693:       async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true) {
+12694:         const timingId = nextHexMapTimingId();
+12695:         const requestLabel = getHexMapRequestLabel(input);
+12696:         return window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure, {
+12697:           onStart: () => {
+12698:             markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
+12699:           },
+12700:           onEnd: () => {
+12701:             markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
+12702:             measureHexMapTiming(
+12703:               timingId,
+12704:               `fetch:${requestLabel}`,
+12705:               `fetch:${requestLabel}:start`,
+12706:               `fetch:${requestLabel}:end`
+12707:             );
+12708:           }
+12709:         });
+12710:       }
+12711:       window.ukAqFetchCacheApi = fetchCacheApi;
+12712: 
+12713:       const ACCESS_LOGIN_REDIRECT_KEY = "uk_aq_access_login_redirect_ts";
+12714:       const HEX_MAP_TIMING_PREFIX = "uk-aq-hex-map";
+12715:       const MAP_TIMING_KEY = "cr";
+12716:       let hexMapTimingSequence = 0;
+12717: 
+12718:       function nextHexMapTimingId() {
+12719:         hexMapTimingSequence += 1;
+12720:         return hexMapTimingSequence;
+12721:       }
+12722: 
+12723:       function getHexMapTimingMarkName(timingId, stage) {
+12724:         return `${HEX_MAP_TIMING_PREFIX}:${MAP_TIMING_KEY}:${timingId}:${stage}`;
+12725:       }
+12726: 
+12727:       function getHexMapRequestLabel(input) {
+12728:         try {
+12729:           const requestUrl = input instanceof Request
+12730:             ? new URL(input.url)
+12731:             : new URL(String(input), window.location.href);
+12732:           return requestUrl.pathname.replace(/^\/+/, "").replace(/\//g, ":") || "request";
+12733:         } catch (_err) {
+12734:           return "request";
+12735:         }
+12736:       }
+12737: 
+12738:       function markHexMapTiming(timingId, stage) {
+12739:         if (typeof performance === "undefined" || typeof performance.mark !== "function") {
+12740:           return;
+12741:         }
+12742:         performance.mark(getHexMapTimingMarkName(timingId, stage));
+12743:       }
+12744: 
+12745:       function measureHexMapTiming(timingId, measureName, startStage, endStage) {
+12746:         if (typeof performance === "undefined" || typeof performance.measure !== "function") {
+12747:           return;
+12748:         }
+12749:         try {
+12750:           performance.measure(
+12751:             `${HEX_MAP_TIMING_PREFIX}:${MAP_TIMING_KEY}:${timingId}:${measureName}`,
+12752:             getHexMapTimingMarkName(timingId, startStage),
+12753:             getHexMapTimingMarkName(timingId, endStage),
+12754:           );
+12755:         } catch (_err) {
+12756:           // Ignore missing-mark errors when a load aborts before completion.
+12757:         }
+12758:       }
+12759: 
+12760:       function isLikelyAccessFetchFailure(error) {
+12761:         if (!(error instanceof TypeError)) {
+12762:           return false;
+12763:         }
+12764: 	        const message = String(error.message || "").toLowerCase();
+12765: 	        return message.includes("failed to fetch") || message.includes("networkerror");
+12766: 	      }
+12767: 
+12768: 	      function buildAccessLoginUrl() {
+12769: 	        const host = window.location.hostname || "";
+12770: 	        if (!host) {
+12771: 	          return null;
+12772: 	        }
+12773: 	        const appSlug = host.split(".")[0];
