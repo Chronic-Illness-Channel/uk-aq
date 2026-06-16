@@ -7225,7 +7225,8 @@
         return {
           fetchCacheApi,
           getTurnstileToken,
-          getCacheAuthToken
+          getCacheAuthToken,
+          resolveCacheBaseUrl
         };
       })();
     </script>
@@ -7237,7 +7238,7 @@
       const projectRefParam = params.get("project_ref");
       const anonKeyParam = params.get("anon_key");
       const cacheBaseParam = params.get("cache_base");
-      const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseParam);
+      const cacheBaseUrl = window.ukAqSharedAuth.resolveCacheBaseUrl(cacheBaseParam);
       const cacheSessionParam = params.get("cache_session_url");
       const turnstileSiteKeyParam = params.get("turnstile_site_key");
       const metricParam = params.get("metric");
@@ -12045,7 +12046,7 @@
 		      const projectRefParam = params.get("project_ref");
 		      const anonKeyParam = params.get("anon_key");
 		      const cacheBaseParam = params.get("cache_base");
-		      const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseParam);
+		      const cacheBaseUrl = window.ukAqSharedAuth.resolveCacheBaseUrl(cacheBaseParam);
 		      const cacheSessionParam = params.get("cache_session_url");
 		      const turnstileSiteKeyParam = params.get("turnstile_site_key");
 		      const metricParam = params.get("metric");
