@@ -6982,7 +6982,7 @@
           if (window.location.protocol === "http:" || window.location.protocol === "https:") {
             return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
           }
-          return "https://cic-test.chronicillnesschannel.co.uk/api/aq";
+          return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
         }
         const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseUrlParam);
         const cacheOrigin = cacheBaseUrl ? new URL(cacheBaseUrl).origin : "";
@@ -17159,7 +17159,7 @@
     if (window.location.protocol === "http:" || window.location.protocol === "https:") {
       return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
     }
-    return "https://cic-test.chronicillnesschannel.co.uk/api/aq";
+    return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
   }
 
   function resolveAqiHistoryBaseUrl(rawValue) {
