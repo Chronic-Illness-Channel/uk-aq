@@ -6989,7 +6989,6 @@
         const defaultCacheSessionUrl = cacheOrigin ? `${cacheOrigin}/api/aq/session/start` : "";
         const cacheSessionParam = params.get("cache_session_url");
         const cacheSessionUrl = (cacheSessionParam || defaultCacheSessionUrl || "").trim();
-        const showTurnstileDebug = params.get("turnstile_debug") === "1";
 
         const CACHE_SESSION_SKEW_MS = 10000;
         const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:shared`;
@@ -7061,47 +7060,17 @@
             container.id = "uk-aq-turnstile-widget-shared";
             document.body.appendChild(container);
           }
-          if (showTurnstileDebug) {
-            Object.assign(container.style, {
-              position: "fixed",
-              right: "12px",
-              bottom: "12px",
-              left: "auto",
-              top: "auto",
-              width: "auto",
-              height: "auto",
-              minWidth: "320px",
-              minHeight: "80px",
-              overflow: "visible",
-              opacity: "1",
-              zIndex: "2147483647",
-              background: "white",
-              padding: "8px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
-            });
-          } else {
-            Object.assign(container.style, {
-              position: "fixed",
-              left: "-10000px",
-              top: "0",
-              right: "auto",
-              bottom: "auto",
-              width: "320px",
-              height: "80px",
-              minWidth: "0",
-              minHeight: "0",
-              overflow: "hidden",
-              opacity: "0.01",
-              zIndex: "2147483647",
-              background: "transparent",
-              padding: "0",
-              border: "0",
-              borderRadius: "0",
-              boxShadow: "none",
-            });
-          }
+          container.style.position = "fixed";
+          container.style.right = "12px";
+          container.style.bottom = "12px";
+          container.style.zIndex = "2147483647";
+          container.style.minWidth = "320px";
+          container.style.minHeight = "80px";
+          container.style.background = "white";
+          container.style.padding = "8px";
+          container.style.border = "1px solid #ccc";
+          container.style.borderRadius = "8px";
+          container.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.2)";
           return container;
         }
 
