@@ -31,7 +31,7 @@ const DEFAULT_TARGETS = [
 ];
 const refPattern = /const PROJECT_REF_PLACEHOLDER = "([^"]*)";/g;
 const anonPattern = /const ANON_KEY_PLACEHOLDER = "([^"]*)";/g;
-/** const turnstilePattern = /const TURNSTILE_SITE_KEY_PLACEHOLDER = "([^"]*)";/g; */
+const turnstilePattern = /const TURNSTILE_SITE_KEY_PLACEHOLDER = "([^"]*)";/g;
 const aqiHistoryPattern = /const AQI_HISTORY_BASE_PLACEHOLDER = "([^"]*)";/g;
 
 async function main() {
@@ -42,7 +42,7 @@ async function main() {
 
   const projectRef = (nodeProcess.env.SUPABASE_PROJECT_REF || "").trim();
   const publishableKey = (nodeProcess.env.SB_PUBLISHABLE_DEFAULT_KEY || "").trim();
-/**  const turnstileSiteKey = (nodeProcess.env.UK_AQ_TURNSTILE_SITE_KEY || "").trim(); */
+  const turnstileSiteKey = (nodeProcess.env.UK_AQ_TURNSTILE_SITE_KEY || "").trim();
   const aqiHistoryBaseUrl = (nodeProcess.env.UK_AQ_AQI_HISTORY_BASE_URL || "__UK_AQ_AQI_HISTORY_BASE_URL__").trim();
 
   if (!projectRef) {
@@ -53,10 +53,10 @@ async function main() {
     console.error("Publishable key is missing. Set SB_PUBLISHABLE_DEFAULT_KEY in .env or the environment.");
     nodeProcess.exit(1);
   }
-/**  if (!turnstileSiteKey) {
+  if (!turnstileSiteKey) {
     console.error("Turnstile site key is missing. Set UK_AQ_TURNSTILE_SITE_KEY in .env or the environment.");
     nodeProcess.exit(1);
-  } */
+  }
 
   const cliTargets = nodeProcess.argv.slice(2).filter(Boolean);
   const targets = (cliTargets.length ? cliTargets : DEFAULT_TARGETS)
@@ -79,13 +79,13 @@ async function main() {
       "ANON_KEY_PLACEHOLDER",
       targetPath,
     );
-/**    updated = replacePlaceholder(
+    updated = replacePlaceholder(
       updated,
       turnstilePattern,
       `const TURNSTILE_SITE_KEY_PLACEHOLDER = "${turnstileSiteKey}";`,
       "TURNSTILE_SITE_KEY_PLACEHOLDER",
       targetPath,
-    ); */
+    );
     updated = replacePlaceholder(
       updated,
       aqiHistoryPattern,

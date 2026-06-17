@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: blob:;"
+      content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: blob:; frame-src https://challenges.cloudflare.com;"
     />
     <title>UK AQ Hex Map – Power 0.8</title>
     <link rel="preload" as="image" href="/sidebar-images/CIC-Square-Border-Words-Alpha.svg" />
@@ -6963,6 +6963,289 @@
         };
       };
     </script>
+
+    <script>
+      window.ukAqSharedAuth = (function() {
+        const params = new URLSearchParams(window.location.search);
+        const TURNSTILE_SITE_KEY_PLACEHOLDER = "0x4AAAAAADBX_LWQibZKSL8W";
+        const turnstileSiteKeyParam = params.get("turnstile_site_key");
+        const turnstileSiteKey = TURNSTILE_SITE_KEY_PLACEHOLDER.includes("__UK_AQ_TURNSTILE_SITE_KEY__")
+          ? (turnstileSiteKeyParam || "")
+          : (turnstileSiteKeyParam || TURNSTILE_SITE_KEY_PLACEHOLDER);
+
+        const cacheBaseUrlParam = params.get("cache_base");
+        function resolveCacheBaseUrl(rawValue) {
+          const explicit = typeof rawValue === "string" ? rawValue.trim() : "";
+          if (explicit) {
+            return explicit.replace(/\/+$/, "");
+          }
+          if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+            return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
+          }
+          return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
+        }
+        const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseUrlParam);
+        const cacheOrigin = cacheBaseUrl ? new URL(cacheBaseUrl).origin : "";
+        const defaultCacheSessionUrl = cacheOrigin ? `${cacheOrigin}/api/aq/session/start` : "";
+        const cacheSessionParam = params.get("cache_session_url");
+        const cacheSessionUrl = (cacheSessionParam || defaultCacheSessionUrl || "").trim();
+
+        const CACHE_SESSION_SKEW_MS = 10000;
+        const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:shared`;
+        
+        let cacheAuthToken = null;
+        let cacheAuthTokenExpiresAt = 0;
+        let cacheAuthInflight = null;
+        let turnstileScriptInflight = null;
+        let turnstileTokenInflight = null;
+        let turnstileWidgetId = null;
+        let turnstileTokenResolver = null;
+        let turnstileTokenRejecter = null;
+        let turnstileTokenTimeoutId = null;
+
+        function readCacheSessionHintUntil() {
+          try {
+            const raw = window.localStorage.getItem(CACHE_SESSION_HINT_STORAGE_KEY);
+            if (!raw) return 0;
+            const parsed = Number(raw);
+            return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+          } catch (_err) {
+            return 0;
+          }
+        }
+
+        function writeCacheSessionHintUntil(untilMs) {
+          try {
+            if (untilMs > 0) {
+              window.localStorage.setItem(CACHE_SESSION_HINT_STORAGE_KEY, String(Math.floor(untilMs)));
+            } else {
+              window.localStorage.removeItem(CACHE_SESSION_HINT_STORAGE_KEY);
+            }
+          } catch (_err) {}
+        }
+
+        function syncCacheSessionHint() {
+          const hintedUntil = readCacheSessionHintUntil();
+          if (hintedUntil > cacheAuthTokenExpiresAt) {
+            cacheAuthToken = "session";
+            cacheAuthTokenExpiresAt = hintedUntil;
+          }
+        }
+
+        function clearCacheAuthToken(clearSharedHint = true) {
+          cacheAuthToken = null;
+          cacheAuthTokenExpiresAt = 0;
+          if (clearSharedHint) writeCacheSessionHintUntil(0);
+        }
+
+        function hasFreshCacheAuthToken() {
+          syncCacheSessionHint();
+          return Boolean(
+            cacheAuthToken &&
+            Date.now() < (cacheAuthTokenExpiresAt - CACHE_SESSION_SKEW_MS)
+          );
+        }
+
+        syncCacheSessionHint();
+        window.addEventListener("storage", (event) => {
+          if (event.key === CACHE_SESSION_HINT_STORAGE_KEY) {
+            syncCacheSessionHint();
+          }
+        });
+
+        function ensureTurnstileContainer() {
+          let container = document.getElementById("uk-aq-turnstile-widget-shared");
+          if (!container) {
+            container = document.createElement("div");
+            container.id = "uk-aq-turnstile-widget-shared";
+            document.body.appendChild(container);
+          }
+          container.style.position = "fixed";
+          container.style.right = "12px";
+          container.style.bottom = "12px";
+          container.style.zIndex = "2147483647";
+          container.style.minWidth = "320px";
+          container.style.minHeight = "80px";
+          container.style.background = "white";
+          container.style.padding = "8px";
+          container.style.border = "1px solid #ccc";
+          container.style.borderRadius = "8px";
+          container.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.2)";
+          return container;
+        }
+
+        function clearTurnstilePendingState() {
+          if (turnstileTokenTimeoutId) {
+            clearTimeout(turnstileTokenTimeoutId);
+            turnstileTokenTimeoutId = null;
+          }
+          turnstileTokenResolver = null;
+          turnstileTokenRejecter = null;
+        }
+
+        async function ensureTurnstileScript() {
+          if (window.turnstile && typeof window.turnstile.render === "function") return;
+          if (!turnstileScriptInflight) {
+            turnstileScriptInflight = new Promise((resolve, reject) => {
+              const existing = document.getElementById("uk-aq-turnstile-script");
+              if (existing) {
+                existing.addEventListener("load", () => resolve(), { once: true });
+                existing.addEventListener("error", () => reject(new Error("Failed to load Turnstile script.")), { once: true });
+                return;
+              }
+              const script = document.createElement("script");
+              script.id = "uk-aq-turnstile-script";
+              script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+              script.async = true;
+              script.defer = true;
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error("Failed to load Turnstile script."));
+              document.head.appendChild(script);
+            });
+          }
+          await turnstileScriptInflight;
+        }
+
+        async function ensureTurnstileWidget() {
+          if (!turnstileSiteKey) throw new Error("Missing Turnstile site key. Add ?turnstile_site_key=... to the URL.");
+          await ensureTurnstileScript();
+          if (turnstileWidgetId !== null) return;
+          const turnstileApi = window.turnstile;
+          if (!turnstileApi || typeof turnstileApi.render !== "function") throw new Error("Turnstile SDK unavailable.");
+          const container = ensureTurnstileContainer();
+          turnstileWidgetId = turnstileApi.render(container, {
+            sitekey: turnstileSiteKey,
+            appearance: "execute",
+            execution: "execute",
+            callback: (token) => {
+              if (turnstileTokenResolver) {
+                turnstileTokenResolver(token);
+                clearTurnstilePendingState();
+              }
+            },
+            "error-callback": () => {
+              const _api = window.turnstile;
+              if (_api && typeof _api.remove === "function" && turnstileWidgetId !== null) {
+                _api.remove(turnstileWidgetId);
+              }
+              turnstileWidgetId = null;
+              if (turnstileTokenRejecter) {
+                turnstileTokenRejecter(new Error("Turnstile verification failed."));
+                clearTurnstilePendingState();
+              }
+            },
+            "expired-callback": () => {
+              const _api = window.turnstile;
+              if (_api && typeof _api.remove === "function" && turnstileWidgetId !== null) {
+                _api.remove(turnstileWidgetId);
+              }
+              turnstileWidgetId = null;
+              if (turnstileTokenRejecter) {
+                turnstileTokenRejecter(new Error("Turnstile token expired."));
+                clearTurnstilePendingState();
+              }
+            },
+          });
+        }
+
+        async function getTurnstileToken() {
+          await ensureTurnstileWidget();
+          if (!turnstileTokenInflight) {
+            turnstileTokenInflight = (async () => {
+              const turnstileApi = window.turnstile;
+              if (!turnstileApi || typeof turnstileApi.execute !== "function") throw new Error("Turnstile execute unavailable.");
+              const token = await new Promise((resolve, reject) => {
+                turnstileTokenResolver = resolve;
+                turnstileTokenRejecter = reject;
+                turnstileTokenTimeoutId = setTimeout(() => {
+                  console.warn("Turnstile widget execution timed out. Could not obtain token.");
+                  if (turnstileTokenRejecter) {
+                    turnstileTokenRejecter(new Error("Turnstile token timed out."));
+                  }
+                  clearTurnstilePendingState();
+                  if (turnstileWidgetId !== null && typeof turnstileApi.reset === "function") {
+                    try { turnstileApi.reset(turnstileWidgetId); } catch(e) {}
+                  }
+                }, 30000);
+                turnstileApi.execute(turnstileWidgetId);
+              });
+              return token;
+            })().finally(() => {
+              turnstileTokenInflight = null;
+            });
+          }
+          return turnstileTokenInflight;
+        }
+
+        async function getCacheAuthToken(forceRefresh = false) {
+          if (!forceRefresh && hasFreshCacheAuthToken()) return cacheAuthToken;
+          if (!cacheSessionUrl) throw new Error("Missing cache session URL. Add ?cache_session_url=... to the URL.");
+          if (!cacheAuthInflight) {
+            cacheAuthInflight = (async () => {
+              const turnstileToken = await getTurnstileToken();
+              const response = await fetch(cacheSessionUrl, {
+                method: "POST",
+                headers: {
+                  "Accept": "application/json",
+                  "X-UK-AQ-Session-Init": "1",
+                  "CF-Turnstile-Token": turnstileToken,
+                },
+                credentials: "include",
+              });
+              if (!response.ok) throw new Error(`Session start failed: ${response.status}`);
+              const payload = await response.json().catch(() => ({}));
+              const expiresIn = Number(payload?.session_expires_in);
+              cacheAuthToken = "session";
+              cacheAuthTokenExpiresAt = Date.now() + Math.max(
+                30000,
+                Math.floor((Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 300) * 1000)
+              );
+              writeCacheSessionHintUntil(cacheAuthTokenExpiresAt);
+              return cacheAuthToken;
+            })().finally(() => {
+              cacheAuthInflight = null;
+            });
+          }
+          return cacheAuthInflight;
+        }
+
+        async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true, mapHooks = {}) {
+          if (mapHooks && mapHooks.onStart) mapHooks.onStart();
+          if (retryOnAuthFailure && !hasFreshCacheAuthToken()) {
+            try {
+              await getCacheAuthToken(false);
+            } catch (err) {
+              console.warn("UK AQ cache auth failed before API fetch", err);
+              throw err;
+            }
+          }
+          try {
+            const response = await fetch(input, { ...init, credentials: "include" });
+            if (response.status === 401 && retryOnAuthFailure) {
+              clearCacheAuthToken(false);
+              await getCacheAuthToken(false);
+              let retried = await fetch(input, { ...init, credentials: "include" });
+              if (retried.status !== 401) return retried;
+              clearCacheAuthToken();
+              await getCacheAuthToken(true);
+              retried = await fetch(input, { ...init, credentials: "include" });
+              return retried;
+            }
+            return response;
+          } finally {
+            if (mapHooks && mapHooks.onEnd) mapHooks.onEnd();
+          }
+        }
+
+        return {
+          fetchCacheApi,
+          getTurnstileToken,
+          getCacheAuthToken,
+          resolveCacheBaseUrl
+        };
+      })();
+    </script>
+
     <script>
       const PROJECT_REF_PLACEHOLDER = "grbfvlbhxwnrwikhyzoc";
       const ANON_KEY_PLACEHOLDER = "sb_publishable_VTRlIHmkcXOUO9lJLvF8bg_vTcJiVTl";
@@ -6970,9 +7253,9 @@
       const projectRefParam = params.get("project_ref");
       const anonKeyParam = params.get("anon_key");
       const cacheBaseParam = params.get("cache_base");
-      const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseParam);
+      const cacheBaseUrl = window.ukAqSharedAuth.resolveCacheBaseUrl(cacheBaseParam);
       const cacheSessionParam = params.get("cache_session_url");
-
+      const turnstileSiteKeyParam = params.get("turnstile_site_key");
       const metricParam = params.get("metric");
       const colorScaleParam = params.get("color_scale");
       const pollutantParam = params.get("pollutant");
@@ -7037,7 +7320,10 @@
       const anonKey = ANON_KEY_PLACEHOLDER.includes("__SB_PUBLISHABLE_DEFAULT_KEY__")
         ? (anonKeyParam || "")
         : ANON_KEY_PLACEHOLDER;
-
+      const TURNSTILE_SITE_KEY_PLACEHOLDER = "0x4AAAAAADBX_LWQibZKSL8W";
+      const turnstileSiteKey = TURNSTILE_SITE_KEY_PLACEHOLDER.includes("__UK_AQ_TURNSTILE_SITE_KEY__")
+        ? (turnstileSiteKeyParam || "")
+        : (turnstileSiteKeyParam || TURNSTILE_SITE_KEY_PLACEHOLDER);
       const cacheOrigin = cacheBaseUrl ? new URL(cacheBaseUrl).origin : "";
       const defaultCacheSessionUrl = cacheOrigin ? `${cacheOrigin}/api/aq/session/start` : "";
       const cacheSessionUrl = (cacheSessionParam || defaultCacheSessionUrl || "").trim();
@@ -7596,139 +7882,23 @@
           : "Missing cache endpoint base URL. Add ?cache_base=... to the URL.";
       }
 
-      function resolveCacheBaseUrl(rawValue) {
-        const explicit = typeof rawValue === "string" ? rawValue.trim() : "";
-        if (explicit) {
-          return explicit.replace(/\/+$/, "");
-        }
-        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
-          return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
-        }
-        return "https://cic-test.chronicillnesschannel.co.uk/api/aq";
-      }
-
-      if (!window.ukAqSharedAuth) {
-        window.ukAqSharedAuth = (() => {
-          const CACHE_SESSION_SKEW_MS = 10000;
-          const CACHE_SESSION_HINT_STORAGE_KEY = `uk_aq_cache_session_hint_v1:${cacheOrigin || "default"}:shared`;
-          let cacheAuthToken = null;
-          let cacheAuthTokenExpiresAt = 0;
-          let cacheAuthInflight = null;
-
-          function readCacheSessionHintUntil() {
-            try {
-              const raw = window.localStorage.getItem(CACHE_SESSION_HINT_STORAGE_KEY);
-              if (!raw) return 0;
-              const parsed = Number(raw);
-              return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-            } catch (_err) {
-              return 0;
-            }
-          }
-
-          function writeCacheSessionHintUntil(untilMs) {
-            try {
-              if (untilMs > 0) {
-                window.localStorage.setItem(CACHE_SESSION_HINT_STORAGE_KEY, String(Math.floor(untilMs)));
-              } else {
-                window.localStorage.removeItem(CACHE_SESSION_HINT_STORAGE_KEY);
-              }
-            } catch (_err) {
-              return;
-            }
-          }
-
-          function syncCacheSessionHint() {
-            const hintedUntil = readCacheSessionHintUntil();
-            if (hintedUntil > cacheAuthTokenExpiresAt) {
-              cacheAuthToken = "session";
-              cacheAuthTokenExpiresAt = hintedUntil;
-            }
-          }
-
-          function clearCacheAuthToken(clearSharedHint = true) {
-            cacheAuthToken = null;
-            cacheAuthTokenExpiresAt = 0;
-            if (clearSharedHint) writeCacheSessionHintUntil(0);
-          }
-
-          function hasFreshCacheAuthToken() {
-            syncCacheSessionHint();
-            return Boolean(cacheAuthToken && Date.now() < (cacheAuthTokenExpiresAt - CACHE_SESSION_SKEW_MS));
-          }
-
-          async function getCacheAuthToken(forceRefresh = false) {
-            if (!forceRefresh && hasFreshCacheAuthToken()) return cacheAuthToken;
-            if (!cacheSessionUrl) throw new Error("Missing cache session URL. Add ?cache_session_url=... to the URL.");
-            if (!cacheAuthInflight) {
-              cacheAuthInflight = (async () => {
-                const response = await fetch(cacheSessionUrl, {
-                  method: "POST",
-                  headers: {
-                    "Accept": "application/json",
-                    "X-UK-AQ-Session-Init": "1",
-                  },
-                  credentials: "include",
-                });
-                if (!response.ok) throw new Error(`Session start failed: ${response.status}`);
-                const payload = await response.json().catch(() => ({}));
-                const expiresIn = Number(payload?.session_expires_in);
-                cacheAuthToken = "session";
-                cacheAuthTokenExpiresAt = Date.now() + Math.max(30000, Math.floor((Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 300) * 1000));
-                writeCacheSessionHintUntil(cacheAuthTokenExpiresAt);
-                return cacheAuthToken;
-              })().finally(() => {
-                cacheAuthInflight = null;
-              });
-            }
-            return cacheAuthInflight;
-          }
-
-          async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true) {
-            if (retryOnAuthFailure && !hasFreshCacheAuthToken()) {
-              await getCacheAuthToken(false);
-            }
-            const response = await fetch(input, { ...init, credentials: "include" });
-            if (response.status === 401 && retryOnAuthFailure) {
-              clearCacheAuthToken(false);
-              await getCacheAuthToken(false);
-              let retried = await fetch(input, { ...init, credentials: "include" });
-              if (retried.status !== 401) return retried;
-              clearCacheAuthToken();
-              await getCacheAuthToken(true);
-              retried = await fetch(input, { ...init, credentials: "include" });
-              return retried;
-            }
-            return response;
-          }
-
-          syncCacheSessionHint();
-          window.addEventListener("storage", (event) => {
-            if (event.key === CACHE_SESSION_HINT_STORAGE_KEY) syncCacheSessionHint();
-          });
-
-          return {
-            getCacheAuthToken,
-            fetchCacheApi,
-          };
-        })();
-      }
-
       async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true) {
         const timingId = nextHexMapTimingId();
         const requestLabel = getHexMapRequestLabel(input);
-        markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
-        try {
-          return await window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure);
-        } finally {
-          markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
-          measureHexMapTiming(
-            timingId,
-            `fetch:${requestLabel}`,
-            `fetch:${requestLabel}:start`,
-            `fetch:${requestLabel}:end`,
-          );
-        }
+        return window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure, {
+          onStart: () => {
+            markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
+          },
+          onEnd: () => {
+            markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
+            measureHexMapTiming(
+              timingId,
+              `fetch:${requestLabel}`,
+              `fetch:${requestLabel}:start`,
+              `fetch:${requestLabel}:end`
+            );
+          }
+        });
       }
       window.ukAqFetchCacheApi = fetchCacheApi;
 
@@ -11891,9 +12061,9 @@
 		      const projectRefParam = params.get("project_ref");
 		      const anonKeyParam = params.get("anon_key");
 		      const cacheBaseParam = params.get("cache_base");
-		      const cacheBaseUrl = resolveCacheBaseUrl(cacheBaseParam);
+		      const cacheBaseUrl = window.ukAqSharedAuth.resolveCacheBaseUrl(cacheBaseParam);
 		      const cacheSessionParam = params.get("cache_session_url");
-
+		      const turnstileSiteKeyParam = params.get("turnstile_site_key");
 		      const metricParam = params.get("metric");
 	      const colorScaleParam = params.get("color_scale");
 	      const pollutantParam = params.get("pollutant");
@@ -11921,7 +12091,10 @@
 	      const anonKey = ANON_KEY_PLACEHOLDER.includes("__SB_PUBLISHABLE_DEFAULT_KEY__")
 	        ? (anonKeyParam || "")
 	        : ANON_KEY_PLACEHOLDER;
-
+	      const TURNSTILE_SITE_KEY_PLACEHOLDER = "0x4AAAAAADBX_LWQibZKSL8W";
+	      const turnstileSiteKey = TURNSTILE_SITE_KEY_PLACEHOLDER.includes("__UK_AQ_TURNSTILE_SITE_KEY__")
+	        ? (turnstileSiteKeyParam || "")
+	        : (turnstileSiteKeyParam || TURNSTILE_SITE_KEY_PLACEHOLDER);
 	      const cacheOrigin = cacheBaseUrl ? new URL(cacheBaseUrl).origin : "";
 	      const defaultCacheSessionUrl = cacheOrigin ? `${cacheOrigin}/api/aq/session/start` : "";
 	      const cacheSessionUrl = (cacheSessionParam || defaultCacheSessionUrl || "").trim();
@@ -12532,32 +12705,23 @@
       }
       updateEndpointHint();
 
-      function resolveCacheBaseUrl(rawValue) {
-        const explicit = typeof rawValue === "string" ? rawValue.trim() : "";
-        if (explicit) {
-          return explicit.replace(/\/+$/, "");
-        }
-        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
-          return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
-        }
-        return "https://cic-test.chronicillnesschannel.co.uk/api/aq";
-      }
-
       async function fetchCacheApi(input, init = {}, retryOnAuthFailure = true) {
         const timingId = nextHexMapTimingId();
         const requestLabel = getHexMapRequestLabel(input);
-        markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
-        try {
-          return await window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure);
-        } finally {
-          markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
-          measureHexMapTiming(
-            timingId,
-            `fetch:${requestLabel}`,
-            `fetch:${requestLabel}:start`,
-            `fetch:${requestLabel}:end`,
-          );
-        }
+        return window.ukAqSharedAuth.fetchCacheApi(input, init, retryOnAuthFailure, {
+          onStart: () => {
+            markHexMapTiming(timingId, `fetch:${requestLabel}:start`);
+          },
+          onEnd: () => {
+            markHexMapTiming(timingId, `fetch:${requestLabel}:end`);
+            measureHexMapTiming(
+              timingId,
+              `fetch:${requestLabel}`,
+              `fetch:${requestLabel}:start`,
+              `fetch:${requestLabel}:end`
+            );
+          }
+        });
       }
       window.ukAqFetchCacheApi = fetchCacheApi;
 
@@ -16935,11 +17099,6 @@
   const DAY_MS = 24 * 60 * 60 * 1000;
   const HOUR_MS = 60 * 60 * 1000;
   const AQI_HISTORY_ROW_LIMIT = 20000;
-  const CHART_GLOBAL_FETCH_CAP = 6;
-  const AQI_ACTIVE_SOURCE_CONCURRENCY = 4;
-  const PRIMARY_OBSERVATION_CONCURRENCY = 3;
-  const ADDITIONAL_OBSERVATION_CONCURRENCY = 2;
-  const BACKGROUND_AQI_PREFETCH_CONCURRENCY = 2;
   const AQI_BAND_TOP_OFFSET_PX = 1;
   const params = new URLSearchParams(window.location.search);
   const cacheBaseUrl = resolveCacheBaseUrl(params.get("cache_base"));
@@ -16955,13 +17114,6 @@
   const configuredAqiHistoryBase = AQI_HISTORY_BASE_PLACEHOLDER.includes("__UK_AQ_AQI_HISTORY_BASE_URL__")
     ? ""
     : AQI_HISTORY_BASE_PLACEHOLDER;
-  const WEBSITE_DEBUG_LOG_ENABLED_PLACEHOLDER = "true";
-  const configuredWebsiteDebugLogEnabled = WEBSITE_DEBUG_LOG_ENABLED_PLACEHOLDER.includes("__UK_AQ_WEBSITE_DEBUG_LOG_ENABLED__")
-    ? ""
-    : WEBSITE_DEBUG_LOG_ENABLED_PLACEHOLDER;
-  const WEBSITE_DEBUG_LOG_ENDPOINT = "/api/aq/debug-log";
-  const WEBSITE_DEBUG_RESPONSE_BODY_LIMIT = 50 * 1024;
-  const WEBSITE_DEBUG_EVENT_LIMIT = 240;
   const cacheAqiHistoryBase = cacheBaseUrl ? `${cacheBaseUrl}/aqi-history` : "";
   const aqiHistoryBaseCandidates = dedupeStrings([
     aqiHistoryBaseUrl,
@@ -16979,8 +17131,7 @@
     isChartMode: false,
     mapKey: null,
     chartModeAreaCode: null,
-    chartModeSessionIdentity: null,
-    lastChartModeSessionIdentity: null,
+    lastChartModeAreaCode: null,
     chartModeSelectedSensors: new Set(),
     chartModeTimeRange: "24h",
     visibleEntries: [],
@@ -16993,15 +17144,12 @@
   };
   const NO_SELECTED_SENSOR_CHART_MESSAGE = "Select a sensor from the list to draw a chart.";
 
-  // key: `${timeseriesId}|connector:${connectorId}|pollutant:${pollutantKey}`
-  // value: { points: Point[], guideline: object|null, coveredRanges: [], failedRanges: [], partialRanges: [], malformedRanges: [], unknownRanges: [], rangeStates: [] }
+  // key: `${timeseriesId}|${pollutantKey}`
+  // value: { points: Point[], guideline: object|null, coveredRanges: [{startMs,endMs}] }
   const seriesDataCache = new Map();
-  // key: `${timeseriesId}|station:${stationId}|connector:${connectorId}|pollutant:${pollutantKey}`
-  // value: { points: AqiPoint[], coveredRanges: [], failedRanges: [], partialRanges: [], malformedRanges: [], unknownRanges: [], rangeStates: [], lastResponseMeta: object|null }
+  // key: `${timeseriesId}|${pollutantKey}`
+  // value: { points: AqiPoint[], coveredRanges: [{startMs,endMs}], lastResponseMeta: object|null }
   const aqiBandCache    = new Map();
-  const seriesChunkInFlight = new Map();
-  const aqiChunkInFlight = new Map();
-  let websiteDebugSession = null;
 
   function collectChartDom(prefix) {
     const panel = document.getElementById(`${prefix}-hex-chart-mode`);
@@ -17026,7 +17174,7 @@
     if (window.location.protocol === "http:" || window.location.protocol === "https:") {
       return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
     }
-    return "https://cic-test.chronicillnesschannel.co.uk/api/aq";
+    return `${window.location.origin.replace(/\/$/, "")}/api/aq`;
   }
 
   function resolveAqiHistoryBaseUrl(rawValue) {
@@ -17361,28 +17509,11 @@
     return null;
   }
 
-  function normalizeAqiMissingReason(value) {
-    if (value === null || value === undefined || value === "") return null;
-    const text = String(value).trim();
-    return text || null;
-  }
-
-  function getAqiPayloadRowField(row, columns, fieldName) {
-    if (Array.isArray(row)) {
-      const index = Array.isArray(columns) ? columns.indexOf(fieldName) : -1;
-      return index >= 0 ? row[index] : undefined;
-    }
-    if (row && typeof row === "object") {
-      return row[fieldName];
-    }
-    return undefined;
-  }
-
-  function incrementAqiCount(counts, key) {
-    const normalizedKey = key === null || key === undefined || key === ""
-      ? "null"
-      : String(key);
-    counts[normalizedKey] = (counts[normalizedKey] || 0) + 1;
+  function getAqiFieldMappingForPollutant(pollutantKey) {
+    if (pollutantKey === "pm25") return { daqiField: "daqi_pm25_rolling24h_index_level", eaqiField: "eaqi_pm25_index_level" };
+    if (pollutantKey === "pm10") return { daqiField: "daqi_pm10_rolling24h_index_level", eaqiField: "eaqi_pm10_index_level" };
+    if (pollutantKey === "no2") return { daqiField: "daqi_no2_index_level", eaqiField: "eaqi_no2_index_level" };
+    return null;
   }
 
   function normalizeAqiBandLevel(value, isEaqi) {
@@ -17397,448 +17528,6 @@
 
   function isAqiHistoryDebugEnabled() {
     return params.get("debug_aqi") === "1";
-  }
-
-  function isChartDebugEnabled() {
-    return params.get("debug_chart") === "1";
-  }
-
-  function isWebsiteDebugLogEnabled() {
-    return parseBooleanFlag(configuredWebsiteDebugLogEnabled, false)
-      || parseBooleanFlag(params.get("debug_log"), false);
-  }
-
-  function serializeDebugError(error) {
-    if (!error) return null;
-    return {
-      name: error?.name || null,
-      message: error instanceof Error ? error.message : String(error),
-      status: Number.isFinite(Number(error?.status)) ? Number(error.status) : (
-        Number.isFinite(Number(error?.ukAqHttpStatus)) ? Number(error.ukAqHttpStatus) : null
-      ),
-    };
-  }
-
-  function capDebugText(value, limit = WEBSITE_DEBUG_RESPONSE_BODY_LIMIT) {
-    const text = String(value ?? "");
-    const cap = Math.max(0, Number(limit) || 0);
-    return {
-      text: text.slice(0, cap),
-      bytes: new Blob([text]).size,
-      truncated: text.length > cap,
-    };
-  }
-
-  function redactDebugQueryValue(key, value) {
-    const normalized = String(key || "").toLowerCase();
-    if (/(token|secret|key|auth|password|session|jwt|credential)/.test(normalized)) {
-      return "[redacted]";
-    }
-    return value;
-  }
-
-  function sanitizeDebugUrl(value) {
-    try {
-      const url = new URL(String(value || ""), window.location.origin);
-      Array.from(url.searchParams.keys()).forEach((key) => {
-        url.searchParams.set(key, redactDebugQueryValue(key, url.searchParams.get(key)));
-      });
-      return url.toString();
-    } catch (_err) {
-      return String(value || "");
-    }
-  }
-
-  function extractDebugQueryParams(value) {
-    try {
-      const url = new URL(String(value || ""), window.location.origin);
-      const output = {};
-      url.searchParams.forEach((paramValue, key) => {
-        output[key] = redactDebugQueryValue(key, paramValue);
-      });
-      return output;
-    } catch (_err) {
-      return {};
-    }
-  }
-
-  function redactDebugHeaders(headers) {
-    const output = {};
-    if (!headers?.forEach) return output;
-    headers.forEach((value, key) => {
-      const normalized = String(key || "").toLowerCase();
-      output[key] = /(authorization|cookie|set-cookie|token|secret|key|auth|session|jwt|credential)/.test(normalized)
-        ? "[redacted]"
-        : value;
-    });
-    return output;
-  }
-
-  function parseDebugBodyJson(text) {
-    const raw = String(text || "").trim();
-    if (!raw || (!raw.startsWith("{") && !raw.startsWith("["))) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (_err) {
-      return null;
-    }
-  }
-
-  function pickDebugValue(...values) {
-    for (const value of values) {
-      if (value !== undefined && value !== null && value !== "") return value;
-    }
-    return null;
-  }
-
-  function pickDebugNumber(...values) {
-    const value = pickDebugValue(...values);
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : null;
-  }
-
-  function pickDebugArray(...values) {
-    for (const value of values) {
-      if (Array.isArray(value)) return value;
-    }
-    return null;
-  }
-
-  function extractHistoryCoverageDebug(source = {}) {
-    const meta = source?.meta && typeof source.meta === "object" ? source.meta : {};
-    const coverage = source?.coverage && typeof source.coverage === "object"
-      ? source.coverage
-      : meta?.coverage && typeof meta.coverage === "object"
-        ? meta.coverage
-        : {};
-    return {
-      read_version: pickDebugValue(source?.read_version, meta?.read_version, coverage?.read_version),
-      index_version: pickDebugValue(source?.index_version, meta?.index_version, coverage?.index_version),
-      data_profile: pickDebugValue(source?.data_profile, meta?.data_profile, coverage?.data_profile, coverage?.profile),
-      source: pickDebugValue(source?.source, meta?.source, coverage?.source),
-      source_path: pickDebugValue(
-        source?.source_path,
-        meta?.source_path,
-        coverage?.source_path,
-        coverage?.object_key,
-        coverage?.manifest_key,
-        coverage?.key,
-      ),
-      source_prefix: pickDebugValue(
-        source?.history_prefix,
-        source?.data_prefix,
-        source?.aqilevels_prefix,
-        source?.observations_prefix,
-        meta?.history_prefix,
-        meta?.data_prefix,
-        meta?.aqilevels_prefix,
-        meta?.observations_prefix,
-        coverage?.history_prefix,
-        coverage?.data_prefix,
-        coverage?.aqilevels_prefix,
-        coverage?.observations_prefix,
-      ),
-      history_prefix: pickDebugValue(source?.history_prefix, meta?.history_prefix, coverage?.history_prefix),
-      data_prefix: pickDebugValue(source?.data_prefix, meta?.data_prefix, coverage?.data_prefix),
-      history_index_prefix: pickDebugValue(source?.history_index_prefix, meta?.history_index_prefix, coverage?.history_index_prefix),
-      timeseries_index_prefix: pickDebugValue(source?.timeseries_index_prefix, meta?.timeseries_index_prefix, coverage?.timeseries_index_prefix),
-      pollutant_partition: pickDebugValue(source?.pollutant_partition, meta?.pollutant_partition, coverage?.pollutant_partition),
-      r2_object_reads: pickDebugNumber(source?.r2_object_reads, meta?.r2_object_reads, coverage?.r2_object_reads),
-      parquet_bytes_read: pickDebugNumber(source?.parquet_bytes_read, meta?.parquet_bytes_read, coverage?.parquet_bytes_read),
-      matched_rows: pickDebugNumber(
-        source?.matched_rows,
-        source?.parquet_matched_rows,
-        meta?.matched_rows,
-        meta?.parquet_matched_rows,
-        coverage?.matched_rows,
-        coverage?.parquet_matched_rows,
-      ),
-      response_complete: pickDebugValue(source?.response_complete, meta?.response_complete, coverage?.response_complete),
-      partial_reasons: pickDebugArray(source?.partial_reasons, meta?.partial_reasons, coverage?.partial_reasons),
-      r2_errors: pickDebugArray(source?.r2_errors, meta?.r2_errors, coverage?.r2_errors),
-      ingest_errors: pickDebugArray(source?.ingest_errors, meta?.ingest_errors, coverage?.ingest_errors),
-    };
-  }
-
-  function createWebsiteDebugSession(context = {}) {
-    return {
-      schema_version: 1,
-      source: "hex_map.html",
-      debug_enabled: true,
-      session_id: `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`,
-      created_at_utc: new Date().toISOString(),
-      page: {
-        path: window.location.pathname,
-        url: sanitizeDebugUrl(window.location.href),
-        user_agent: window.navigator?.userAgent || null,
-      },
-      context,
-      events: [],
-      timings_ms: {},
-      counters: {
-        failed_fetch_count: 0,
-        aqi_history_503_count: 0,
-        postcode_prefix_hints_401_count: 0,
-        warning_count: 0,
-        error_count: 0,
-      },
-      flushed: false,
-      uploading: false,
-    };
-  }
-
-  function startWebsiteDebugSession(context = {}) {
-    if (!isWebsiteDebugLogEnabled()) return null;
-    websiteDebugSession = createWebsiteDebugSession(context);
-    console.debug("[uk-aq website-debug]", "session-started", websiteDebugSession.context);
-    return websiteDebugSession;
-  }
-
-  function getWebsiteDebugSession() {
-    if (!isWebsiteDebugLogEnabled()) return null;
-    if (!websiteDebugSession) {
-      websiteDebugSession = createWebsiteDebugSession({ reason: "ad-hoc" });
-    }
-    return websiteDebugSession;
-  }
-
-  function recordWebsiteDebugEvent(type, details = {}) {
-    const session = getWebsiteDebugSession();
-    if (!session) return;
-    const event = {
-      at_utc: new Date().toISOString(),
-      type,
-      ...details,
-    };
-    if (session.events.length < WEBSITE_DEBUG_EVENT_LIMIT) {
-      session.events.push(event);
-    } else if (!session.events_truncated) {
-      session.events_truncated = true;
-      session.events.push({
-        at_utc: new Date().toISOString(),
-        type: "events_truncated",
-        limit: WEBSITE_DEBUG_EVENT_LIMIT,
-      });
-    }
-    const status = Number(details?.status ?? details?.http_status ?? details?.response?.status);
-    if (type.includes("failed") || (Number.isFinite(status) && status >= 400)) {
-      session.counters.failed_fetch_count += 1;
-    }
-    if (type.includes("error") || (Number.isFinite(status) && status >= 500)) {
-      session.counters.error_count += 1;
-    }
-    if (type.includes("warning") || type.includes("malformed")) {
-      session.counters.warning_count += 1;
-    }
-    if (String(details?.route || "").includes("aqi-history") && status === 503) {
-      session.counters.aqi_history_503_count += 1;
-    }
-    if (String(details?.route || "").includes("postcode_prefix_hints") && status === 401) {
-      session.counters.postcode_prefix_hints_401_count += 1;
-    }
-  }
-
-  function recordWebsiteDebugTiming(name, valueMs) {
-    const session = getWebsiteDebugSession();
-    if (!session || !name || !Number.isFinite(Number(valueMs))) return;
-    session.timings_ms[name] = Math.round(Number(valueMs));
-  }
-
-  async function flushWebsiteDebugLog(reason = "manual") {
-    const session = websiteDebugSession;
-    if (!isWebsiteDebugLogEnabled() || !session || session.flushed || session.uploading) return;
-    if (!session.events.length && !Object.keys(session.timings_ms || {}).length) return;
-    session.uploading = true;
-    const payload = {
-      ...session,
-      flushed_reason: reason,
-      flushed_at_utc: new Date().toISOString(),
-    };
-    try {
-      const body = JSON.stringify(payload);
-      const response = await fetch(WEBSITE_DEBUG_LOG_ENDPOINT, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body,
-        keepalive: body.length < 60000,
-      });
-      const responseText = await response.text().catch(() => "");
-      let responsePayload = null;
-      try {
-        responsePayload = responseText ? JSON.parse(responseText) : null;
-      } catch (_err) {
-        responsePayload = null;
-      }
-      if (!response.ok) {
-        console.warn("[uk-aq website-debug]", "upload failed", response.status, responsePayload || responseText);
-        session.uploading = false;
-        return;
-      }
-      if (responsePayload?.uploaded !== true) {
-        console.warn("[uk-aq website-debug]", "upload not confirmed", responsePayload || responseText);
-        session.uploading = false;
-        return;
-      }
-      session.flushed = true;
-      console.debug("[uk-aq website-debug]", "uploaded", {
-        reason,
-        events: session.events.length,
-        timings: Object.keys(session.timings_ms || {}).length,
-        dropbox_path: responsePayload?.dropbox_path || null,
-      });
-    } catch (error) {
-      session.uploading = false;
-      console.warn("[uk-aq website-debug]", "upload error", error);
-    }
-  }
-
-  function recordWebsiteFetchFailure(route, url, response, bodyText, context = {}) {
-    if (!isWebsiteDebugLogEnabled()) return;
-    const session = getWebsiteDebugSession();
-    const status = response?.status || null;
-    const hasPriorMatchingBody = Boolean(session?.events?.some((event) => (
-      event?.type === "fetch_failed"
-      && event?.route === route
-      && event?.status === status
-      && event?.body_text
-    )));
-    const capped = capDebugText(bodyText, hasPriorMatchingBody ? 4096 : WEBSITE_DEBUG_RESPONSE_BODY_LIMIT);
-    recordWebsiteDebugEvent("fetch_failed", {
-      route,
-      url: sanitizeDebugUrl(url),
-      query: extractDebugQueryParams(url),
-      status,
-      status_text: response?.statusText || "",
-      headers: redactDebugHeaders(response?.headers),
-      body_text: capped.text,
-      body_json: parseDebugBodyJson(capped.text),
-      body_bytes: capped.bytes,
-      body_truncated: capped.truncated,
-      context,
-    });
-  }
-
-  window.ukAqWebsiteDebugLog = {
-    enabled: isWebsiteDebugLogEnabled,
-    recordEvent: recordWebsiteDebugEvent,
-    recordTiming: recordWebsiteDebugTiming,
-    flush: flushWebsiteDebugLog,
-    capText: capDebugText,
-    sanitizeUrl: sanitizeDebugUrl,
-    redactHeaders: redactDebugHeaders,
-    parseBodyJson: parseDebugBodyJson,
-  };
-
-  function getEntryConnectorId(entry) {
-    const value = entry?.connectorId
-      ?? entry?.connector_id
-      ?? entry?.row?.connector_id
-      ?? entry?.row?.connector?.id
-      ?? entry?.row?.connectorId
-      ?? null;
-    if (value === null || value === undefined || value === "") return null;
-    return String(value).trim() || null;
-  }
-
-  function getEntryStationId(entry) {
-    const value = entry?.stationId
-      ?? entry?.station_id
-      ?? entry?.row?.station_id
-      ?? entry?.row?.station?.id
-      ?? null;
-    if (value === null || value === undefined || value === "") return null;
-    return String(value).trim() || null;
-  }
-
-  function normalizeDebugRanges(ranges = []) {
-    return (Array.isArray(ranges) ? ranges : [])
-      .filter((segment) => Number.isFinite(segment?.startMs) && Number.isFinite(segment?.endMs))
-      .map((segment) => ({
-        start_utc: new Date(segment.startMs).toISOString(),
-        end_utc: new Date(segment.endMs).toISOString(),
-      }));
-  }
-
-  function summarizeParsedGapRanges(points, range, expectedMs = HOUR_MS, maxRanges = 25) {
-    const rangeStart = Number(range?.startMs);
-    const rangeEnd = Number(range?.endMs);
-    if (!Number.isFinite(rangeStart) || !Number.isFinite(rangeEnd) || rangeEnd <= rangeStart) {
-      return { ranges: [], total: 0, truncated: false };
-    }
-    const times = (Array.isArray(points) ? points : [])
-      .map((point) => point?.date?.getTime?.())
-      .filter((timeMs) => Number.isFinite(timeMs) && timeMs >= rangeStart && timeMs <= rangeEnd)
-      .sort((a, b) => a - b);
-    const uniqueTimes = Array.from(new Set(times));
-    const gapRanges = [];
-    const addGap = (startMs, endMs) => {
-      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return;
-      gapRanges.push({ startMs, endMs });
-    };
-    if (!uniqueTimes.length) {
-      addGap(rangeStart, rangeEnd);
-    } else {
-      if (uniqueTimes[0] - rangeStart > expectedMs * 1.5) {
-        addGap(rangeStart, uniqueTimes[0]);
-      }
-      for (let index = 1; index < uniqueTimes.length; index++) {
-        const previous = uniqueTimes[index - 1];
-        const current = uniqueTimes[index];
-        if (current - previous > expectedMs * 1.5) {
-          addGap(previous + expectedMs, current);
-        }
-      }
-      const last = uniqueTimes[uniqueTimes.length - 1];
-      if (rangeEnd - last > expectedMs * 1.5) {
-        addGap(last + expectedMs, rangeEnd);
-      }
-    }
-    return {
-      ranges: normalizeDebugRanges(gapRanges.slice(0, maxRanges)),
-      total: gapRanges.length,
-      truncated: gapRanges.length > maxRanges,
-    };
-  }
-
-  function getAqiPointCounts(points) {
-    const list = Array.isArray(points) ? points : [];
-    const daqiMissingReasonCounts = {};
-    const eaqiMissingReasonCounts = {};
-    let daqiCount = 0;
-    let eaqiCount = 0;
-    let nullDaqiCount = 0;
-    let nullEaqiCount = 0;
-    list.forEach((point) => {
-      if (point?.daqi !== null && point?.daqi !== undefined) {
-        daqiCount += 1;
-      } else {
-        nullDaqiCount += 1;
-      }
-      if (point?.eaqi !== null && point?.eaqi !== undefined) {
-        eaqiCount += 1;
-      } else {
-        nullEaqiCount += 1;
-      }
-      incrementAqiCount(daqiMissingReasonCounts, normalizeAqiMissingReason(point?.daqi_missing_reason));
-      incrementAqiCount(eaqiMissingReasonCounts, normalizeAqiMissingReason(point?.eaqi_missing_reason));
-    });
-    return {
-      parsed_point_count: list.length,
-      daqi_count: daqiCount,
-      eaqi_count: eaqiCount,
-      null_daqi_count: nullDaqiCount,
-      null_eaqi_count: nullEaqiCount,
-      daqi_missing_reason_counts: daqiMissingReasonCounts,
-      eaqi_missing_reason_counts: eaqiMissingReasonCounts,
-    };
-  }
-
-  function getTimeseriesPayloadRows(payload) {
-    if (Array.isArray(payload?.data)) return payload.data;
-    if (Array.isArray(payload?.points)) return payload.points;
-    if (Array.isArray(payload?.rows)) return payload.rows;
-    return [];
   }
 
   const AQI_HISTORY_CHUNK_MAX_ATTEMPTS = 3;
@@ -17901,48 +17590,23 @@
     if (textPayload.rows.length) {
       return textPayload;
     }
-    return { points: [], malformed: text.length > 0 };
+    return { points: [] };
   }
 
   function normalizeAqiHistoryResponseMeta(payload, requestMeta = {}) {
     const meta = payload?.meta || {};
-    const parsedPoints = Array.isArray(requestMeta?.points) ? requestMeta.points : [];
-    const rawRows = getAqiPayloadRows(payload);
-    const pointCount = parsedPoints.length || rawRows.length;
-    const aqiCounts = getAqiPointCounts(parsedPoints);
+    const pointCount = Array.isArray(requestMeta?.points) ? requestMeta.points.length : getAqiPayloadRows(payload).length;
     const responseComplete = Object.prototype.hasOwnProperty.call(payload || {}, "response_complete")
       ? payload.response_complete
       : Object.prototype.hasOwnProperty.call(meta, "response_complete")
         ? meta.response_complete
         : null;
-    const hasGap = Object.prototype.hasOwnProperty.call(payload || {}, "has_gap")
-      ? payload.has_gap
-      : Object.prototype.hasOwnProperty.call(meta, "has_gap")
-        ? meta.has_gap
-        : null;
     const rowCountValue = payload?.row_count ?? meta?.row_count ?? null;
-    const coverage = payload?.coverage || meta?.coverage || null;
-    const historyDebug = extractHistoryCoverageDebug({ ...payload, ...meta, coverage });
     return {
       source: payload?.source || meta?.source || null,
-      ...historyDebug,
       response_complete: responseComplete,
-      has_gap: hasGap,
-      coverage_state: payload?.coverage_state || meta?.coverage_state || coverage?.coverage_state || null,
-      partial_reasons: Array.isArray(payload?.partial_reasons) ? payload.partial_reasons
-        : Array.isArray(meta?.partial_reasons) ? meta.partial_reasons
-        : Array.isArray(coverage?.partial_reasons) ? coverage.partial_reasons
-        : null,
       row_count: Number.isFinite(Number(rowCountValue)) ? Number(rowCountValue) : null,
-      raw_row_count: rawRows.length,
       point_count: Number.isFinite(Number(pointCount)) ? Number(pointCount) : null,
-      parsed_point_count: aqiCounts.parsed_point_count,
-      daqi_count: Number.isFinite(Number(meta?.daqi_count)) ? Number(meta.daqi_count) : aqiCounts.daqi_count,
-      eaqi_count: Number.isFinite(Number(meta?.eaqi_count)) ? Number(meta.eaqi_count) : aqiCounts.eaqi_count,
-      null_daqi_count: Number.isFinite(Number(meta?.null_daqi_count)) ? Number(meta.null_daqi_count) : aqiCounts.null_daqi_count,
-      null_eaqi_count: Number.isFinite(Number(meta?.null_eaqi_count)) ? Number(meta.null_eaqi_count) : aqiCounts.null_eaqi_count,
-      daqi_missing_reason_counts: meta?.daqi_missing_reason_counts || aqiCounts.daqi_missing_reason_counts,
-      eaqi_missing_reason_counts: meta?.eaqi_missing_reason_counts || aqiCounts.eaqi_missing_reason_counts,
       data_format: payload?.data_format || meta?.data_format || null,
       wire_format: payload?.wire_format || meta?.wire_format || requestMeta?.wireFormat || null,
       cache_status: payload?.cache_status || meta?.cache_status || null,
@@ -17951,71 +17615,27 @@
       query_to_utc: payload?.query_to_utc || meta?.query_to_utc || requestMeta?.toIso || null,
       timeseries_id: payload?.timeseries_id || meta?.timeseries_id || requestMeta?.timeseriesId || null,
       entity_id: payload?.entity_id || meta?.entity_id || requestMeta?.timeseriesId || null,
-      station_id: payload?.station_id || meta?.station_id || requestMeta?.stationId || null,
-      connector_id: payload?.connector_id || meta?.connector_id || requestMeta?.connectorId || null,
       pollutant: payload?.pollutant || meta?.pollutant || requestMeta?.pollutantKey || null,
-      source_split_boundary_utc: payload?.source_split_boundary_utc || meta?.source_split_boundary_utc || null,
-      overlap_start_utc: payload?.overlap_start_utc || meta?.overlap_start_utc || coverage?.overlap_start_utc || null,
-      retention_start_utc: payload?.retention_start_utc || meta?.retention_start_utc || coverage?.retention_start_utc || null,
-      source_of_truth_days: payload?.source_of_truth_days || meta?.source_of_truth_days || coverage?.ingest_retention_days || null,
-      coverage,
-      row_summary: payload?.coverage?.row_summary || meta?.row_summary || coverage?.row_summary || null,
     };
   }
 
   function logAqiHistoryDebugMeta(stage, url, payload, requestMeta, points) {
     if (!isAqiHistoryDebugEnabled()) return;
     const normalizedMeta = normalizeAqiHistoryResponseMeta(payload, { ...requestMeta, points });
-    const historyDebug = extractHistoryCoverageDebug(normalizedMeta);
-    const pointCounts = getAqiPointCounts(points);
-    const rowSummary = normalizedMeta.row_summary || {};
     console.debug("[uk-aq aqi-history]", stage, {
       url,
-      selected_aqi_source_station_id: state.selectedAqiSensorId || null,
       timeseries_id: normalizedMeta.timeseries_id,
-      station_id: normalizedMeta.station_id,
-      connector_id: normalizedMeta.connector_id,
       pollutant: normalizedMeta.pollutant,
       query_from_utc: normalizedMeta.query_from_utc,
       query_to_utc: normalizedMeta.query_to_utc,
       source: normalizedMeta.source,
-      read_version: historyDebug.read_version,
-      index_version: historyDebug.index_version,
-      data_profile: historyDebug.data_profile,
-      source_path: historyDebug.source_path,
-      source_prefix: historyDebug.source_prefix,
-      history_prefix: historyDebug.history_prefix,
-      history_index_prefix: historyDebug.history_index_prefix,
-      timeseries_index_prefix: historyDebug.timeseries_index_prefix,
-      pollutant_partition: historyDebug.pollutant_partition,
-      r2_object_reads: historyDebug.r2_object_reads,
-      parquet_bytes_read: historyDebug.parquet_bytes_read,
-      matched_rows: historyDebug.matched_rows,
-      source_split_boundary_utc: normalizedMeta.source_split_boundary_utc,
-      overlap_start_utc: normalizedMeta.overlap_start_utc,
-      retention_start_utc: normalizedMeta.retention_start_utc,
-      source_of_truth_days: normalizedMeta.source_of_truth_days,
       response_complete: normalizedMeta.response_complete,
-      has_gap: normalizedMeta.has_gap,
-      coverage_state: normalizedMeta.coverage_state,
-      partial_reasons: normalizedMeta.partial_reasons,
       row_count: normalizedMeta.row_count,
-      raw_row_count: normalizedMeta.raw_row_count,
       point_count: normalizedMeta.point_count,
-      parsed_point_count: normalizedMeta.parsed_point_count,
-      parsed_daqi_count: pointCounts.daqi_count,
-      parsed_eaqi_count: pointCounts.eaqi_count,
-      rows_with_null_daqi: pointCounts.null_daqi_count,
-      rows_with_null_eaqi: pointCounts.null_eaqi_count,
-      daqi_missing_reason_counts: rowSummary?.daqi_missing_reason_counts || pointCounts.daqi_missing_reason_counts,
-      eaqi_missing_reason_counts: rowSummary?.eaqi_missing_reason_counts || pointCounts.eaqi_missing_reason_counts,
-      row_summary: rowSummary,
       data_format: normalizedMeta.data_format,
       wire_format: normalizedMeta.wire_format,
       cache_status: normalizedMeta.cache_status,
       http_status: normalizedMeta.http_status,
-      attempt: requestMeta?.attempt || null,
-      coverage: normalizedMeta.coverage,
     });
   }
 
@@ -18049,10 +17669,7 @@
     const normalizedMeta = normalizeAqiHistoryResponseMeta(payload, requestMeta);
     console.warn("[uk-aq aqi-history]", stage, {
       url,
-      selected_aqi_source_station_id: state.selectedAqiSensorId || null,
       timeseries_id: normalizedMeta.timeseries_id,
-      station_id: normalizedMeta.station_id,
-      connector_id: normalizedMeta.connector_id,
       pollutant: normalizedMeta.pollutant,
       query_from_utc: normalizedMeta.query_from_utc,
       query_to_utc: normalizedMeta.query_to_utc,
@@ -18060,7 +17677,6 @@
       response_complete: normalizedMeta.response_complete,
       row_count: normalizedMeta.row_count,
       point_count: normalizedMeta.point_count,
-      row_summary: normalizedMeta.row_summary,
       data_format: normalizedMeta.data_format,
       wire_format: normalizedMeta.wire_format,
       cache_status: normalizedMeta.cache_status,
@@ -18072,11 +17688,8 @@
   }
 
   function shouldMarkAqiHistoryRangeCovered(payload, points) {
-    return isCoveredCacheState(classifyAqiCacheState({
-      points,
-      meta: normalizeAqiHistoryResponseMeta(payload, { points }),
-      cacheState: payload?.malformed ? "malformed" : null,
-    }));
+    if (Array.isArray(points) && points.length > 0) return true;
+    return normalizeAqiHistoryResponseMeta(payload, { points }).response_complete === true;
   }
 
   function parseObservationNumericValue(rawValue) {
@@ -18111,15 +17724,9 @@
 
   function normalizeTimeseriesDebugMeta(payload) {
     if (sharedTimeseriesClient?.normalizeTimeseriesMeta) {
-      const normalized = sharedTimeseriesClient.normalizeTimeseriesMeta(payload);
-      return {
-        ...normalized,
-        ...extractHistoryCoverageDebug({ ...payload, ...(payload?.meta || {}), coverage: normalized?.coverage || payload?.coverage || payload?.meta?.coverage }),
-      };
+      return sharedTimeseriesClient.normalizeTimeseriesMeta(payload);
     }
     const meta = payload?.meta || {};
-    const coverage = meta?.coverage || payload?.coverage || null;
-    const historyDebug = extractHistoryCoverageDebug({ ...payload, ...meta, coverage });
     const rowCount = Number(meta?.row_count);
     const r2RowCount = Number(meta?.r2_row_count);
     const ingestRowCount = Number(meta?.ingest_row_count);
@@ -18128,113 +17735,50 @@
       source_mode: meta?.source_mode || payload?.source_mode || null,
       r2_coverage_end: meta?.r2_coverage_end || null,
       ingest_tail_start: meta?.ingest_tail_start || null,
-      source_split_boundary_utc: meta?.source_split_boundary_utc || payload?.source_split_boundary_utc || null,
-      ingest_retention_days: meta?.ingest_retention_days || null,
-      response_complete: Object.prototype.hasOwnProperty.call(meta, "response_complete") ? meta.response_complete : null,
       has_gap: Object.prototype.hasOwnProperty.call(meta, "has_gap") ? meta.has_gap : null,
       cache_status: meta?.cache_status || null,
       row_count: Number.isFinite(rowCount) ? rowCount : null,
       r2_row_count: Number.isFinite(r2RowCount) ? r2RowCount : null,
       ingest_row_count: Number.isFinite(ingestRowCount) ? ingestRowCount : null,
       deduped_row_count: Number.isFinite(dedupedRowCount) ? dedupedRowCount : null,
-      coverage: meta?.coverage || null,
       r2_errors: Array.isArray(meta?.r2_errors) ? meta.r2_errors : null,
       ingest_errors: Array.isArray(meta?.ingest_errors) ? meta.ingest_errors : null,
-      ...historyDebug,
     };
   }
 
-  function logTimeseriesDebugMeta(contextLabel, payload, entry, chunk, requestMeta = {}) {
-    if (!isChartDebugEnabled()) return;
+  function logTimeseriesDebugMeta(contextLabel, payload, entry, chunk) {
     const meta = normalizeTimeseriesDebugMeta(payload);
     if (!meta) return;
-    const rows = getTimeseriesPayloadRows(payload);
-    const points = Array.isArray(requestMeta?.points) ? requestMeta.points : parseSeriesPayloadPoints(payload);
-    const gapSummary = summarizeParsedGapRanges(points, chunk);
     if (
       meta.source_mode === null &&
       meta.r2_coverage_end === null &&
       meta.ingest_tail_start === null &&
-      meta.source_split_boundary_utc === null &&
-      meta.ingest_retention_days === null &&
       meta.has_gap === null &&
       meta.cache_status === null &&
       meta.row_count === null &&
       meta.r2_row_count === null &&
       meta.ingest_row_count === null &&
       meta.deduped_row_count === null &&
-      !rows.length &&
       (!Array.isArray(meta.r2_errors) || meta.r2_errors.length === 0) &&
       (!Array.isArray(meta.ingest_errors) || meta.ingest_errors.length === 0)
     ) {
       return;
     }
     console.debug("[uk-aq timeseries]", contextLabel, {
-      url: requestMeta?.url || null,
-      selected_chart_identity: {
-        map_key: state.mapKey || null,
-        area_code: state.chartModeAreaCode || null,
-        session_identity: state.chartModeSessionIdentity || null,
-      },
       timeseries_id: entry?.timeseriesId || null,
-      station_id: getEntryStationId(entry),
-      connector_id: getEntryConnectorId(entry) || meta?.coverage?.target_connector_id || meta?.coverage?.connector_id || null,
-      pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
       chunk_start: chunk?.startIso || null,
       chunk_end: chunk?.endIso || null,
       source_mode: meta.source_mode,
-      read_version: meta.read_version || null,
-      index_version: meta.index_version || null,
-      data_profile: meta.data_profile || null,
-      source_path: meta.source_path || null,
-      source_prefix: meta.source_prefix || null,
-      history_prefix: meta.history_prefix || null,
-      history_index_prefix: meta.history_index_prefix || null,
-      timeseries_index_prefix: meta.timeseries_index_prefix || null,
-      pollutant_partition: meta.pollutant_partition || null,
-      r2_object_reads: meta.r2_object_reads,
-      parquet_bytes_read: meta.parquet_bytes_read,
-      matched_rows: meta.matched_rows,
       r2_coverage_end: meta.r2_coverage_end,
       ingest_tail_start: meta.ingest_tail_start,
-      source_split_boundary_utc: meta.source_split_boundary_utc,
-      ingest_retention_days: meta.ingest_retention_days,
-      response_complete: meta.response_complete,
       has_gap: meta.has_gap,
       cache_status: meta.cache_status,
-      http_status: requestMeta?.httpStatus || null,
       row_count: meta.row_count,
-      raw_row_count: rows.length,
-      parsed_point_count: points.length,
-      parsed_gap_ranges: gapSummary.ranges,
-      parsed_gap_range_count: gapSummary.total,
-      parsed_gap_ranges_truncated: gapSummary.truncated,
       r2_row_count: meta.r2_row_count,
       ingest_row_count: meta.ingest_row_count,
       deduped_row_count: meta.deduped_row_count,
-      coverage: meta.coverage,
       r2_errors: meta.r2_errors,
       ingest_errors: meta.ingest_errors,
-    });
-  }
-
-  function logTimeseriesDebugFailure(stage, entry, chunk, error, requestMeta = {}) {
-    if (!isChartDebugEnabled()) return;
-    console.debug("[uk-aq timeseries]", stage, {
-      url: requestMeta?.url || null,
-      selected_chart_identity: {
-        map_key: state.mapKey || null,
-        area_code: state.chartModeAreaCode || null,
-        session_identity: state.chartModeSessionIdentity || null,
-      },
-      timeseries_id: entry?.timeseriesId || null,
-      station_id: getEntryStationId(entry),
-      connector_id: getEntryConnectorId(entry),
-      pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
-      chunk_start: chunk?.startIso || null,
-      chunk_end: chunk?.endIso || null,
-      http_status: requestMeta?.httpStatus || null,
-      error: error instanceof Error ? error.message : String(error),
     });
   }
 
@@ -18244,8 +17788,7 @@
       return sharedTimeseriesClient.buildCanonicalTimeseriesUrl({
         baseUrl: seriesUrl,
         timeseriesId,
-        pollutant: activePollutant,
-        windowLabel: normalizeChartRangeValue(state.chartModeTimeRange),
+        windowLabel: state.chartModeTimeRange || "24h",
         startIso: chunk?.startIso || null,
         endIso: chunk?.endIso || null,
         proxyV2Enabled: UK_AQ_CHART_TIMESERIES_PROXY_V2_ENABLED,
@@ -18254,7 +17797,6 @@
     }
     const url = new URL(seriesUrl);
     url.searchParams.set("timeseries_id", String(timeseriesId));
-    url.searchParams.set("pollutant", activePollutant);
     url.searchParams.set("start", chunk.startIso);
     url.searchParams.set("end", chunk.endIso);
     url.searchParams.set("format", "compact");
@@ -18262,32 +17804,41 @@
   }
 
   function parseAqiBandPayload(payload, pollutantKey) {
-    if (!normalizeAqiSupportedPollutant(pollutantKey)) return [];
+    const mapping = getAqiFieldMappingForPollutant(pollutantKey);
+    if (!mapping) return [];
     const dataFormat = String(payload?.data_format || "").toLowerCase();
     const columns = Array.isArray(payload?.columns) ? payload.columns : [];
     const periodStartIndex = columns.indexOf("period_start_utc");
     const timestampHourIndex = columns.indexOf("timestamp_hour_utc");
     const observedAtIndex = columns.indexOf("observed_at");
+    const daqiIndex = [mapping.daqiField, "daqi_index_level", "daqi"]
+      .map((field) => columns.indexOf(field))
+      .find((index) => index >= 0);
+    const eaqiIndex = [mapping.eaqiField, "eaqi_index_level", "eaqi"]
+      .map((field) => columns.indexOf(field))
+      .find((index) => index >= 0);
     const rawPoints = getAqiPayloadRows(payload);
     return rawPoints.map((row) => {
       if (dataFormat === "compact" && Array.isArray(row)) {
         const observedAt = periodStartIndex >= 0 ? row[periodStartIndex] : timestampHourIndex >= 0 ? row[timestampHourIndex] : observedAtIndex >= 0 ? row[observedAtIndex] : row[0];
         return {
           date: new Date(observedAt),
-          daqi: normalizeAqiBandLevel(getAqiPayloadRowField(row, columns, "daqi_index_level"), false),
-          eaqi: normalizeAqiBandLevel(getAqiPayloadRowField(row, columns, "eaqi_index_level"), true),
-          daqi_missing_reason: normalizeAqiMissingReason(getAqiPayloadRowField(row, columns, "daqi_missing_reason")),
-          eaqi_missing_reason: normalizeAqiMissingReason(getAqiPayloadRowField(row, columns, "eaqi_missing_reason")),
+          daqi: normalizeAqiBandLevel(daqiIndex >= 0 ? row[daqiIndex] : null, false),
+          eaqi: normalizeAqiBandLevel(eaqiIndex >= 0 ? row[eaqiIndex] : null, true),
         };
       }
       return {
         date: new Date(row?.period_start_utc || row?.timestamp_hour_utc || row?.observed_at),
-        daqi: normalizeAqiBandLevel(getAqiPayloadRowField(row, columns, "daqi_index_level"), false),
-        eaqi: normalizeAqiBandLevel(getAqiPayloadRowField(row, columns, "eaqi_index_level"), true),
-        daqi_missing_reason: normalizeAqiMissingReason(getAqiPayloadRowField(row, columns, "daqi_missing_reason")),
-        eaqi_missing_reason: normalizeAqiMissingReason(getAqiPayloadRowField(row, columns, "eaqi_missing_reason")),
+        daqi: normalizeAqiBandLevel(
+          row?.[mapping.daqiField] ?? row?.daqi_index_level ?? row?.daqi,
+          false,
+        ),
+        eaqi: normalizeAqiBandLevel(
+          row?.[mapping.eaqiField] ?? row?.eaqi_index_level ?? row?.eaqi,
+          true,
+        ),
       };
-    }).filter((row) => Number.isFinite(row.date?.getTime()))
+    }).filter((row) => Number.isFinite(row.date?.getTime()) && (row.daqi !== null || row.eaqi !== null))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
@@ -18298,80 +17849,12 @@
     return { startDate, endDate, startMs: startDate.getTime(), endMs: endDate.getTime(), startIso: startDate.toISOString(), endIso: endDate.toISOString() };
   }
 
-  function normalizeChartRangeValue(value) {
-    const normalized = String(value || "").trim();
-    return normalized === "12h" || normalized === "24h" || normalized === "7d" || normalized === "31d" || normalized === "90d"
-      ? normalized
-      : "24h";
-  }
-
   function getAdapter(mapKey = state.mapKey) {
     return mapKey === "cr" ? window.crMap : window.ukMap;
   }
 
   function getCurrentContext(mapKey = state.mapKey) {
     return getAdapter(mapKey)?.getChartModeContext?.() || null;
-  }
-
-  function normalizeChartSessionPart(value) {
-    const text = String(value ?? "").trim();
-    return text ? text.toUpperCase() : "";
-  }
-
-  function resolveChartSessionAreaCode(context) {
-    return normalizeChartSessionPart(
-      context?.areaCode
-        ?? context?.area_code
-        ?? context?.pcon_code
-        ?? context?.lad_code
-        ?? context?.la_code
-        ?? context?.code
-        ?? "",
-    );
-  }
-
-  function resolveChartSessionHexCellKey(context) {
-    return normalizeChartSessionPart(
-      context?.hexCellKey
-        ?? context?.hex_cell_key
-        ?? context?.visualHexCellKey
-        ?? context?.visual_hex_cell_key
-        ?? context?.cellKey
-        ?? context?.cell_key
-        ?? context?.hexKey
-        ?? context?.hex_key
-        ?? "",
-    );
-  }
-
-  function resolveChartSessionIdentity(mapKey, context) {
-    const scope = normalizeChartSessionPart(mapKey || context?.mapKey || state.mapKey || "uk").toLowerCase();
-    const areaCode = resolveChartSessionAreaCode(context);
-    if (areaCode) {
-      return {
-        identity: `${scope}|area:${areaCode}`,
-        mapKey: scope,
-        areaCode,
-        source: "area_code",
-      };
-    }
-    const hexCellKey = resolveChartSessionHexCellKey(context);
-    if (hexCellKey) {
-      return {
-        identity: `${scope}|hex:${hexCellKey}`,
-        mapKey: scope,
-        areaCode: "",
-        hexCellKey,
-        source: "hex_cell_key",
-      };
-    }
-    return {
-      identity: "",
-      mapKey: scope,
-      areaCode: "",
-      hexCellKey: "",
-      source: null,
-    };
   }
 
   function getInlineTableRefs(mapKey = state.mapKey) {
@@ -18576,20 +18059,18 @@
   function enter(options = {}) {
     const mapKey = options.mapKey || window.mapTabController?.getActiveTab?.() || "uk";
     const context = getCurrentContext(mapKey);
-    const nextSession = resolveChartSessionIdentity(mapKey, context);
-    if (!nextSession.identity) return;
+    if (!context?.areaCode) return;
     const entries = (context.entries || []).map(normalizeEntry).filter(Boolean);
-    const nextAreaCode = nextSession.areaCode || nextSession.hexCellKey || "";
-    if (state.lastChartModeSessionIdentity !== nextSession.identity) {
+    const nextAreaCode = String(context.areaCode || "").trim();
+    if (nextAreaCode && state.lastChartModeAreaCode !== nextAreaCode) {
       state.chartModeTimeRange = "24h";
-    } else {
-      state.chartModeTimeRange = normalizeChartRangeValue(state.chartModeTimeRange);
     }
     state.isChartMode = true;
     state.mapKey = mapKey;
     state.chartModeAreaCode = nextAreaCode;
-    state.chartModeSessionIdentity = nextSession.identity;
-    state.lastChartModeSessionIdentity = nextSession.identity;
+    if (nextAreaCode) {
+      state.lastChartModeAreaCode = nextAreaCode;
+    }
     state.visibleEntries = entries;
     const requestedSensorIdRaw = options.initialSensorId ?? options.initialStationId;
     const requestedSensorId = requestedSensorIdRaw ? String(requestedSensorIdRaw).trim() : "";
@@ -18612,7 +18093,6 @@
     state.isChartMode = false;
     state.mapKey = null;
     state.chartModeAreaCode = null;
-    state.chartModeSessionIdentity = null;
     state.chartModeSelectedSensors.clear();
     state.selectedAqiSensorId = null;
     state.visibleEntries = [];
@@ -18626,14 +18106,13 @@
 
   function syncWindowControl() {
     const dom = domByMap[state.mapKey];
-    if (dom?.windowSelect) dom.windowSelect.value = normalizeChartRangeValue(state.chartModeTimeRange);
+    if (dom?.windowSelect) dom.windowSelect.value = state.chartModeTimeRange || "24h";
   }
 
   function syncFromMap(mapKey = state.mapKey, options = {}) {
     if (!state.isChartMode || state.mapKey !== mapKey) return;
     const context = getCurrentContext(mapKey);
-    const nextSession = resolveChartSessionIdentity(mapKey, context);
-    if (!nextSession.identity || nextSession.identity !== state.chartModeSessionIdentity) {
+    if (!context?.areaCode || context.areaCode !== state.chartModeAreaCode) {
       if (options.preserveChartMode) {
         syncPanels();
         return;
@@ -18665,7 +18144,7 @@
     const cf = dom?.chartFrame;
     if (!cf?.currentSeriesData?.entries?.length) return;
 
-    const windowValue = normalizeChartRangeValue(state.chartModeTimeRange);
+    const windowValue = state.chartModeTimeRange || "24h";
     const newRange    = resolveRange(windowValue);
     const token       = state.loadToken; // snapshot — do NOT increment
 
@@ -18678,52 +18157,34 @@
     const deltaMs  = newRange.endDate.getTime() - prevEnd.getTime();
     if (deltaMs < 30 * 1000) return; // < 30 s elapsed — nothing meaningful to fetch
 
-    const deltaChunk = {
-      startMs: prevEnd.getTime(),
-      endMs: newRange.endDate.getTime(),
-      startIso: prevEnd.toISOString(),
-      endIso: newRange.endIso,
-    };
+    const deltaChunk = { startIso: prevEnd.toISOString(), endIso: newRange.endIso };
     let anyNewData     = false;
     let primaryGuideline = cf.currentGuideline;
     const primaryId      = state.selectedAqiSensorId || state.selectedPrimaryId || usableEntries[0]?.stationId;
 
     for (const entry of usableEntries) {
       if (state.loadToken !== token) return; // superseded by a user action
-      const cacheKey = buildSeriesCacheKey(entry);
-      if (!cacheKey) continue;
       try {
-        const result = await fetchObservationSeriesChunkDeduped(entry, cacheKey, deltaChunk, null);
-        const cacheRecord = getOrCreateSeriesCacheRecord(cacheKey);
-        recordCacheRangeState(
-          cacheRecord,
-          deltaChunk.startMs,
-          deltaChunk.endMs,
-          classifyObservationCacheState(result),
-          {
-            sourceMetadata: extractObservationSourceMetadata(entry, result),
-            error: result?.error,
-          },
-        );
+        const result = await fetchObservationSeriesChunk(entry, deltaChunk, null);
         if (result.points.length > 0) {
-          cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], result.points);
-          if (result.guideline && !cacheRecord.guideline) {
-            cacheRecord.guideline = result.guideline;
+          const cacheKey = buildSeriesCacheKey(entry);
+          const cached = seriesDataCache.get(cacheKey) || { points: [], guideline: null, coveredRanges: [] };
+          cached.points = mergeSeriesPoints(cached?.points || [], result.points);
+          cached.coveredRanges = addCoveredRange(
+            cached.coveredRanges,
+            prevEnd.getTime(),
+            newRange.endDate.getTime()
+          );
+          if (result.guideline && !cached.guideline) {
+            cached.guideline = result.guideline;
           }
-          seriesDataCache.set(cacheKey, cacheRecord);
+          seriesDataCache.set(cacheKey, cached);
           if (!primaryGuideline && entry.stationId === primaryId && result.guideline) {
             primaryGuideline = result.guideline;
           }
           anyNewData = true;
         }
-      } catch (error) {
-        const cacheRecord = getOrCreateSeriesCacheRecord(cacheKey);
-        recordCacheRangeState(cacheRecord, deltaChunk.startMs, deltaChunk.endMs, "failed", {
-          sourceMetadata: extractObservationSourceMetadata(entry, null),
-          error,
-        });
-        seriesDataCache.set(cacheKey, cacheRecord);
-      }
+      } catch (_err) {}
     }
 
     if (state.loadToken !== token || !anyNewData) return; // nothing changed
@@ -18732,7 +18193,7 @@
     const seriesPointsMap = new Map();
     usableEntries.forEach((entry) => {
       const cacheKey = buildSeriesCacheKey(entry);
-      const cached = cacheKey ? getOrCreateSeriesCacheRecord(cacheKey) : null;
+      const cached = seriesDataCache.get(cacheKey);
       if (cached?.points?.length) {
         seriesPointsMap.set(entry.stationId, getPointsInRange(cached.points, newRange));
       } else {
@@ -18827,108 +18288,34 @@
     return typeof window.ukAqFetchCacheApi === "function" ? window.ukAqFetchCacheApi : null;
   }
 
-  async function fetchAqiHistoryPayload(url, requestDebugContext = {}) {
+  async function fetchAqiHistoryPayload(url) {
     const init = { credentials: "include", headers: { Accept: "application/json" } };
     const cacheFetch = getCacheFetch();
-    const startedAt = performance.now();
     const response = cacheFetch ? await cacheFetch(url, init) : await fetch(url, init);
+    if (!response.ok) throw new Error(`Chart request failed: ${response.status}`);
     const contentType = response.headers.get("content-type") || "";
-    const body = await response.text();
-    recordWebsiteDebugTiming("last_aqi_history_fetch_ms", performance.now() - startedAt);
-    if (!response.ok) {
-      recordWebsiteFetchFailure("aqi-history", url, response, body, requestDebugContext);
-      const error = new Error(`Chart request failed: ${response.status}`);
-      error.ukAqDebugLogged = true;
-      error.ukAqHttpStatus = response.status;
-      error.ukAqResponseBodyText = capDebugText(body).text;
-      error.ukAqResponseContentType = contentType;
-      throw error;
-    }
     return {
       status: response.status,
       contentType,
-      body,
+      body: await response.text(),
     };
   }
 
   async function fetchObservationSeriesChunk(entry, chunk, signal) {
-    if (!seriesUrl || !entry?.timeseriesId) return { entry, points: [], guideline: null, cacheState: "unknown" };
+    if (!seriesUrl || !entry?.timeseriesId) return { entry, points: [], guideline: null };
     const url = buildObservationSeriesRequestUrl(entry.timeseriesId, chunk);
-    if (!url) return { entry, points: [], guideline: null, cacheState: "unknown" };
+    if (!url) return { entry, points: [], guideline: null };
     const init = { credentials: "include", headers: { Accept: "application/json" }, signal };
     const cacheFetch = getCacheFetch();
     const response = cacheFetch ? await cacheFetch(url.toString(), init) : await fetch(url.toString(), init);
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      const error = new Error(`Chart request failed: ${response.status}`);
-      error.ukAqDebugLogged = true;
-      error.ukAqHttpStatus = response.status;
-      error.ukAqResponseBodyText = capDebugText(body).text;
-      recordWebsiteFetchFailure("timeseries", url.toString(), response, body, {
-        timeseries_id: entry?.timeseriesId || null,
-        station_id: getEntryStationId(entry),
-        connector_id: getEntryConnectorId(entry),
-        pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
-        from_utc: chunk?.startIso || null,
-        to_utc: chunk?.endIso || null,
-      });
-      logTimeseriesDebugFailure("fetch-failed", entry, chunk, error, {
-        url: url.toString(),
-        httpStatus: response.status,
-      });
-      throw error;
-    }
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch (error) {
-      error.ukAqDebugLogged = true;
-      logTimeseriesDebugFailure("fetch-malformed", entry, chunk, error, {
-        url: url.toString(),
-        httpStatus: response.status,
-      });
-      return {
-        entry,
-        points: [],
-        guideline: null,
-        meta: null,
-        normalizedMeta: null,
-        rawRowCount: null,
-        cacheState: "malformed",
-        error,
-      };
-    }
-    const points = parseSeriesPayloadPoints(payload);
-    const normalizedMeta = normalizeTimeseriesDebugMeta(payload);
-    recordWebsiteDebugEvent("timeseries_history_response", {
-      route: "timeseries",
-      url: sanitizeDebugUrl(url.toString()),
-      query: extractDebugQueryParams(url.toString()),
-      timeseries_id: entry?.timeseriesId || null,
-      station_id: getEntryStationId(entry),
-      connector_id: getEntryConnectorId(entry) || normalizedMeta?.coverage?.target_connector_id || normalizedMeta?.coverage?.connector_id || null,
-      pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
-      from_utc: chunk?.startIso || null,
-      to_utc: chunk?.endIso || null,
-      http_status: response.status,
-      point_count: points.length,
-      row_count: normalizedMeta?.row_count ?? null,
-      response_complete: normalizedMeta?.response_complete ?? null,
-      partial_reasons: Array.isArray(normalizedMeta?.partial_reasons) ? normalizedMeta.partial_reasons : null,
-      history: extractHistoryCoverageDebug(normalizedMeta),
-    });
-    logTimeseriesDebugMeta("fetch-success", payload, entry, chunk, {
-      url: url.toString(),
-      httpStatus: response.status,
-      points,
-    });
+    if (!response.ok) throw new Error(`Chart request failed: ${response.status}`);
+    const payload = await response.json();
+    logTimeseriesDebugMeta("hex_map", payload, entry, chunk);
     return {
       entry,
-      points,
+      points: parseSeriesPayloadPoints(payload),
       guideline: payload?.guideline || null,
       meta: payload?.meta || null,
-      normalizedMeta,
-      rawRowCount: getTimeseriesPayloadRows(payload).length,
     };
   }
 
@@ -18936,39 +18323,6 @@
     const byTime = new Map();
     [...existingPoints, ...newPoints].forEach((p) => byTime.set(p.date.getTime(), p));
     return Array.from(byTime.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
-
-  const CACHE_RANGE_STATES = new Set([
-    "covered_empty",
-    "covered_with_data",
-    "failed",
-    "partial",
-    "malformed",
-    "unknown",
-  ]);
-
-  function normalizeCacheRangeState(value) {
-    const state = String(value || "").trim().toLowerCase();
-    return CACHE_RANGE_STATES.has(state) ? state : "unknown";
-  }
-
-  function isCoveredCacheState(value) {
-    const state = normalizeCacheRangeState(value);
-    return state === "covered_empty" || state === "covered_with_data";
-  }
-
-  function getNonCoveredRangeProperty(state) {
-    const normalized = normalizeCacheRangeState(state);
-    return normalized === "failed" ? "failedRanges"
-      : normalized === "partial" ? "partialRanges"
-      : normalized === "malformed" ? "malformedRanges"
-      : normalized === "unknown" ? "unknownRanges"
-      : null;
-  }
-
-  function normalizeCacheKeyPart(value) {
-    const text = String(value ?? "").trim();
-    return (text || "null").replace(/\|/g, "_");
   }
 
   function normalizeCoveredRanges(ranges = []) {
@@ -18992,215 +18346,6 @@
 
   function addCoveredRange(ranges, startMs, endMs) {
     return normalizeCoveredRanges([...(Array.isArray(ranges) ? ranges : []), { startMs, endMs }]);
-  }
-
-  function rangesOverlap(leftStartMs, leftEndMs, rightStartMs, rightEndMs) {
-    return Number.isFinite(leftStartMs)
-      && Number.isFinite(leftEndMs)
-      && Number.isFinite(rightStartMs)
-      && Number.isFinite(rightEndMs)
-      && leftStartMs < rightEndMs
-      && rightStartMs < leftEndMs;
-  }
-
-  function removeOverlappingRanges(ranges, startMs, endMs) {
-    return normalizeCoveredRanges((Array.isArray(ranges) ? ranges : []).filter((segment) => (
-      !rangesOverlap(Number(segment?.startMs), Number(segment?.endMs), startMs, endMs)
-    )));
-  }
-
-  function normalizeCacheRangeStates(ranges = []) {
-    return (Array.isArray(ranges) ? ranges : [])
-      .filter((segment) => Number.isFinite(segment?.startMs) && Number.isFinite(segment?.endMs) && segment.endMs > segment.startMs)
-      .map((segment) => ({
-        startMs: Number(segment.startMs),
-        endMs: Number(segment.endMs),
-        state: normalizeCacheRangeState(segment.state),
-        sourceMetadata: segment.sourceMetadata && typeof segment.sourceMetadata === "object" ? segment.sourceMetadata : null,
-        error: segment.error ? String(segment.error) : null,
-        httpStatus: Number.isFinite(Number(segment.httpStatus)) ? Number(segment.httpStatus) : null,
-        recordedAtUtc: segment.recordedAtUtc || null,
-      }))
-      .sort((a, b) => a.startMs - b.startMs);
-  }
-
-  function normalizeCacheRecord(record = {}, defaults = {}) {
-    const normalized = {
-      ...record,
-      ...defaults,
-      points: Array.isArray(record.points) ? record.points : [],
-      coveredRanges: normalizeCoveredRanges(record.coveredRanges),
-      failedRanges: normalizeCoveredRanges(record.failedRanges),
-      partialRanges: normalizeCoveredRanges(record.partialRanges),
-      malformedRanges: normalizeCoveredRanges(record.malformedRanges),
-      unknownRanges: normalizeCoveredRanges(record.unknownRanges),
-      rangeStates: normalizeCacheRangeStates(record.rangeStates),
-    };
-    if (Object.prototype.hasOwnProperty.call(defaults, "guideline")) {
-      normalized.guideline = record.guideline || defaults.guideline || null;
-    }
-    if (Object.prototype.hasOwnProperty.call(defaults, "lastResponseMeta")) {
-      normalized.lastResponseMeta = record.lastResponseMeta || defaults.lastResponseMeta || null;
-    }
-    return normalized;
-  }
-
-  function normalizeSeriesCacheRecord(record = {}) {
-    return normalizeCacheRecord(record, { guideline: null });
-  }
-
-  function normalizeAqiCacheRecord(record = {}) {
-    return normalizeCacheRecord(record, { lastResponseMeta: null });
-  }
-
-  function getOrCreateSeriesCacheRecord(cacheKey) {
-    if (!cacheKey) return null;
-    const normalized = normalizeSeriesCacheRecord(seriesDataCache.get(cacheKey) || {});
-    seriesDataCache.set(cacheKey, normalized);
-    return normalized;
-  }
-
-  function getOrCreateAqiCacheRecord(cacheKey) {
-    if (!cacheKey) return null;
-    const normalized = normalizeAqiCacheRecord(aqiBandCache.get(cacheKey) || {});
-    aqiBandCache.set(cacheKey, normalized);
-    return normalized;
-  }
-
-  function recordCacheRangeState(record, startMs, endMs, state, details = {}) {
-    if (!record || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return record;
-    const normalizedState = normalizeCacheRangeState(state);
-    const nonCoveredProps = ["failedRanges", "partialRanges", "malformedRanges", "unknownRanges"];
-    record.rangeStates = normalizeCacheRangeStates(record.rangeStates)
-      .filter((segment) => !rangesOverlap(segment.startMs, segment.endMs, startMs, endMs));
-    record.rangeStates.push({
-      startMs,
-      endMs,
-      state: normalizedState,
-      sourceMetadata: details.sourceMetadata || null,
-      error: details.error ? String(details.error) : null,
-      httpStatus: Number.isFinite(Number(details.httpStatus)) ? Number(details.httpStatus) : null,
-      recordedAtUtc: new Date().toISOString(),
-    });
-    record.rangeStates = normalizeCacheRangeStates(record.rangeStates);
-
-    if (isCoveredCacheState(normalizedState)) {
-      record.coveredRanges = addCoveredRange(record.coveredRanges, startMs, endMs);
-      nonCoveredProps.forEach((prop) => {
-        record[prop] = removeOverlappingRanges(record[prop], startMs, endMs);
-      });
-      return record;
-    }
-
-    const prop = getNonCoveredRangeProperty(normalizedState);
-    if (prop) {
-      record.coveredRanges = removeOverlappingRanges(record.coveredRanges, startMs, endMs);
-      nonCoveredProps.forEach((rangeProp) => {
-        record[rangeProp] = rangeProp === prop
-          ? addCoveredRange(record[rangeProp], startMs, endMs)
-          : removeOverlappingRanges(record[rangeProp], startMs, endMs);
-      });
-    }
-    return record;
-  }
-
-  function getCacheStateDebug(record) {
-    const normalized = normalizeCacheRecord(record || {});
-    return {
-      covered_ranges: normalizeDebugRanges(normalized.coveredRanges),
-      failed_ranges: normalizeDebugRanges(normalized.failedRanges),
-      partial_ranges: normalizeDebugRanges(normalized.partialRanges),
-      malformed_ranges: normalizeDebugRanges(normalized.malformedRanges),
-      unknown_ranges: normalizeDebugRanges(normalized.unknownRanges),
-      range_states: normalizeCacheRangeStates(normalized.rangeStates).map((segment) => ({
-        startMs: segment.startMs,
-        endMs: segment.endMs,
-        startIso: new Date(segment.startMs).toISOString(),
-        endIso: new Date(segment.endMs).toISOString(),
-        state: segment.state,
-        sourceMetadata: segment.sourceMetadata,
-        error: segment.error,
-        httpStatus: segment.httpStatus,
-      })),
-    };
-  }
-
-  function classifyObservationCacheState(result) {
-    const explicitState = normalizeCacheRangeState(result?.cacheState);
-    if (explicitState !== "unknown" || result?.cacheState === "unknown") return explicitState;
-    const points = Array.isArray(result?.points) ? result.points : [];
-    const meta = result?.normalizedMeta || normalizeTimeseriesDebugMeta({ meta: result?.meta || {} });
-    const responseComplete = meta?.response_complete;
-    const hasGap = meta?.has_gap === true;
-    const rawRowCount = Number.isFinite(Number(result?.rawRowCount)) ? Number(result.rawRowCount)
-      : Number.isFinite(Number(meta?.row_count)) ? Number(meta.row_count)
-      : null;
-    if (Number.isFinite(rawRowCount) && rawRowCount > points.length) return "malformed";
-    if (points.length > 0) {
-      return responseComplete === false || hasGap ? "partial" : "covered_with_data";
-    }
-    if (responseComplete === true) return "covered_empty";
-    if (responseComplete === false || hasGap) return "partial";
-    return "unknown";
-  }
-
-  function classifyAqiCacheState(result) {
-    const explicitState = normalizeCacheRangeState(result?.cacheState);
-    if (explicitState !== "unknown" || result?.cacheState === "unknown") return explicitState;
-    const points = Array.isArray(result?.points) ? result.points : [];
-    const meta = result?.meta || {};
-    const responseComplete = meta?.response_complete;
-    const hasGap = meta?.has_gap === true;
-    const rawRowCount = Number.isFinite(Number(result?.rawRowCount)) ? Number(result.rawRowCount)
-      : Number.isFinite(Number(meta?.raw_row_count)) ? Number(meta.raw_row_count)
-      : Number.isFinite(Number(meta?.row_count)) ? Number(meta.row_count)
-      : null;
-    if (Number.isFinite(rawRowCount) && rawRowCount > points.length) return "malformed";
-    if (points.length > 0) {
-      return responseComplete === false || hasGap ? "partial" : "covered_with_data";
-    }
-    if (responseComplete === true) return "covered_empty";
-    if (responseComplete === false || hasGap) return "partial";
-    return "unknown";
-  }
-
-  function extractObservationSourceMetadata(entry, result) {
-    const meta = result?.normalizedMeta || normalizeTimeseriesDebugMeta({ meta: result?.meta || {} });
-    const coverage = meta?.coverage || {};
-    return {
-      timeseries_id: entry?.timeseriesId || null,
-      station_id: getEntryStationId(entry),
-      connector_id: getEntryConnectorId(entry) || coverage?.target_connector_id || coverage?.connector_id || null,
-      pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
-      source_mode: meta?.source_mode || null,
-      source_split_boundary_utc: meta?.source_split_boundary_utc || null,
-      ingest_retention_days: meta?.ingest_retention_days || coverage?.ingest_retention_days || null,
-      response_complete: meta?.response_complete ?? null,
-      partial_reasons: Array.isArray(meta?.partial_reasons) ? meta.partial_reasons : null,
-      history: extractHistoryCoverageDebug(meta || {}),
-      coverage,
-    };
-  }
-
-  function extractAqiSourceMetadata(entry, pollutantKey, result) {
-    const meta = result?.meta || {};
-    return {
-      timeseries_id: entry?.timeseriesId || meta?.timeseries_id || null,
-      station_id: getEntryStationId(entry) || meta?.station_id || null,
-      connector_id: getEntryConnectorId(entry) || meta?.connector_id || null,
-      pollutant: pollutantKey || meta?.pollutant || null,
-      source: meta?.source || null,
-      source_split_boundary_utc: meta?.source_split_boundary_utc || null,
-      overlap_start_utc: meta?.overlap_start_utc || meta?.coverage?.overlap_start_utc || null,
-      retention_start_utc: meta?.retention_start_utc || meta?.coverage?.retention_start_utc || null,
-      source_of_truth_days: meta?.source_of_truth_days || null,
-      response_complete: meta?.response_complete ?? null,
-      has_gap: meta?.has_gap ?? null,
-      coverage_state: meta?.coverage_state || null,
-      partial_reasons: Array.isArray(meta?.partial_reasons) ? meta.partial_reasons : null,
-      history: extractHistoryCoverageDebug(meta || {}),
-      coverage: meta?.coverage || null,
-    };
   }
 
   function getMissingRangesForRequest(range, coveredRanges) {
@@ -19228,36 +18373,22 @@
     });
   }
 
-  function getPointsInRanges(points, ranges) {
-    const normalizedRanges = normalizeCoveredRanges(ranges);
-    if (!Array.isArray(points) || !points.length || !normalizedRanges.length) return [];
-    return points.filter((point) => {
-      const timeMs = point?.date?.getTime?.();
-      return Number.isFinite(timeMs) && normalizedRanges.some((segment) => (
-        timeMs >= segment.startMs && timeMs <= segment.endMs
-      ));
-    });
-  }
-
   function buildSeriesCacheKey(entry) {
     if (!entry?.timeseriesId) return "";
     const pollutantKey = normalizeAqiSupportedPollutant(entry?.pollutant || "") || "unknown";
-    const connectorId = getEntryConnectorId(entry);
-    return `${normalizeCacheKeyPart(entry.timeseriesId)}|connector:${normalizeCacheKeyPart(connectorId)}|pollutant:${normalizeCacheKeyPart(pollutantKey)}`;
+    return `${entry.timeseriesId}|${pollutantKey}`;
   }
 
   function buildAqiCacheKey(entry, pollutantKey) {
     if (!entry?.timeseriesId || !pollutantKey) return "";
-    return `${normalizeCacheKeyPart(entry.timeseriesId)}|station:${normalizeCacheKeyPart(getEntryStationId(entry))}|connector:${normalizeCacheKeyPart(getEntryConnectorId(entry))}|pollutant:${normalizeCacheKeyPart(pollutantKey)}`;
+    return `${entry.timeseriesId}|${pollutantKey}`;
   }
 
   function buildChunkWorkQueue(entryPlans, windowValue) {
     const chunkSpanMs = getChunkSpanMs(windowValue);
     const allEntryChunks = entryPlans.map(({ entry, missingRanges, cacheKey }) => {
       const chunks = [];
-      const newestFirstRanges = (Array.isArray(missingRanges) ? [...missingRanges] : [])
-        .sort((a, b) => Number(b?.endMs || 0) - Number(a?.endMs || 0));
-      newestFirstRanges.forEach((segment) => {
+      (missingRanges || []).forEach((segment) => {
         let end = segment.endMs;
         while (end > segment.startMs) {
           const start = Math.max(segment.startMs, end - chunkSpanMs);
@@ -19307,70 +18438,6 @@
     await Promise.all(workers);
   }
 
-  async function runObservationQueueWithFetchCaps(queue, options = {}, iterator) {
-    const items = Array.isArray(queue) ? queue.map((item, index) => ({ item, index })) : [];
-    if (!items.length) return;
-    const totalItems = items.length;
-    const primaryStationId = String(options.primaryStationId || "").trim();
-    const globalLimit = Math.max(1, Math.min(
-      Number(options.globalConcurrency) || CHART_GLOBAL_FETCH_CAP,
-      CHART_GLOBAL_FETCH_CAP,
-      items.length,
-    ));
-    const primaryLimit = Math.max(1, Math.min(
-      Number(options.primaryConcurrency) || PRIMARY_OBSERVATION_CONCURRENCY,
-      PRIMARY_OBSERVATION_CONCURRENCY,
-      globalLimit,
-    ));
-    const additionalLimit = Math.max(1, Math.min(
-      Number(options.additionalConcurrency) || ADDITIONAL_OBSERVATION_CONCURRENCY,
-      ADDITIONAL_OBSERVATION_CONCURRENCY,
-      globalLimit,
-    ));
-    const activeByStationId = new Map();
-    let activeCount = 0;
-    let completedCount = 0;
-    let rejected = false;
-
-    const getStationLimit = (workItem) => {
-      const stationId = String(workItem?.entry?.stationId || "").trim();
-      return stationId && stationId === primaryStationId ? primaryLimit : additionalLimit;
-    };
-
-    await new Promise((resolve, reject) => {
-      const pump = () => {
-        if (rejected) return;
-        if (completedCount >= totalItems) {
-          resolve();
-          return;
-        }
-        while (activeCount < globalLimit && items.length > 0) {
-          const nextIndex = items.findIndex(({ item }) => {
-            const stationId = String(item?.entry?.stationId || "unknown").trim() || "unknown";
-            return (activeByStationId.get(stationId) || 0) < getStationLimit(item);
-          });
-          if (nextIndex < 0) return;
-          const { item, index } = items.splice(nextIndex, 1)[0];
-          const stationId = String(item?.entry?.stationId || "unknown").trim() || "unknown";
-          activeByStationId.set(stationId, (activeByStationId.get(stationId) || 0) + 1);
-          activeCount += 1;
-          Promise.resolve(iterator(item, index))
-            .then(() => {
-              activeByStationId.set(stationId, Math.max(0, (activeByStationId.get(stationId) || 1) - 1));
-              activeCount -= 1;
-              completedCount += 1;
-              pump();
-            })
-            .catch((error) => {
-              rejected = true;
-              reject(error);
-            });
-        }
-      };
-      pump();
-    });
-  }
-
   function buildAqiChunkWorkQueue(missingRanges, windowValue) {
     const chunkSpanMs = getChunkSpanMs(windowValue);
     const firstChunkSpanMs = Math.max(HOUR_MS, Math.min(chunkSpanMs, 2 * HOUR_MS));
@@ -19396,7 +18463,7 @@
   }
 
   function buildAqiHistoryRequestCandidates(entry, pollutantKey, range) {
-    if (!entry?.timeseriesId || !pollutantKey) return [];
+    if (!entry?.timeseriesId || !getAqiFieldMappingForPollutant(pollutantKey)) return [];
     return dedupeStrings(aqiHistoryBaseCandidates.map((base) => {
       try {
         const url = new URL(base);
@@ -19422,48 +18489,14 @@
       let lastError = null;
       let lastRequestMeta = null;
       for (let attempt = 1; attempt <= AQI_HISTORY_CHUNK_MAX_ATTEMPTS; attempt++) {
-        const requestDebugContext = {
-          timeseries_id: entry?.timeseriesId || null,
-          station_id: getEntryStationId(entry),
-          connector_id: getEntryConnectorId(entry),
-          pollutant: pollutantKey,
-          from_utc: range?.startIso || null,
-          to_utc: range?.endIso || null,
-          attempt,
-          max_attempts: AQI_HISTORY_CHUNK_MAX_ATTEMPTS,
-        };
         try {
-          const { status, contentType, body } = await fetchAqiHistoryPayload(url, requestDebugContext);
+          const { status, contentType, body } = await fetchAqiHistoryPayload(url);
           const payload = parseAqiHistoryResponseBody(body);
           const wireFormat = payload?.data_format || body?.data_format || (String(contentType).includes("json") ? "json" : "text");
           const points = parseAqiBandPayload(payload, pollutantKey);
-          const meta = normalizeAqiHistoryResponseMeta(payload, {
-            timeseriesId: entry?.timeseriesId || null,
-            stationId: getEntryStationId(entry),
-            connectorId: getEntryConnectorId(entry),
-            pollutantKey,
-            fromIso: range?.startIso || null,
-            toIso: range?.endIso || null,
-            httpStatus: status,
-            wireFormat,
-            points,
-          });
-          if (payload?.malformed) {
-            recordWebsiteDebugEvent("aqi_history_malformed", {
-              route: "aqi-history",
-              url: sanitizeDebugUrl(url),
-              query: extractDebugQueryParams(url),
-              status,
-              content_type: contentType,
-              body_preview: capDebugText(body, 4096).text,
-              context: requestDebugContext,
-            });
-          }
           if (isAqiHistoryDebugEnabled()) {
             logAqiHistoryDebugMeta("fetch-success", url, payload, {
               timeseriesId: entry?.timeseriesId || null,
-              stationId: getEntryStationId(entry),
-              connectorId: getEntryConnectorId(entry),
               pollutantKey,
               fromIso: range?.startIso || null,
               toIso: range?.endIso || null,
@@ -19472,57 +18505,32 @@
               attempt,
             }, points);
           }
-          recordWebsiteDebugEvent("aqi_history_response", {
-            route: "aqi-history",
-            url: sanitizeDebugUrl(url),
-            query: extractDebugQueryParams(url),
-            timeseries_id: entry?.timeseriesId || meta?.timeseries_id || null,
-            station_id: getEntryStationId(entry) || meta?.station_id || null,
-            connector_id: getEntryConnectorId(entry) || meta?.connector_id || null,
-            pollutant: pollutantKey || meta?.pollutant || null,
-            from_utc: range?.startIso || null,
-            to_utc: range?.endIso || null,
-            http_status: status,
-            point_count: points.length,
-            row_count: meta?.row_count ?? null,
-            response_complete: meta?.response_complete ?? null,
-            partial_reasons: Array.isArray(meta?.partial_reasons) ? meta.partial_reasons : null,
-            history: extractHistoryCoverageDebug(meta),
-          });
           return {
             points,
-            meta,
-            rawRowCount: getAqiPayloadRows(payload).length,
-            cacheState: payload?.malformed ? "malformed" : null,
+            meta: normalizeAqiHistoryResponseMeta(payload, {
+              timeseriesId: entry?.timeseriesId || null,
+              pollutantKey,
+              fromIso: range?.startIso || null,
+              toIso: range?.endIso || null,
+              httpStatus: status,
+              wireFormat,
+              points,
+            }),
           };
         } catch (error) {
           lastError = error;
           lastRequestMeta = {
             timeseriesId: entry?.timeseriesId || null,
-            stationId: getEntryStationId(entry),
-            connectorId: getEntryConnectorId(entry),
             pollutantKey,
             fromIso: range?.startIso || null,
             toIso: range?.endIso || null,
             attempt,
           };
           const retryable = shouldRetryAqiHistoryError(error) && attempt < AQI_HISTORY_CHUNK_MAX_ATTEMPTS;
-          recordWebsiteDebugEvent("aqi_history_attempt_failed", {
-            route: "aqi-history",
-            url: sanitizeDebugUrl(url),
-            query: extractDebugQueryParams(url),
-            status: Number.isFinite(Number(error?.ukAqHttpStatus)) ? Number(error.ukAqHttpStatus) : null,
-            retryable,
-            next_retry_in_ms: retryable ? getAqiHistoryChunkRetryDelayMs(attempt) : null,
-            context: lastRequestMeta,
-            error: serializeDebugError(error),
-          });
           if (isAqiHistoryDebugEnabled()) {
             console.debug("[uk-aq aqi-history]", "fetch-failed", {
               url,
               timeseries_id: entry?.timeseriesId || null,
-              station_id: getEntryStationId(entry),
-              connector_id: getEntryConnectorId(entry),
               pollutant: pollutantKey,
               query_from_utc: range?.startIso || null,
               query_to_utc: range?.endIso || null,
@@ -19548,19 +18556,6 @@
       }
     }
     if (lastFailure) {
-      recordWebsiteDebugEvent("aqi_bands_failed", {
-        route: "aqi-history",
-        url: sanitizeDebugUrl(lastFailure.url || ""),
-        query: extractDebugQueryParams(lastFailure.url || ""),
-        context: {
-          ...(lastFailure.requestMeta || {}),
-          from_utc: range?.startIso || null,
-          to_utc: range?.endIso || null,
-          attempts: AQI_HISTORY_CHUNK_MAX_ATTEMPTS,
-          candidate_count: candidates.length,
-        },
-        error: serializeDebugError(lastFailure.error),
-      });
       logAqiHistoryChunkFailure("chunk-failed", lastFailure.url || null, null, {
         ...(lastFailure.requestMeta || {}),
         fromIso: range?.startIso || null,
@@ -19569,57 +18564,7 @@
         candidateCount: candidates.length,
       }, lastFailure.error);
     }
-    return {
-      points: [],
-      meta: null,
-      cacheState: "failed",
-      error: lastFailure?.error || new Error("AQI history request failed."),
-    };
-  }
-
-  function getChunkBoundaryMs(chunk, key) {
-    const direct = Number(chunk?.[key]);
-    if (Number.isFinite(direct)) return direct;
-    const isoKey = key === "startMs" ? "startIso" : "endIso";
-    const parsed = Date.parse(chunk?.[isoKey] || "");
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  function buildInFlightChunkKey(cacheKey, chunk) {
-    const startMs = getChunkBoundaryMs(chunk, "startMs");
-    const endMs = getChunkBoundaryMs(chunk, "endMs");
-    if (!cacheKey || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return "";
-    return `${cacheKey}|${startMs}|${endMs}`;
-  }
-
-  async function fetchObservationSeriesChunkDeduped(entry, cacheKey, chunk, signal) {
-    const inFlightKey = buildInFlightChunkKey(cacheKey || buildSeriesCacheKey(entry), chunk);
-    if (!inFlightKey) return fetchObservationSeriesChunk(entry, chunk, signal);
-    const existing = seriesChunkInFlight.get(inFlightKey);
-    if (existing) return existing;
-    const request = fetchObservationSeriesChunk(entry, chunk, signal)
-      .finally(() => {
-        if (seriesChunkInFlight.get(inFlightKey) === request) {
-          seriesChunkInFlight.delete(inFlightKey);
-        }
-      });
-    seriesChunkInFlight.set(inFlightKey, request);
-    return request;
-  }
-
-  async function fetchAqiBandsDeduped(entry, pollutantKey, range, cacheKey) {
-    const inFlightKey = buildInFlightChunkKey(cacheKey || buildAqiCacheKey(entry, pollutantKey), range);
-    if (!inFlightKey) return fetchAqiBands(entry, pollutantKey, range);
-    const existing = aqiChunkInFlight.get(inFlightKey);
-    if (existing) return existing;
-    const request = fetchAqiBands(entry, pollutantKey, range)
-      .finally(() => {
-        if (aqiChunkInFlight.get(inFlightKey) === request) {
-          aqiChunkInFlight.delete(inFlightKey);
-        }
-      });
-    aqiChunkInFlight.set(inFlightKey, request);
-    return request;
+    return { points: [], meta: null };
   }
 
   async function prefetchAqiBandsForEntries(entries, range, options = {}) {
@@ -19627,14 +18572,8 @@
     if (!list.length || !range) return;
     const activeSourceStationId = String(options.activeSourceStationId || "").trim();
     const loadToken = Number.isFinite(options.loadToken) ? Number(options.loadToken) : null;
-    const concurrency = Math.max(1, Math.min(
-      Number(options.concurrency) || BACKGROUND_AQI_PREFETCH_CONCURRENCY,
-      BACKGROUND_AQI_PREFETCH_CONCURRENCY,
-      CHART_GLOBAL_FETCH_CAP,
-    ));
     const contextPollutant = normalizeAqiSupportedPollutant(getCurrentContext()?.pollutant || "");
     const shouldContinue = () => loadToken === null || state.loadToken === loadToken;
-    const prefetchQueue = [];
     for (const entry of list) {
       if (!shouldContinue()) return;
       const stationId = String(entry?.stationId || "").trim();
@@ -19642,53 +18581,47 @@
       const pollutantKey = normalizeAqiSupportedPollutant(entry?.pollutant || "") || contextPollutant;
       const aqiCacheKey = buildAqiCacheKey(entry, pollutantKey);
       if (!aqiCacheKey || !pollutantKey) continue;
-      const cacheRecord = getOrCreateAqiCacheRecord(aqiCacheKey);
+      let cacheRecord = aqiBandCache.get(aqiCacheKey) || { points: [], coveredRanges: [] };
+      if (!Array.isArray(cacheRecord.points)) cacheRecord.points = [];
+      cacheRecord.coveredRanges = normalizeCoveredRanges(cacheRecord.coveredRanges);
       const missingRanges = getMissingRangesForRequest(range, cacheRecord.coveredRanges);
       if (!missingRanges.length) {
         aqiBandCache.set(aqiCacheKey, cacheRecord);
         continue;
       }
+      const newlyFetched = [];
+      let lastResponseMeta = cacheRecord.lastResponseMeta || null;
       for (const missing of missingRanges) {
-        prefetchQueue.push({ entry, pollutantKey, aqiCacheKey, cacheRecord, missing });
+        if (!shouldContinue()) return;
+        const missingRange = {
+          startMs: missing.startMs,
+          endMs: missing.endMs,
+          startDate: new Date(missing.startMs),
+          endDate: new Date(missing.endMs),
+          startIso: new Date(missing.startMs).toISOString(),
+          endIso: new Date(missing.endMs).toISOString(),
+        };
+        const result = await fetchAqiBands(entry, pollutantKey, missingRange);
+        const points = Array.isArray(result?.points) ? result.points : [];
+      for (let i = 0; i < points.length; i++) {
+        newlyFetched.push(points[i]);
       }
-    }
-    await runChunkQueueWithConcurrency(prefetchQueue, concurrency, async (workItem) => {
-      if (!shouldContinue()) return;
-      const { entry, pollutantKey, aqiCacheKey, cacheRecord, missing } = workItem;
-      const missingRange = {
-        startMs: missing.startMs,
-        endMs: missing.endMs,
-        startDate: new Date(missing.startMs),
-        endDate: new Date(missing.endMs),
-        startIso: new Date(missing.startMs).toISOString(),
-        endIso: new Date(missing.endMs).toISOString(),
-      };
-      const result = await fetchAqiBandsDeduped(entry, pollutantKey, missingRange, aqiCacheKey);
-      const points = Array.isArray(result?.points) ? result.points : [];
-      if (points.length) {
-        cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], points);
+        lastResponseMeta = result?.meta || lastResponseMeta;
+        if (shouldMarkAqiHistoryRangeCovered(result?.meta || null, points)) {
+          cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, missing.startMs, missing.endMs);
+        }
       }
-      cacheRecord.lastResponseMeta = result?.meta || cacheRecord.lastResponseMeta || null;
-      recordCacheRangeState(
-        cacheRecord,
-        missing.startMs,
-        missing.endMs,
-        classifyAqiCacheState(result),
-        {
-          sourceMetadata: extractAqiSourceMetadata(entry, pollutantKey, result),
-          error: result?.error,
-          httpStatus: result?.meta?.http_status,
-        },
-      );
+      cacheRecord.points = mergeSeriesPoints(cacheRecord.points, newlyFetched);
+      cacheRecord.lastResponseMeta = lastResponseMeta;
       aqiBandCache.set(aqiCacheKey, cacheRecord);
-    });
+    }
   }
 
   function clearCacheForCurrentSensors() {
     const tidSet = new Set();
     Array.from(state.chartModeSelectedSensors).forEach((id) => {
       const entry = state.visibleEntries.find((e) => e.stationId === id);
-      if (entry?.timeseriesId) tidSet.add(String(entry.timeseriesId));
+      if (entry?.timeseriesId) tidSet.add(entry.timeseriesId);
     });
     seriesDataCache.forEach((_v, key) => { if (tidSet.has(key.split("|")[0])) seriesDataCache.delete(key); });
     aqiBandCache.forEach((_v, key)    => { if (tidSet.has(key.split("|")[0])) aqiBandCache.delete(key); });
@@ -19779,7 +18712,6 @@
 
   async function loadChartData(reason = "sensor-change") {
     if (!state.isChartMode) return;
-    const websiteDebugLoadStartedAt = performance.now();
 
     // If a new load arrives while one is running, abort the current work and
     // replay the latest reason as soon as the worker loop unwinds.
@@ -19826,7 +18758,7 @@
       }
       const aqiSourceSymbolIndex = Math.max(0, selectedIds.indexOf(aqiSourceId));
 
-      const windowValue = normalizeChartRangeValue(state.chartModeTimeRange);
+      const windowValue = state.chartModeTimeRange || "24h";
       const range = resolveRange(windowValue);
       dom = domByMap[state.mapKey];
       const units = usableEntries[0]?.units || getCurrentContext()?.units || "";
@@ -19840,14 +18772,12 @@
       const cf = dom.chartFrame;
       const frameValid = !!(cf
         && cf.areaCode === state.chartModeAreaCode
-        && cf.sessionIdentity === state.chartModeSessionIdentity
         && cf.mapKey === state.mapKey
         && cf.width === svgWidth
         && cf.height === svgHeight);
 
       const seriesPointsMap = new Map();
       const fetchPlans = [];
-      const observationDebugPlans = [];
       let primaryGuideline = null;
       const primaryId = aqiSourceId || state.selectedPrimaryId || usableEntries[0]?.stationId;
       const primary = aqiSourceEntry || usableEntries.find((entry) => entry.stationId === primaryId) || usableEntries[0];
@@ -19855,7 +18785,12 @@
 
       usableEntries.forEach((entry) => {
         const cacheKey = buildSeriesCacheKey(entry);
-        const cacheRecord = cacheKey ? getOrCreateSeriesCacheRecord(cacheKey) : normalizeSeriesCacheRecord();
+        let cacheRecord = cacheKey ? seriesDataCache.get(cacheKey) : null;
+        if (!cacheRecord) {
+          cacheRecord = { points: [], guideline: null, coveredRanges: [] };
+        }
+        if (!Array.isArray(cacheRecord.points)) cacheRecord.points = [];
+        cacheRecord.coveredRanges = normalizeCoveredRanges(cacheRecord.coveredRanges);
 
         const inRangePoints = getPointsInRange(cacheRecord.points, range);
         seriesPointsMap.set(entry.stationId, inRangePoints);
@@ -19864,15 +18799,6 @@
         }
 
         const missingRanges = getMissingRangesForRequest(range, cacheRecord.coveredRanges);
-        observationDebugPlans.push({
-          timeseries_id: entry?.timeseriesId || null,
-          station_id: getEntryStationId(entry),
-          connector_id: getEntryConnectorId(entry),
-          cache_key: cacheKey || null,
-          cache_status: missingRanges.length ? "miss_or_partial" : "hit",
-          ...getCacheStateDebug(cacheRecord),
-          missing_ranges: normalizeDebugRanges(missingRanges),
-        });
         if (missingRanges.length && cacheKey) {
           fetchPlans.push({ entry, cacheKey, missingRanges });
         }
@@ -19881,109 +18807,23 @@
       const aqiCacheKey = buildAqiCacheKey(primary, pollutantKey);
       let aqiCacheRecord = aqiCacheKey ? aqiBandCache.get(aqiCacheKey) : null;
       if (!aqiCacheRecord && aqiCacheKey) {
-        aqiCacheRecord = getOrCreateAqiCacheRecord(aqiCacheKey);
+        aqiCacheRecord = { points: [], coveredRanges: [] };
       }
       if (aqiCacheRecord) {
-        aqiCacheRecord = normalizeAqiCacheRecord(aqiCacheRecord);
-        if (aqiCacheKey) aqiBandCache.set(aqiCacheKey, aqiCacheRecord);
+        if (!Array.isArray(aqiCacheRecord.points)) aqiCacheRecord.points = [];
+        aqiCacheRecord.coveredRanges = normalizeCoveredRanges(aqiCacheRecord.coveredRanges);
       }
       let aqiPoints = aqiCacheRecord ? getPointsInRange(aqiCacheRecord.points, range) : [];
 
       const aqiMissingRanges = (aqiCacheRecord && primary && pollutantKey)
         ? getMissingRangesForRequest(range, aqiCacheRecord.coveredRanges)
         : [];
-      startWebsiteDebugSession({
-        reason,
-        chart_identity: {
-          map_key: state.mapKey || null,
-          area_code: state.chartModeAreaCode || null,
-          session_identity: state.chartModeSessionIdentity || null,
-        },
-        range_label: windowValue,
-        range_start_utc: range.startIso,
-        range_end_utc: range.endIso,
-        selected_sensor_ids: selectedIds,
-        selected_aqi_source_station_id: state.selectedAqiSensorId || null,
-        selected_aqi_source_timeseries_id: primary?.timeseriesId || null,
-        selected_aqi_source_connector_id: getEntryConnectorId(primary),
-        pollutant: pollutantKey,
-        observation_cache: observationDebugPlans,
-        observation_fetch_required: fetchPlans.length > 0,
-        aqi_cache: {
-          cache_key: aqiCacheKey || null,
-          cache_status: aqiMissingRanges.length ? "miss_or_partial" : "hit",
-          ...getCacheStateDebug(aqiCacheRecord || {}),
-          missing_ranges: normalizeDebugRanges(aqiMissingRanges),
-        },
-      });
-      if (isChartDebugEnabled()) {
-        console.debug("[uk-aq chart]", "load-plan", {
-          reason,
-          selected_chart_identity: {
-            map_key: state.mapKey || null,
-            area_code: state.chartModeAreaCode || null,
-            session_identity: state.chartModeSessionIdentity || null,
-          },
-          range_label: windowValue,
-          range_start_utc: range.startIso,
-          range_end_utc: range.endIso,
-          selected_sensor_ids: selectedIds,
-          selected_aqi_source_station_id: state.selectedAqiSensorId || null,
-          selected_aqi_source_timeseries_id: primary?.timeseriesId || null,
-          selected_aqi_source_connector_id: getEntryConnectorId(primary),
-          pollutant: pollutantKey,
-          observation_cache: observationDebugPlans,
-          observation_fetch_required: fetchPlans.length > 0,
-        });
-      }
-      if (isAqiHistoryDebugEnabled()) {
-        console.debug("[uk-aq aqi-history]", "cache-plan", {
-          selected_aqi_source_station_id: state.selectedAqiSensorId || null,
-          timeseries_id: primary?.timeseriesId || null,
-          station_id: getEntryStationId(primary),
-          connector_id: getEntryConnectorId(primary),
-          pollutant: pollutantKey,
-          cache_key: aqiCacheKey || null,
-          cache_status: aqiMissingRanges.length ? "miss_or_partial" : "hit",
-          ...getCacheStateDebug(aqiCacheRecord || {}),
-          missing_ranges: normalizeDebugRanges(aqiMissingRanges),
-        });
-      }
       let aqiLoadingActive = aqiMissingRanges.length > 0;
-      const preserveAqiBandsForLineOnlyChange = reason === "sensor-change"
-        && frameValid
-        && dom?.chartFrame?.currentAqiKey === aqiCacheKey
-        && aqiMissingRanges.length === 0;
-      const aqiProgressStartedAt = performance.now();
       const aqiProgressPromise = (async () => {
         if (!aqiCacheRecord || !aqiMissingRanges.length) return;
         let lastResponseMeta = aqiCacheRecord.lastResponseMeta || null;
-        const initialAqiPoints = Array.isArray(aqiPoints) ? aqiPoints : [];
-        let aqiRenderableRanges = [];
-        let aqiNextRenderIndex = 0;
-        const aqiCompletedChunkIndexes = new Set();
-        const aqiWorkQueue = buildAqiChunkWorkQueue(aqiMissingRanges, windowValue)
-          .map((chunk, queueIndex) => ({ ...chunk, queueIndex }));
-        const renderContiguousAqiChunks = () => {
-          let advanced = false;
-          while (aqiCompletedChunkIndexes.has(aqiNextRenderIndex)) {
-            const chunk = aqiWorkQueue[aqiNextRenderIndex];
-            if (!chunk) break;
-            aqiRenderableRanges = addCoveredRange(aqiRenderableRanges, chunk.startMs, chunk.endMs);
-            aqiNextRenderIndex += 1;
-            advanced = true;
-          }
-          if (!advanced || token !== state.loadToken || signal.aborted) return;
-          const newlyRenderablePoints = getPointsInRanges(aqiCacheRecord.points, aqiRenderableRanges);
-          aqiPoints = mergeSeriesPoints(initialAqiPoints, newlyRenderablePoints);
-          syncAqiBands(dom?.chartFrame, {
-            aqiPoints,
-            aqiCacheKey,
-            aqiLoading: true,
-            aqiSourceSymbolIndex,
-          });
-        };
-        await runChunkQueueWithConcurrency(aqiWorkQueue, AQI_ACTIVE_SOURCE_CONCURRENCY, async (missing) => {
+        const aqiWorkQueue = buildAqiChunkWorkQueue(aqiMissingRanges, windowValue);
+        await runChunkQueueWithConcurrency(aqiWorkQueue, 3, async (missing) => {
           if (token !== state.loadToken || signal.aborted) return;
           const missingRange = {
             startMs: missing.startMs,
@@ -19993,57 +18833,35 @@
             startIso: missing.startIso,
             endIso: missing.endIso,
           };
-          const result = await fetchAqiBandsDeduped(primary, pollutantKey, missingRange, aqiCacheKey);
+          const result = await fetchAqiBands(primary, pollutantKey, missingRange);
           const points = Array.isArray(result?.points) ? result.points : [];
           lastResponseMeta = result?.meta || lastResponseMeta;
           if (points.length) {
             aqiCacheRecord.points = mergeSeriesPoints(aqiCacheRecord.points, points);
           }
-          recordCacheRangeState(
-            aqiCacheRecord,
-            missing.startMs,
-            missing.endMs,
-            classifyAqiCacheState(result),
-            {
-              sourceMetadata: extractAqiSourceMetadata(primary, pollutantKey, result),
-              error: result?.error,
-              httpStatus: result?.meta?.http_status,
-            },
-          );
+          if (shouldMarkAqiHistoryRangeCovered(result?.meta || null, points)) {
+            aqiCacheRecord.coveredRanges = addCoveredRange(aqiCacheRecord.coveredRanges, missing.startMs, missing.endMs);
+          }
           aqiCacheRecord.lastResponseMeta = lastResponseMeta;
           aqiBandCache.set(aqiCacheKey, aqiCacheRecord);
-          recordWebsiteDebugEvent("aqi_chunk_completed", {
-            route: "aqi-history",
-            cache_key: aqiCacheKey || null,
-            chunk: {
-              start_utc: missing.startIso,
-              end_utc: missing.endIso,
-              queue_index: missing.queueIndex,
-            },
-            point_count: points.length,
-            cache_state: classifyAqiCacheState(result),
-            http_status: result?.meta?.http_status || null,
-            response_complete: result?.meta?.response_complete ?? null,
-            partial_reasons: Array.isArray(result?.meta?.partial_reasons) ? result.meta.partial_reasons : null,
-            history: extractHistoryCoverageDebug(result?.meta || {}),
-            error: serializeDebugError(result?.error),
-          });
+          aqiPoints = getPointsInRange(aqiCacheRecord.points, range);
           if (token !== state.loadToken || signal.aborted) return;
-          aqiCompletedChunkIndexes.add(missing.queueIndex);
-          renderContiguousAqiChunks();
+          syncAqiBands(dom?.chartFrame, {
+            aqiPoints,
+            aqiCacheKey,
+            aqiLoading: true,
+            aqiSourceSymbolIndex,
+          });
         });
         aqiLoadingActive = false;
         if (token !== state.loadToken || signal.aborted) return;
-        aqiPoints = getPointsInRange(aqiCacheRecord.points, range);
         syncAqiBands(dom?.chartFrame, {
           aqiPoints,
           aqiCacheKey,
           aqiLoading: false,
           aqiSourceSymbolIndex,
         });
-      })().finally(() => {
-        recordWebsiteDebugTiming("aqi_bands_fetch_ms", performance.now() - aqiProgressStartedAt);
-      }).catch((_err) => {
+      })().catch((_err) => {
         aqiLoadingActive = false;
       });
 
@@ -20067,7 +18885,6 @@
             yAxisLoading: observsLoadingActive,
             aqiSourceSymbolIndex,
             aqiCacheKey,
-            skipAqiRepaint: preserveAqiBandsForLineOnlyChange,
           });
         }
       } else if (hasCachedData) {
@@ -20076,7 +18893,6 @@
           yAxisLoading: observsLoadingActive,
           aqiSourceSymbolIndex,
           aqiCacheKey,
-          skipAqiRepaint: preserveAqiBandsForLineOnlyChange,
         });
       }
       if (!hasCachedData) {
@@ -20085,7 +18901,6 @@
           yAxisLoading: observsLoadingActive,
           aqiSourceSymbolIndex,
           aqiCacheKey,
-          skipAqiRepaint: preserveAqiBandsForLineOnlyChange,
         });
       }
 
@@ -20102,7 +18917,6 @@
           yAxisLoading: false,
           aqiSourceSymbolIndex,
           aqiCacheKey,
-          skipAqiRepaint: preserveAqiBandsForLineOnlyChange,
         });
         const totalPoints = Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0);
         if (!totalPoints) {
@@ -20114,7 +18928,6 @@
         void prefetchAqiBandsForEntries(usableEntries, range, {
           activeSourceStationId: aqiSourceId,
           loadToken: token,
-          concurrency: BACKGROUND_AQI_PREFETCH_CONCURRENCY,
         });
         return;
       }
@@ -20123,59 +18936,51 @@
       const lineWorkQueue = buildChunkWorkQueue(fetchPlans, windowValue);
       const totalChunks = Math.max(1, lineWorkQueue.length);
       let completedChunks = 0;
-      let lineFlushChain = Promise.resolve();
       let lineNextCommitIndex = 0;
+      let lineCanCommit = true;
+      let lineFlushChain = Promise.resolve();
       const linePendingResults = new Map();
-      const observationFetchStartedAt = performance.now();
-      const applyLinePayload = async (payload) => {
-        if (!payload) return;
-        if (payload.failed) {
-          completedChunks += 1;
-          dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
-          return;
-        }
-
-        const { entry, cacheKey, chunk, result } = payload;
-        const cacheRecord = getOrCreateSeriesCacheRecord(cacheKey);
-        cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], result.points || []);
-        recordCacheRangeState(
-          cacheRecord,
-          chunk.startMs,
-          chunk.endMs,
-          classifyObservationCacheState(result),
-          {
-            sourceMetadata: extractObservationSourceMetadata(entry, result),
-            error: result?.error,
-          },
-        );
-        if (result.guideline && !cacheRecord.guideline) {
-          cacheRecord.guideline = result.guideline;
-        }
-        seriesDataCache.set(cacheKey, cacheRecord);
-
-        const inRangePoints = getPointsInRange(cacheRecord.points, range);
-        seriesPointsMap.set(entry.stationId, inRangePoints);
-        if (!primaryGuideline && entry.stationId === primaryId && cacheRecord.guideline) {
-          primaryGuideline = cacheRecord.guideline;
-        }
-
-        completedChunks += 1;
-        updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
-          aqiLoading: false,
-          yAxisLoading: true,
-          aqiSourceSymbolIndex,
-          aqiCacheKey,
-          skipAqiRepaint: true,
-        });
-        dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
-      };
-      const scheduleOrderedLineFlush = () => {
+      const scheduleLineFlush = () => {
         lineFlushChain = lineFlushChain.then(async () => {
           while (linePendingResults.has(lineNextCommitIndex)) {
             const payload = linePendingResults.get(lineNextCommitIndex);
             linePendingResults.delete(lineNextCommitIndex);
             lineNextCommitIndex += 1;
-            await applyLinePayload(payload);
+            if (payload?.failed) {
+              completedChunks += 1;
+              dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
+              continue;
+            }
+
+            const { entry, cacheKey, chunk, result } = payload;
+            let cacheRecord = seriesDataCache.get(cacheKey);
+            if (!cacheRecord) {
+              cacheRecord = { points: [], guideline: null, coveredRanges: [] };
+            }
+            cacheRecord.points = mergeSeriesPoints(cacheRecord.points || [], result.points || []);
+            if (Array.isArray(result.points) && result.points.length > 0) {
+              cacheRecord.coveredRanges = addCoveredRange(cacheRecord.coveredRanges, chunk.startMs, chunk.endMs);
+            }
+            if (result.guideline && !cacheRecord.guideline) {
+              cacheRecord.guideline = result.guideline;
+            }
+            seriesDataCache.set(cacheKey, cacheRecord);
+
+            const inRangePoints = getPointsInRange(cacheRecord.points, range);
+            seriesPointsMap.set(entry.stationId, inRangePoints);
+            if (!primaryGuideline && entry.stationId === primaryId && cacheRecord.guideline) {
+              primaryGuideline = cacheRecord.guideline;
+            }
+
+            completedChunks += 1;
+            updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
+              aqiLoading: false,
+              yAxisLoading: true,
+              aqiSourceSymbolIndex,
+              aqiCacheKey,
+              skipAqiRepaint: true,
+            });
+            dom.chartFrame?.progressBar?.update(completedChunks / totalChunks);
           }
         });
         return lineFlushChain;
@@ -20189,15 +18994,10 @@
         if (dom.chartFrame?.progressBar?.remove) dom.chartFrame.progressBar.remove();
         dom.chartFrame.progressBar = ChartCore.renderProgressBar(svgEl, progressFrame);
 
-        await runObservationQueueWithFetchCaps(lineWorkQueue, {
-          primaryStationId: primaryId,
-          primaryConcurrency: PRIMARY_OBSERVATION_CONCURRENCY,
-          additionalConcurrency: ADDITIONAL_OBSERVATION_CONCURRENCY,
-          globalConcurrency: CHART_GLOBAL_FETCH_CAP,
-        }, async (workItem, index) => {
+        await runChunkQueueWithConcurrency(lineWorkQueue, 4, async (workItem, index) => {
           if (token !== state.loadToken || signal.aborted) return;
           try {
-            const result = await fetchObservationSeriesChunkDeduped(workItem.entry, workItem.cacheKey, workItem.chunk, signal);
+            const result = await fetchObservationSeriesChunk(workItem.entry, workItem.chunk, signal);
             if (token !== state.loadToken || signal.aborted) return;
             linePendingResults.set(index, {
               entry: workItem.entry,
@@ -20205,71 +19005,22 @@
               chunk: workItem.chunk,
               result,
             });
-            recordWebsiteDebugEvent("timeseries_chunk_completed", {
-              route: "timeseries",
-              cache_key: workItem.cacheKey || null,
-              timeseries_id: workItem.entry?.timeseriesId || null,
-              station_id: getEntryStationId(workItem.entry),
-              connector_id: getEntryConnectorId(workItem.entry),
-              chunk: {
-                start_utc: workItem.chunk?.startIso || null,
-                end_utc: workItem.chunk?.endIso || null,
-                queue_index: index,
-              },
-              point_count: Array.isArray(result?.points) ? result.points.length : 0,
-              cache_state: classifyObservationCacheState(result),
-              response_complete: result?.normalizedMeta?.response_complete ?? null,
-              partial_reasons: Array.isArray(result?.normalizedMeta?.partial_reasons) ? result.normalizedMeta.partial_reasons : null,
-              history: extractHistoryCoverageDebug(result?.normalizedMeta || result?.meta || {}),
-            });
-          } catch (chunkErr) {
+          } catch (_chunkErr) {
             if (signal.aborted || token !== state.loadToken) return;
-            let debugUrl = null;
-            try {
-              debugUrl = buildObservationSeriesRequestUrl(workItem.entry?.timeseriesId, workItem.chunk)?.toString?.() || null;
-            } catch (_err) {
-              debugUrl = null;
-            }
-            if (!chunkErr?.ukAqDebugLogged) {
-              logTimeseriesDebugFailure("fetch-failed", workItem.entry, workItem.chunk, chunkErr, {
-                url: debugUrl,
-              });
-            }
-            const cacheRecord = getOrCreateSeriesCacheRecord(workItem.cacheKey);
-            recordCacheRangeState(cacheRecord, workItem.chunk.startMs, workItem.chunk.endMs, "failed", {
-              sourceMetadata: extractObservationSourceMetadata(workItem.entry, null),
-              error: chunkErr,
-            });
-            seriesDataCache.set(workItem.cacheKey, cacheRecord);
             linePendingResults.set(index, {
               entry: workItem.entry,
               cacheKey: workItem.cacheKey,
               chunk: workItem.chunk,
               failed: true,
             });
-            recordWebsiteDebugEvent("timeseries_chunk_failed", {
-              route: "timeseries",
-              cache_key: workItem.cacheKey || null,
-              timeseries_id: workItem.entry?.timeseriesId || null,
-              station_id: getEntryStationId(workItem.entry),
-              connector_id: getEntryConnectorId(workItem.entry),
-              chunk: {
-                start_utc: workItem.chunk?.startIso || null,
-                end_utc: workItem.chunk?.endIso || null,
-                queue_index: index,
-              },
-              error: serializeDebugError(chunkErr),
-            });
           }
-          void scheduleOrderedLineFlush();
+          void scheduleLineFlush();
         });
-      })().finally(() => {
-        recordWebsiteDebugTiming("observation_fetch_ms", performance.now() - observationFetchStartedAt);
-      }).catch((_err) => {});
+      })().catch((_err) => {});
 
       setLoading(true);
       await lineProgressPromise;
-      await scheduleOrderedLineFlush();
+      await scheduleLineFlush();
       if (token !== state.loadToken || signal.aborted) return;
 
       updateChart(dom, seriesPointsMap, usableEntries, range, primaryGuideline, units, aqiPoints, {
@@ -20277,7 +19028,6 @@
         yAxisLoading: false,
         aqiSourceSymbolIndex,
         aqiCacheKey,
-        skipAqiRepaint: true,
       });
       const totalPoints = Array.from(seriesPointsMap.values()).reduce((sum, points) => sum + points.length, 0);
       if (!totalPoints) {
@@ -20289,22 +19039,14 @@
       void prefetchAqiBandsForEntries(usableEntries, range, {
         activeSourceStationId: aqiSourceId,
         loadToken: token,
-        concurrency: BACKGROUND_AQI_PREFETCH_CONCURRENCY,
       });
 
     } catch (error) {
       if (signal.aborted || token !== state.loadToken) return;
-      recordWebsiteDebugEvent("chart_load_error", {
-        route: "chart",
-        reason,
-        error: serializeDebugError(error),
-      });
       console.warn("Could not load chart mode data.", error);
       renderEmptyChart("Could not load chart data. Try Refresh.");
       setMessage("Could not load chart data. Try Refresh.", { error: true });
     } finally {
-      recordWebsiteDebugTiming("load_chart_data_ms", performance.now() - websiteDebugLoadStartedAt);
-      void flushWebsiteDebugLog(signal.aborted ? "chart-load-aborted" : "chart-load-finished");
       if (state.loadAbortController === abortController) {
         state.loadAbortController = null;
       }
@@ -20419,8 +19161,6 @@
     const bandHeight = 22;
     const gap = 4;
     const slotWidth = Math.max(1, (frame.width - frame.margin.left - frame.margin.right) / Math.max(1, (frame.endMs - frame.startMs) / HOUR_MS));
-    const renderedCounts = { daqi_segment_count: 0, eaqi_segment_count: 0 };
-    const carryForwardLevels = { daqi: null, eaqi: null };
     const drawBand = (label, y, key, colors) => {
       const group = svg.append("g")
         .attr("transform", `translate(0, ${y})`)
@@ -20437,23 +19177,7 @@
       }
       for (let t = new Date(frame.startMs).setMinutes(0, 0, 0); t < frame.endMs; t += HOUR_MS) {
         const point = pointByHour.get(t);
-        if (!point) {
-          carryForwardLevels[key] = null;
-          continue;
-        }
-        const level = point[key];
-        const missingReason = point[`${key}_missing_reason`];
-        let resolvedLevel = null;
-        if (level !== null && level !== undefined) {
-          resolvedLevel = level;
-          carryForwardLevels[key] = level;
-        } else if (missingReason) {
-          carryForwardLevels[key] = null;
-          continue;
-        } else {
-          resolvedLevel = carryForwardLevels[key];
-        }
-        const color = resolvedLevel !== null && resolvedLevel !== undefined ? colors[resolvedLevel] : null;
+        const color = point ? colors[point[key]] : null;
         if (!color) continue;
         const x = Math.max(frame.margin.left, xScale(new Date(t)));
         const nextX = xScale(new Date(t + HOUR_MS));
@@ -20467,8 +19191,6 @@
             .attr("width", width)
             .attr("height", bandHeight)
             .attr("fill", color);
-          if (key === "daqi") renderedCounts.daqi_segment_count += 1;
-          if (key === "eaqi") renderedCounts.eaqi_segment_count += 1;
         }
       }
     };
@@ -20495,7 +19217,6 @@
     }
     drawBand("DAQI", bandTop, "daqi", daqiColors);
     drawBand("EAQI", bandTop + bandHeight + gap, "eaqi", eaqiColors);
-    return renderedCounts;
   }
 
   function syncAqiBands(cf, renderOptions = {}) {
@@ -20516,30 +19237,10 @@
       : (Number.isInteger(cf.currentAqiSourceSymbolIndex) ? cf.currentAqiSourceSymbolIndex : -1);
     cf.aqiBandsContainer.selectAll("*").remove();
     cf.aqiBandsContainer.classed("is-loading", cf.currentAqiLoading);
-    const renderedCounts = renderAqiBands(cf.aqiBandsContainer, cf.currentAqiPoints || [], cf.frame, cf.xScale, {
+    renderAqiBands(cf.aqiBandsContainer, cf.currentAqiPoints || [], cf.frame, cf.xScale, {
       loading: cf.currentAqiLoading,
       aqiSourceSymbolIndex: cf.currentAqiSourceSymbolIndex,
     });
-    if (isAqiHistoryDebugEnabled()) {
-      const pointCounts = getAqiPointCounts(cf.currentAqiPoints || []);
-      console.debug("[uk-aq aqi-history]", "render-bands", {
-        selected_aqi_source_station_id: state.selectedAqiSensorId || null,
-        cache_key: cf.currentAqiKey || null,
-        loading: cf.currentAqiLoading,
-        range_start_utc: new Date(cf.frame.startMs).toISOString(),
-        range_end_utc: new Date(cf.frame.endMs).toISOString(),
-        row_count: pointCounts.parsed_point_count,
-        parsed_point_count: pointCounts.parsed_point_count,
-        parsed_daqi_count: pointCounts.daqi_count,
-        parsed_eaqi_count: pointCounts.eaqi_count,
-        rows_with_null_daqi: pointCounts.null_daqi_count,
-        rows_with_null_eaqi: pointCounts.null_eaqi_count,
-        daqi_missing_reason_counts: pointCounts.daqi_missing_reason_counts,
-        eaqi_missing_reason_counts: pointCounts.eaqi_missing_reason_counts,
-        rendered_daqi_segment_count: renderedCounts?.daqi_segment_count || 0,
-        rendered_eaqi_segment_count: renderedCounts?.eaqi_segment_count || 0,
-      });
-    }
   }
 
   function initChartFrame(dom, range, numSeries) {
@@ -20723,7 +19424,6 @@
       margin, width, height,
       frame: { width, height, margin, startMs: range.startMs, endMs: range.endMs },
       areaCode: state.chartModeAreaCode,
-      sessionIdentity: state.chartModeSessionIdentity,
       mapKey: state.mapKey,
       animFrameId: null,
       currentGuideline: null,
@@ -20814,39 +19514,12 @@
     const lineFn = d3.line()
       .x((p) => cf.xScale(p.date))
       .y((p) => cf.yScale(p.value));
-    const windowValue = normalizeChartRangeValue(state.chartModeTimeRange);
+    const windowValue = state.chartModeTimeRange || "24h";
     const intervalMs  = ChartCore.getSymbolIntervalMs(windowValue);
     const seriesSegments = [];
     usableEntries.forEach((entry) => {
       seriesSegments.push(ChartCore.buildSegments(seriesPointsMap.get(entry.stationId) || []));
     });
-    if (isChartDebugEnabled()) {
-      console.debug("[uk-aq chart]", "render-lines", {
-        selected_chart_identity: {
-          map_key: state.mapKey || null,
-          area_code: state.chartModeAreaCode || null,
-          session_identity: state.chartModeSessionIdentity || null,
-        },
-        range_label: windowValue,
-        range_start_utc: range.startDate.toISOString(),
-        range_end_utc: range.endDate.toISOString(),
-        series: usableEntries.map((entry, index) => {
-          const points = seriesPointsMap.get(entry.stationId) || [];
-          const gapSummary = summarizeParsedGapRanges(points, range);
-          return {
-            timeseries_id: entry?.timeseriesId || null,
-            station_id: getEntryStationId(entry),
-            connector_id: getEntryConnectorId(entry),
-            pollutant: entry?.pollutant || getCurrentContext()?.pollutant || null,
-            parsed_point_count: points.length,
-            rendered_line_segment_count: Array.isArray(seriesSegments[index]) ? seriesSegments[index].length : 0,
-            parsed_gap_ranges: gapSummary.ranges,
-            parsed_gap_range_count: gapSummary.total,
-            parsed_gap_ranges_truncated: gapSummary.truncated,
-          };
-        }),
-      });
-    }
 
     // Clear paths/symbols for slots beyond the active series count.
     for (let i = usableEntries.length; i < cf.seriesPaths.length; i++) {
@@ -20972,9 +19645,7 @@
     dom.panel?.addEventListener("click", (event) => { event.stopPropagation(); });
   });
   chartRangeToolbarSelect?.addEventListener("change", () => {
-    if (!state.isChartMode) return;
-    state.chartModeTimeRange = normalizeChartRangeValue(chartRangeToolbarSelect.value);
-    chartRangeToolbarSelect.value = state.chartModeTimeRange;
+    state.chartModeTimeRange = chartRangeToolbarSelect.value || "24h";
     loadChartData("window-change");
   });
   backButton?.addEventListener("click", exit);
@@ -21980,40 +20651,8 @@
   async function loadPrefixHints() {
     try {
       const response = await fetch(POSTCODE_PREFIX_HINTS_URL, { credentials: "include" });
-      const bodyText = await response.text();
-      if (!response.ok) {
-        const debug = window.ukAqWebsiteDebugLog;
-        if (debug?.enabled?.()) {
-          const capped = debug.capText?.(bodyText) || { text: bodyText, bytes: bodyText.length, truncated: false };
-          debug.recordEvent?.("postcode_prefix_hints_failed", {
-            route: "postcode_prefix_hints",
-            url: debug.sanitizeUrl?.(POSTCODE_PREFIX_HINTS_URL) || POSTCODE_PREFIX_HINTS_URL,
-            status: response.status,
-            status_text: response.statusText || "",
-            headers: debug.redactHeaders?.(response.headers) || {},
-            body_text: capped.text,
-            body_json: debug.parseBodyJson?.(capped.text) || null,
-            body_bytes: capped.bytes,
-            body_truncated: capped.truncated,
-          });
-          void debug.flush?.("postcode-prefix-hints-failed");
-        }
-        return;
-      }
-      let payload = null;
-      try {
-        payload = JSON.parse(bodyText || "{}");
-      } catch (error) {
-        window.ukAqWebsiteDebugLog?.recordEvent?.("postcode_prefix_hints_malformed", {
-          route: "postcode_prefix_hints",
-          url: window.ukAqWebsiteDebugLog?.sanitizeUrl?.(POSTCODE_PREFIX_HINTS_URL) || POSTCODE_PREFIX_HINTS_URL,
-          status: response.status,
-          body_preview: String(bodyText || "").slice(0, 4096),
-          error: { message: error instanceof Error ? error.message : String(error) },
-        });
-        void window.ukAqWebsiteDebugLog?.flush?.("postcode-prefix-hints-malformed");
-        return;
-      }
+      if (!response.ok) return;
+      const payload = await response.json();
       if (payload?.ok && payload.postcode_samples_1 && payload.postcode_samples_2) {
         prefixHintsCache = payload;
       }
