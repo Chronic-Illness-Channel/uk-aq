@@ -1,8 +1,8 @@
 # AGENTS
 
 ## Main Repo
-- `LIVE-uk-aq-webpage` is the main repo for this project and the default starting point for cross-repo work.
-- Filesystem location: `/Users/mikehinford/Dropbox/Projects/CIC Website/CIC Air Quality Networks/LIVE UK AQ Networks/LIVE-uk-aq-webpage`.
+- `LIVE-uk-aq-ops` is the main repo for this project and the default starting point for cross-repo work.
+- Filesystem location: `/Users/mikehinford/Dropbox/Projects/CIC Website/CIC Air Quality Networks/LIVE UK AQ Networks/LIVE-uk-aq-ops`.
 
 ## Planning Requests
 When proposing plans, offer more than one option when possible, list pros/cons for each, and recommend which to pick with a brief rationale.
